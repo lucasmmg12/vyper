@@ -30,21 +30,98 @@ export default function AdminPage() {
                     <p style={{ color: 'var(--text-muted)' }}>Panel de Control Financiero</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <Link href="/admin/vyper-coins" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#facc15', color: '#facc15' }}>🪙 VYPER COINS</button>
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                borderColor: '#facc15',
+                                color: '#facc15',
+                                minWidth: '140px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            🪙 VYPER COINS
+                        </button>
                     </Link>
                     <Link href="/admin/debt" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>💳 CTA CTE</button>
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                borderColor: '#ef4444',
+                                color: '#ef4444',
+                                minWidth: '140px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            💳 CTA CTE
+                        </button>
                     </Link>
                     <Link href="/admin/clients" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#a5b4fc', color: '#a5b4fc' }}>👥 CLIENTES</button>
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                borderColor: '#a5b4fc',
+                                color: '#a5b4fc',
+                                minWidth: '140px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            👥 CLIENTES
+                        </button>
                     </Link>
                     <Link href="/admin/bi" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#4ade80', color: '#4ade80' }}>📊 ANALYTICS</button>
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                borderColor: '#4ade80',
+                                color: '#4ade80',
+                                minWidth: '140px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            📊 ANALYTICS
+                        </button>
                     </Link>
                     <Link href="/" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>SALIR</button>
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                minWidth: '100px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            SALIR
+                        </button>
                     </Link>
                 </div>
             </header>
