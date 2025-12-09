@@ -74,7 +74,7 @@ export default function HomePage() {
           </Link>
 
           {/* Module 3: Tutorial Interactivo */}
-          <a href="/TUTORIAL_INTERACTIVO.html" target="_blank" rel="noopener noreferrer">
+          <Link href="/tutorial">
             <div className="glass-card" style={{ height: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 2rem' }}>
               <div className="glow-icon-container" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
                 <GraduationCap size={32} />
@@ -87,7 +87,7 @@ export default function HomePage() {
                 COMENZAR TUTORIAL <BookOpen size={18} style={{ marginLeft: '8px' }} />
               </button>
             </div>
-          </a>
+          </Link>
 
         </div>
 

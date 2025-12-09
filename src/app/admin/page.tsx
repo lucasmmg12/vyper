@@ -31,7 +31,7 @@ export default function AdminPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <a href="/TUTORIAL_INTERACTIVO.html" target="_blank" rel="noopener noreferrer">
+                    <Link href="/tutorial" passHref>
                         <button
                             className="secondary"
                             style={{
@@ -50,7 +50,7 @@ export default function AdminPage() {
                         >
                             📚 AYUDA
                         </button>
-                    </a>
+                    </Link>
                     <Link href="/admin/vyper-coins" passHref>
                         <button
                             className="secondary"
