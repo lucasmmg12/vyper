@@ -1,0 +1,115 @@
+
+'use client';
+
+import { useState } from 'react';
+
+const CATEGORIES = [
+    'Compras de Mercaderia',
+    'Alquiler',
+    'Luz',
+    'Agua',
+    'Internet',
+    'Marketing',
+    'Grow',
+    'Impuestos',
+    'Sueldos',
+    'Comisiones',
+    'Retiros de capital'
+];
+
+export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
+    const [formData, setFormData] = useState({
+        branch: 'Rawson',
+        amount: '',
+        category: CATEGORIES[0],
+        observations: '',
+        date: new Date().toISOString().split('T')[0]
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await fetch('/api/expenses', {
+                method: 'POST',
+                body: JSON.stringify(formData)
+            });
+            setFormData({ ...formData, amount: '', observations: '' });
+            onSuccess();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="glass-card">
+            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--secondary-accent)' }}>
+                NUEVO EGRESO
+            </h3>
+            <form onSubmit={handleSubmit}>
+
+                <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                    <div>
+                        <label>FECHA</label>
+                        <input
+                            type="date"
+                            value={formData.date}
+                            onChange={e => setFormData({ ...formData, date: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label>SUCURSAL</label>
+                        <select
+                            value={formData.branch}
+                            onChange={e => setFormData({ ...formData, branch: e.target.value })}
+                        >
+                            <option value="Rawson">Rawson</option>
+                            <option value="Rivadavia">Rivadavia</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label>CATEGORÍA</label>
+                    <select
+                        value={formData.category}
+                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    >
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+
+                <div>
+                    <label>IMPORTE ($)</label>
+                    <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={formData.amount}
+                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold' }}
+                    />
+                </div>
+
+                <div>
+                    <label>OBSERVACIONES</label>
+                    <textarea
+                        rows={3}
+                        value={formData.observations}
+                        onChange={e => setFormData({ ...formData, observations: e.target.value })}
+                    />
+                </div>
+
+                <button type="submit" disabled={loading} style={{ width: '100%', background: 'linear-gradient(135deg, #db2777, #9d174d)' }}>
+                    {loading ? 'GUARDANDO...' : 'REGISTRAR GASTO'}
+                </button>
+            </form>
+        </div>
+    );
+}

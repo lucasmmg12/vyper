@@ -1,65 +1,82 @@
-import Image from "next/image";
-import styles from "./page.module.css";
 
-export default function Home() {
+'use client';
+
+import Link from 'next/link';
+import { LayoutDashboard, TrendingUp, Settings, BarChart2, ShieldCheck, PieChart } from 'lucide-react';
+
+export default function HomePage() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen flex flex-col justify-center">
+      <main className="page-container">
+
+        {/* Header Hero */}
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <div className="animate-float" style={{ display: 'inline-block', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '80px', height: '80px',
+              background: 'white', borderRadius: '50%',
+              boxShadow: '0 0 40px rgba(255,255,255,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <LayoutDashboard size={40} color="black" />
+            </div>
+          </div>
+
+          <h1 style={{ marginBottom: '1rem', fontSize: '3.5rem' }}>
+            GROW LABS SYSTEM
+          </h1>
+
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '0.5rem 1rem', borderRadius: '50px',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            <ShieldCheck size={16} />
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              ADMINISTRACIÓN CENTRALIZADA
+            </span>
+          </div>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Main Navigation Grid */}
+        <div className="grid-layout" style={{ maxWidth: '900px', margin: '0 auto', gap: '2rem' }}>
+
+          {/* Module 1: Admin Panel */}
+          <Link href="/admin">
+            <div className="glass-card" style={{ height: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 2rem' }}>
+              <div className="glow-icon-container">
+                <TrendingUp size={32} />
+              </div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Panel Operativo</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+                Gestión diaria de ventas, egresos y control de caja por sucursal.
+              </p>
+              <button style={{ width: '100%' }}>
+                INGRESAR
+              </button>
+            </div>
+          </Link>
+
+          {/* Module 2: BI Analytics */}
+          <Link href="/admin/bi">
+            <div className="glass-card" style={{ height: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 2rem' }}>
+              <div className="glow-icon-container">
+                <BarChart2 size={32} />
+              </div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Business Intelligence</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+                Análisis avanzado de datos, proyecciones y comparativas de rendimiento.
+              </p>
+              <button className="secondary" style={{ width: '100%' }}>
+                VER ANALÍTICAS <PieChart size={18} style={{ marginLeft: '8px' }} />
+              </button>
+            </div>
+          </Link>
+
         </div>
+
+
+
       </main>
     </div>
   );
