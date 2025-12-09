@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial Interactivo - Vyper Labs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .tutorial-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(165, 180, 252, 0.1));
+            border-radius: 20px;
+            margin-bottom: 3rem;
+            border: 2px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4ade80, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+        }
+
+        .tutorial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .tutorial-card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tutorial-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4ade80, #a5b4fc);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tutorial-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tutorial-card:hover {
+            transform: translateY(-10px);
+            border-color: #4ade80;
+            box-shadow: 0 10px 40px rgba(74, 222, 128, 0.3);
+        }
+
+        .tutorial-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .tutorial-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #4ade80;
+        }
+
+        .tutorial-card .duration {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(74, 222, 128, 0.2);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: #4ade80;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-card p {
+            color: #a0a0a0;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .tutorial-card .steps-count {
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 90%;
+            position: relative;
+            border: 2px solid rgba(74, 222, 128, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #ef4444;
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .step-container {
+            margin-top: 2rem;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 4rem;
+        }
+
+        .step.active {
+            opacity: 1;
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+            transform: scale(1.02);
+        }
+
+        .step.completed {
+            opacity: 0.7;
+            border-color: #a5b4fc;
+        }
+
+        .step-number {
+            position: absolute;
+            left: 1.5rem;
+            top: 1.5rem;
+            width: 2rem;
+            height: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #4ade80, #a5b4fc);
+            color: #000;
+            transform: scale(1.2);
+        }
+
+        .step.completed .step-number {
+            background: #a5b4fc;
+            color: #000;
+        }
+
+        .step h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .step p {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .step-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #a5b4fc);
+            transition: width 0.3s ease;
+            border-radius: 50px;
+        }
+
+        .completion-message {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+        }
+
+        .completion-message.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .completion-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .quick-links {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .quick-links h3 {
+            color: #4ade80;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .link-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #fff;
+            display: block;
+        }
+
+        .link-item:hover {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .link-item .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tutorial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="tutorial-container">
+        <div class="header">
+            <h1>🎓 Tutorial Interactivo Vyper Labs</h1>
+            <p>Aprende a usar el sistema paso a paso con guías visuales</p>
+        </div>
+
+        <div class="tutorial-grid">
+            <!-- Tutorial 1: Primeros Pasos -->
+            <div class="tutorial-card" onclick="openTutorial('primeros-pasos')">
+                <div class="tutorial-icon">🚀</div>
+                <h3>Primeros Pasos</h3>
+                <span class="duration">⏱️ 5 minutos</span>
+                <p>Aprende a navegar por el sistema y conoce las funcionalidades básicas del dashboard principal.</p>
+                <div class="steps-count">📋 6 pasos</div>
+            </div>
+
+            <!-- Tutorial 2: Registrar Ventas -->
+            <div class="tutorial-card" onclick="openTutorial('registrar-ventas')">
+                <div class="tutorial-icon">💰</div>
+                <h3>Registrar Ventas</h3>
+                <span class="duration">⏱️ 7 minutos</span>
+                <p>Guía completa para registrar ventas, seleccionar clientes y métodos de pago correctamente.</p>
+                <div class="steps-count">📋 8 pasos</div>
+            </div>
+
+            <!-- Tutorial 3: Gestión de Clientes -->
+            <div class="tutorial-card" onclick="openTutorial('gestion-clientes')">
+                <div class="tutorial-icon">👥</div>
+                <h3>Gestión de Clientes</h3>
+                <span class="duration">⏱️ 6 minutos</span>
+                <p>Cómo crear, editar y administrar la base de datos de clientes de forma eficiente.</p>
+                <div class="steps-count">📋 7 pasos</div>
+            </div>
+
+            <!-- Tutorial 4: Cuenta Corriente -->
+            <div class="tutorial-card" onclick="openTutorial('cuenta-corriente')">
+                <div class="tutorial-icon">💳</div>
+                <h3>Cuenta Corriente</h3>
+                <span class="duration">⏱️ 8 minutos</span>
+                <p>Maneja créditos y pagos de clientes con el sistema de cuenta corriente y notificaciones.</p>
+                <div class="steps-count">📋 9 pasos</div>
+            </div>
+
+            <!-- Tutorial 5: Vyper Coins -->
+            <div class="tutorial-card" onclick="openTutorial('vyper-coins')">
+                <div class="tutorial-icon">🪙</div>
+                <h3>Programa Vyper Coins</h3>
+                <span class="duration">⏱️ 5 minutos</span>
+                <p>Aprende a usar el sistema de fidelización para premiar a tus mejores clientes.</p>
+                <div class="steps-count">📋 6 pasos</div>
+            </div>
+
+            <!-- Tutorial 6: Analytics -->
+            <div class="tutorial-card" onclick="openTutorial('analytics')">
+                <div class="tutorial-icon">📊</div>
+                <h3>Business Intelligence</h3>
+                <span class="duration">⏱️ 10 minutos</span>
+                <p>Descubre cómo analizar tus datos, generar reportes y tomar decisiones informadas.</p>
+                <div class="steps-count">📋 10 pasos</div>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <h3>🔗 Enlaces Rápidos</h3>
+            <div class="links-grid">
+                <a href="MANUAL_DE_USUARIO.html" class="link-item" target="_blank">
+                    <div class="icon">📖</div>
+                    <div>Manual Completo</div>
+                </a>
+                <a href="#" class="link-item" onclick="alert('Próximamente: Videos tutoriales')">
+                    <div class="icon">🎥</div>
+                    <div>Video Tutoriales</div>
+                </a>
+                <a href="#" class="link-item" onclick="alert('Próximamente: Preguntas frecuentes')">
+                    <div class="icon">❓</div>
+                    <div>FAQ</div>
+                </a>
+                <a href="#" class="link-item" onclick="alert('Soporte: soporte@vyperlabs.com')">
+                    <div class="icon">💬</div>
+                    <div>Soporte</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Template -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeTutorial()">✕</button>
+            <h2 id="tutorial-title" style="color: #4ade80; margin-bottom: 0.5rem;"></h2>
+            <p id="tutorial-description" style="color: #a0a0a0; margin-bottom: 1rem;"></p>
+
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+
+            <div id="steps-container" class="step-container"></div>
+
+            <div id="completion-message" class="completion-message">
+                <div class="completion-icon">🎉</div>
+                <h2 style="color: #4ade80; margin-bottom: 1rem;">¡Tutorial Completado!</h2>
+                <p style="color: #a0a0a0; margin-bottom: 2rem;">Has completado exitosamente este tutorial. ¡Ahora estás
+                    listo para usar esta funcionalidad!</p>
+                <button class="btn btn-primary" onclick="closeTutorial()">Finalizar</button>
+            </div>
+
+            <div id="navigation-buttons" class="navigation-buttons">
+                <button id="prev-btn" class="btn btn-secondary" onclick="previousStep()" disabled>← Anterior</button>
+                <button id="next-btn" class="btn btn-primary" onclick="nextStep()">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tutorials = {
+            'primeros-pasos': {
+                title: '🚀 Primeros Pasos en Vyper Labs',
+                description: 'Aprende a navegar por el sistema y conoce las funcionalidades básicas',
+                steps: [
+                    {
+                        title: 'Bienvenido a Vyper Labs',
+                        content: 'Vyper Labs es tu sistema integral de gestión empresarial. En este tutorial aprenderás a navegar por la interfaz principal y acceder a todas las funcionalidades.'
+                    },
+                    {
+                        title: 'Pantalla de Inicio',
+                        content: 'Al abrir la aplicación, verás dos opciones principales: <strong>Panel Operativo</strong> para operaciones diarias y <strong>Business Intelligence</strong> para análisis avanzado. Haz clic en "INGRESAR" bajo Panel Operativo.'
+                    },
+                    {
+                        title: 'Dashboard Principal',
+                        content: 'El dashboard es el centro de operaciones. Aquí encontrarás pestañas para <strong>VENTAS</strong> y <strong>EGRESOS</strong>, un formulario de registro a la izquierda y el historial de transacciones a la derecha.'
+                    },
+                    {
+                        title: 'Barra de Navegación',
+                        content: 'En la parte superior verás botones para acceder a: 🪙 Vyper Coins, 💳 Cuenta Corriente, 👥 Clientes, y 📊 Analytics. Puedes navegar entre módulos en cualquier momento.'
+                    },
+                    {
+                        title: 'Pestañas Ventas/Egresos',
+                        content: 'Usa las pestañas para alternar entre registro de ventas y egresos. El formulario cambiará automáticamente según la pestaña seleccionada.'
+                    },
+                    {
+                        title: '¡Listo para Empezar!',
+                        content: 'Ya conoces la estructura básica del sistema. En los siguientes tutoriales aprenderás a usar cada funcionalidad en detalle. ¡Comencemos!'
+                    }
+                ]
+            },
+            'registrar-ventas': {
+                title: '💰 Cómo Registrar Ventas',
+                description: 'Guía paso a paso para registrar ventas correctamente',
+                steps: [
+                    {
+                        title: 'Acceder al Formulario de Ventas',
+                        content: 'En el dashboard principal, asegúrate de estar en la pestaña <strong>VENTAS</strong> (debe estar resaltada en verde).'
+                    },
+                    {
+                        title: 'Verificar la Fecha',
+                        content: 'El campo de fecha se completa automáticamente con la fecha actual. Si necesitas registrar una venta de otro día, puedes modificarla haciendo clic en el campo.'
+                    },
+                    {
+                        title: 'Seleccionar Cliente',
+                        content: 'Haz clic en el campo "CLIENTE" y comienza a escribir el nombre o teléfono. El sistema mostrará sugerencias automáticamente. Selecciona el cliente correcto de la lista desplegable.'
+                    },
+                    {
+                        title: 'Ingresar el Importe',
+                        content: 'En el campo "IMPORTE ($)", escribe el monto total de la venta. Puedes usar decimales (ej: 1500.50). El sistema formateará el número automáticamente.'
+                    },
+                    {
+                        title: 'Seleccionar Método de Pago',
+                        content: 'Elige el método de pago: 💵 Efectivo, 🏦 Transferencia, 💳 Tarjeta Débito/Crédito, o 📝 Cuenta Corriente. Si eliges Cuenta Corriente, la deuda del cliente se actualizará automáticamente.'
+                    },
+                    {
+                        title: 'Agregar Conceptos (Opcional)',
+                        content: 'En el campo "CONCEPTOS", puedes detallar los productos o servicios vendidos. Por ejemplo: "2x Proteína Whey, 1x Creatina". Este campo es opcional pero recomendado para mejor control.'
+                    },
+                    {
+                        title: 'Guardar la Venta',
+                        content: 'Revisa que todos los datos sean correctos y haz clic en el botón verde "💰 REGISTRAR VENTA". Verás un mensaje de confirmación.'
+                    },
+                    {
+                        title: 'Verificar en el Historial',
+                        content: '¡Listo! La venta aparecerá inmediatamente en el panel de historial a la derecha. Puedes editarla o eliminarla si cometiste un error.'
+                    }
+                ]
+            },
+            'gestion-clientes': {
+                title: '👥 Gestión de Clientes',
+                description: 'Aprende a administrar tu base de datos de clientes',
+                steps: [
+                    {
+                        title: 'Acceder al Módulo de Clientes',
+                        content: 'Haz clic en el botón "👥 CLIENTES" en la barra de navegación superior del dashboard.'
+                    },
+                    {
+                        title: 'Vista General de Clientes',
+                        content: 'Verás una cuadrícula con todos tus clientes. Cada tarjeta muestra: nombre, teléfono, deuda actual (en rojo si tiene deuda) y saldo de Vyper Coins.'
+                    },
+                    {
+                        title: 'Buscar un Cliente',
+                        content: 'Usa la barra de búsqueda en la parte superior. Puedes buscar por nombre o por número de teléfono. Los resultados se filtran automáticamente mientras escribes.'
+                    },
+                    {
+                        title: 'Crear Nuevo Cliente',
+                        content: 'Haz clic en el botón "NUEVO CLIENTE". Se abrirá un formulario modal donde debes completar: Nombre completo, Teléfono (con código de área, ej: 5491112345678), y Email (opcional).'
+                    },
+                    {
+                        title: 'Guardar el Nuevo Cliente',
+                        content: 'Después de completar los datos, haz clic en "GUARDAR CLIENTE". El nuevo cliente aparecerá inmediatamente en la lista con deuda $0 y 0 Vyper Coins.'
+                    },
+                    {
+                        title: 'Editar un Cliente Existente',
+                        content: 'En la tarjeta del cliente, haz clic en el botón "EDITAR". Se abrirá el mismo formulario con los datos actuales. Modifica lo que necesites y guarda los cambios.'
+                    },
+                    {
+                        title: 'Información Importante',
+                        content: 'No puedes eliminar clientes que tengan transacciones registradas. El número de teléfono es crucial para las notificaciones de WhatsApp, asegúrate de ingresarlo correctamente con el código de país (54 para Argentina).'
+                    }
+                ]
+            },
+            'cuenta-corriente': {
+                title: '💳 Sistema de Cuenta Corriente',
+                description: 'Gestiona créditos y pagos de clientes',
+                steps: [
+                    {
+                        title: 'Acceder a Cuenta Corriente',
+                        content: 'Haz clic en "💳 CTA CTE" en la barra de navegación superior.'
+                    },
+                    {
+                        title: 'Vista del Módulo',
+                        content: 'Verás un formulario para registrar transacciones en la parte superior y el historial de movimientos del mes actual en la parte inferior.'
+                    },
+                    {
+                        title: 'Buscar Cliente',
+                        content: 'En el campo "CLIENTE", comienza a escribir el nombre o teléfono. Selecciona el cliente de la lista. Verás su deuda actual destacada en rojo.'
+                    },
+                    {
+                        title: 'Registrar una Compra a Crédito',
+                        content: 'Ingresa el monto de la compra en "IMPORTE ($)". Haz clic en el botón rojo "COMPRA EN CUENTA CORRIENTE". Verás una vista previa del balance actual y el nuevo balance después de la compra.'
+                    },
+                    {
+                        title: 'Confirmar la Compra',
+                        content: 'Verifica que los montos sean correctos y haz clic en "📝 REGISTRAR COMPRA". El sistema actualizará la deuda del cliente automáticamente.'
+                    },
+                    {
+                        title: 'Notificación Automática',
+                        content: 'El cliente recibirá un mensaje de WhatsApp con el detalle: monto de la compra, nuevo saldo total, y un recordatorio de pago. Esto sucede automáticamente si el cliente tiene un teléfono válido registrado.'
+                    },
+                    {
+                        title: 'Registrar un Pago',
+                        content: 'Para registrar un pago, selecciona el cliente, ingresa el monto que está pagando, y haz clic en el botón verde "PAGO". El sistema restará el monto de su deuda.'
+                    },
+                    {
+                        title: 'Pagos Parciales',
+                        content: 'Puedes registrar pagos parciales. Por ejemplo, si un cliente debe $5000 y paga $2000, su nueva deuda será $3000. El sistema calcula todo automáticamente.'
+                    },
+                    {
+                        title: 'Historial de Movimientos',
+                        content: 'En la tabla inferior verás todos los movimientos del mes: fecha, cliente, tipo (COMPRA en rojo o PAGO en verde), importe y balance resultante. Esto te permite hacer seguimiento detallado de cada cuenta.'
+                    }
+                ]
+            },
+            'vyper-coins': {
+                title: '🪙 Programa Vyper Coins',
+                description: 'Sistema de fidelización y recompensas',
+                steps: [
+                    {
+                        title: '¿Qué son los Vyper Coins?',
+                        content: 'Vyper Coins es un programa de fidelización que te permite premiar a tus clientes frecuentes con puntos canjeables por descuentos o productos.'
+                    },
+                    {
+                        title: 'Acceder al Módulo',
+                        content: 'Haz clic en "🪙 VYPER COINS" en la barra de navegación superior.'
+                    },
+                    {
+                        title: 'Seleccionar Cliente',
+                        content: 'Usa el buscador para encontrar al cliente. Al seleccionarlo, verás su saldo actual de Vyper Coins destacado.'
+                    },
+                    {
+                        title: 'Agregar Coins',
+                        content: 'Ingresa la cantidad de coins a agregar en el campo "CANTIDAD DE COINS". Haz clic en el botón verde "AGREGAR COINS". Esto suma puntos al cliente (por ejemplo, por una compra o promoción).'
+                    },
+                    {
+                        title: 'Descontar Coins (Canje)',
+                        content: 'Para cuando un cliente canjea sus puntos, ingresa la cantidad y haz clic en el botón rojo "DESCONTAR COINS". El sistema verificará que el cliente tenga suficientes coins antes de permitir el canje.'
+                    },
+                    {
+                        title: 'Notificaciones y Registro',
+                        content: 'Cada movimiento de coins genera una notificación de WhatsApp al cliente y queda registrado en el historial. Así tanto tú como el cliente pueden hacer seguimiento de los puntos acumulados y canjeados.'
+                    }
+                ]
+            },
+            'analytics': {
+                title: '📊 Business Intelligence',
+                description: 'Análisis avanzado de datos y reportes',
+                steps: [
+                    {
+                        title: 'Acceder a Analytics',
+                        content: 'Haz clic en "📊 ANALYTICS" en la barra de navegación superior para acceder al módulo de Business Intelligence.'
+                    },
+                    {
+                        title: 'Vista General del Dashboard',
+                        content: 'Verás múltiples secciones: KPIs principales en la parte superior (Ingresos, Egresos, Utilidad), gráficos de tendencias, y tablas de datos detallados.'
+                    },
+                    {
+                        title: 'Métricas Principales (KPIs)',
+                        content: 'Las tarjetas superiores muestran: 💰 Ingresos Totales, 💸 Egresos Totales, 📊 Utilidad Neta, y 📈 Margen de Ganancia. Estos números se actualizan según el período seleccionado.'
+                    },
+                    {
+                        title: 'Gráfico de Tendencias',
+                        content: 'El gráfico de líneas muestra la evolución de ingresos y egresos en el tiempo. Puedes identificar picos de ventas, tendencias alcistas o bajistas, y patrones estacionales.'
+                    },
+                    {
+                        title: 'Distribución de Egresos',
+                        content: 'El gráfico de torta muestra cómo se distribuyen tus gastos por categoría (Salarios, Alquiler, Servicios, etc.). Esto te ayuda a identificar dónde se va la mayor parte del dinero.'
+                    },
+                    {
+                        title: 'Filtros de Período',
+                        content: 'Usa los filtros superiores para cambiar el período de análisis: Hoy, Esta Semana, Este Mes, Este Año, o un Rango Personalizado. Los gráficos se actualizan automáticamente.'
+                    },
+                    {
+                        title: 'Análisis por Método de Pago',
+                        content: 'Puedes ver la distribución de ventas por método de pago. Esto te ayuda a entender las preferencias de tus clientes y optimizar tus opciones de pago.'
+                    },
+                    {
+                        title: 'Top Clientes',
+                        content: 'La tabla de mejores clientes muestra quiénes son tus clientes más valiosos por volumen de compras. Úsala para identificar a quién ofrecer promociones especiales o más Vyper Coins.'
+                    },
+                    {
+                        title: 'Exportar Reportes',
+                        content: 'Haz clic en los botones de exportación para descargar los datos en PDF (con gráficos), Excel (para análisis adicional), o CSV (compatible con otras herramientas).'
+                    },
+                    {
+                        title: 'Tomar Decisiones Informadas',
+                        content: '¡Felicidades! Ahora sabes usar Analytics. Revisa este dashboard semanalmente para identificar oportunidades de mejora, controlar gastos y maximizar ganancias.'
+                    }
+                ]
+            }
+        };
+
+        let currentTutorial = null;
+        let currentStep = 0;
+
+        function openTutorial(tutorialId) {
+            currentTutorial = tutorials[tutorialId];
+            currentStep = 0;
+
+            document.getElementById('tutorial-title').textContent = currentTutorial.title;
+            document.getElementById('tutorial-description').textContent = currentTutorial.description;
+
+            renderSteps();
+            updateProgress();
+            updateButtons();
+
+            document.getElementById('tutorial-modal').classList.add('active');
+            document.getElementById('completion-message').classList.remove('active');
+            document.getElementById('navigation-buttons').style.display = 'flex';
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-modal').classList.remove('active');
+            currentTutorial = null;
+            currentStep = 0;
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('steps-container');
+            container.innerHTML = '';
+
+            currentTutorial.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step';
+                if (index === currentStep) stepDiv.classList.add('active');
+                if (index < currentStep) stepDiv.classList.add('completed');
+
+                stepDiv.innerHTML = `
+                    <div class="step-number">${index + 1}</div>
+                    <h4>${step.title}</h4>
+                    <p>${step.content}</p>
+                `;
+
+                container.appendChild(stepDiv);
+            });
+        }
+
+        function nextStep() {
+            if (currentStep < currentTutorial.steps.length - 1) {
+                currentStep++;
+                renderSteps();
+                updateProgress();
+                updateButtons();
+            } else {
+                // Tutorial completado
+                document.getElementById('steps-container').style.display = 'none';
+                document.getElementById('navigation-buttons').style.display = 'none';
+                document.getElementById('completion-message').classList.add('active');
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderSteps();
+                updateProgress();
+                updateButtons();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentStep + 1) / currentTutorial.steps.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            prevBtn.disabled = currentStep === 0;
+
+            if (currentStep === currentTutorial.steps.length - 1) {
+                nextBtn.textContent = 'Completar ✓';
+            } else {
+                nextBtn.textContent = 'Siguiente →';
+            }
+        }
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeTutorial();
+        });
+
+        // Navegación con flechas
+        document.addEventListener('keydown', (e) => {
+            if (!currentTutorial) return;
+
+            if (e.key === 'ArrowRight') nextStep();
+            if (e.key === 'ArrowLeft') previousStep();
+        });
+    </script>
+
+</body>
+
+</html>

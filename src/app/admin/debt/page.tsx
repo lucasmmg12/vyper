@@ -52,7 +52,8 @@ export default function DebtManagementPage() {
 
     const fetchTransactions = async () => {
         try {
-            const res = await fetch('/api/debt-transactions?limit=100');
+            // Obtener todas las transacciones del mes actual
+            const res = await fetch('/api/debt-transactions?current_month=true');
             const data = await res.json();
             setTransactions(data.transactions || []);
         } catch (err) {
@@ -379,7 +380,7 @@ export default function DebtManagementPage() {
                 <div className="glass-card">
                     <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <History size={24} color="#a5b4fc" />
-                        Historial de Transacciones ({transactions.length})
+                        Movimientos del Mes - {new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }).toUpperCase()} ({transactions.length})
                     </h2>
 
                     {transactions.length === 0 ? (

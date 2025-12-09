@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '100';
     const clientId = searchParams.get('client_id');
+    const currentMonth = searchParams.get('current_month') === 'true';
 
     let query = supabase
         .from('debt_transactions')
@@ -17,7 +18,19 @@ export async function GET(request: Request) {
         query = query.eq('client_id', clientId);
     }
 
-    query = query.limit(parseInt(limit));
+    // Si se solicita el mes actual, filtrar por fecha
+    if (currentMonth) {
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+        query = query
+            .gte('created_at', firstDayOfMonth.toISOString())
+            .lte('created_at', lastDayOfMonth.toISOString());
+    } else {
+        // Si no se solicita el mes actual, aplicar el límite
+        query = query.limit(parseInt(limit));
+    }
 
     const { data, error } = await query;
 
