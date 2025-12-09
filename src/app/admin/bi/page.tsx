@@ -189,8 +189,14 @@ export default function BusinessIntelligence() {
                             <LineChart data={combinedForecastData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                                 <XAxis dataKey="month" stroke="#a3a3a3" />
-                                <YAxis stroke="#a3a3a3" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+                                <YAxis
+                                    stroke="#a3a3a3"
+                                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                                    formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                                />
                                 <Legend />
                                 <Line type="monotone" dataKey="sales" name="Histórico" stroke="#4ade80" strokeWidth={2} dot={{ r: 4 }} />
                                 <Line type="monotone" dataKey="forecast" name="Proyección" stroke="#6d28d9" strokeWidth={2} strokeDasharray="5 5" />

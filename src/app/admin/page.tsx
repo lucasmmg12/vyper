@@ -34,6 +34,9 @@ export default function AdminPage() {
                     <Link href="/admin/vyper-coins" passHref>
                         <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#facc15', color: '#facc15' }}>🪙 VYPER COINS</button>
                     </Link>
+                    <Link href="/admin/debt" passHref>
+                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>💳 CTA CTE</button>
+                    </Link>
                     <Link href="/admin/clients" passHref>
                         <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#a5b4fc', color: '#a5b4fc' }}>👥 CLIENTES</button>
                     </Link>
