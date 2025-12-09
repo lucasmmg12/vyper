@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, TrendingUp, Settings, BarChart2, ShieldCheck, PieChart } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Settings, BarChart2, ShieldCheck, PieChart, BookOpen, GraduationCap } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -39,7 +39,7 @@ export default function HomePage() {
         </div>
 
         {/* Main Navigation Grid */}
-        <div className="grid-layout" style={{ maxWidth: '900px', margin: '0 auto', gap: '2rem' }}>
+        <div className="grid-layout" style={{ maxWidth: '1200px', margin: '0 auto', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
 
           {/* Module 1: Admin Panel */}
           <Link href="/admin">
@@ -72,6 +72,22 @@ export default function HomePage() {
               </button>
             </div>
           </Link>
+
+          {/* Module 3: Tutorial Interactivo */}
+          <a href="/TUTORIAL_INTERACTIVO.html" target="_blank" rel="noopener noreferrer">
+            <div className="glass-card" style={{ height: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 2rem' }}>
+              <div className="glow-icon-container" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
+                <GraduationCap size={32} />
+              </div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Tutorial Interactivo</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+                Aprende a usar el sistema paso a paso con guías visuales y tutoriales completos.
+              </p>
+              <button className="secondary" style={{ width: '100%', borderColor: '#fbbf24', color: '#fbbf24' }}>
+                COMENZAR TUTORIAL <BookOpen size={18} style={{ marginLeft: '8px' }} />
+              </button>
+            </div>
+          </a>
 
         </div>
 

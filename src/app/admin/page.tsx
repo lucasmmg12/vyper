@@ -31,6 +31,26 @@ export default function AdminPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <a href="/TUTORIAL_INTERACTIVO.html" target="_blank" rel="noopener noreferrer">
+                        <button
+                            className="secondary"
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                borderColor: '#fbbf24',
+                                color: '#fbbf24',
+                                background: 'transparent',
+                                minWidth: '120px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            📚 AYUDA
+                        </button>
+                    </a>
                     <Link href="/admin/vyper-coins" passHref>
                         <button
                             className="secondary"
