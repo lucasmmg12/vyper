@@ -110,7 +110,7 @@ export default function Footer() {
                             </a>
 
                             <a
-                                href="https://www.growsanjuan.com"
+                                href="https://www.growlabs.lat"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
