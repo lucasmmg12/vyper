@@ -50,18 +50,44 @@ export async function POST(request: Request) {
             .single();
 
         if (!clientError && clientData && clientData.phone) {
-            // Send WhatsApp notification (don't wait for it, run async)
-            sendWhatsAppNotification(
-                client_name,
-                parseFloat(amount),
-                clientData.coin_balance || 0,
-                clientData.phone
-            ).catch(err => {
+            // Send WhatsApp notification
+            try {
+                const success = await sendWhatsAppNotification(
+                    client_name,
+                    parseFloat(amount),
+                    clientData.coin_balance || 0,
+                    clientData.phone
+                );
+
+                // Update the transaction with the result
+                await supabase
+                    .from('coin_transactions')
+                    .update({
+                        notification_status: success ? 'sent' : 'error',
+                        notification_error: success ? null : 'Failed to send message via BuilderBot'
+                    })
+                    .eq('id', data[0].id);
+
+            } catch (err: any) {
                 console.error('Failed to send WhatsApp notification:', err);
-                // Don't fail the transaction if notification fails
-            });
+                // Log the catch error as well
+                await supabase
+                    .from('coin_transactions')
+                    .update({
+                        notification_status: 'error',
+                        notification_error: err.message || 'Unknown error'
+                    })
+                    .eq('id', data[0].id);
+            }
         } else {
             console.warn('Could not send notification: client phone not found');
+            await supabase
+                .from('coin_transactions')
+                .update({
+                    notification_status: 'error',
+                    notification_error: 'Client phone not found'
+                })
+                .eq('id', data[0].id);
         }
 
         return NextResponse.json({ success: true, data });

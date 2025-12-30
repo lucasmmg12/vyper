@@ -21,6 +21,8 @@ interface CoinTransaction {
     coins_added: number;
     date: string;
     created_at: string;
+    notification_status?: 'sent' | 'error';
+    notification_error?: string;
 }
 
 export default function VyperCoinsPage() {
@@ -418,6 +420,7 @@ export default function VyperCoinsPage() {
                                     <th style={{ padding: '0.75rem 0.5rem' }}>CLIENTE</th>
                                     <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>IMPORTE</th>
                                     <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>COINS</th>
+                                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>NOTIF.</th>
                                     <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>ACCIONES</th>
                                 </tr>
                             </thead>
@@ -441,6 +444,15 @@ export default function VyperCoinsPage() {
                                         </td>
                                         <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#facc15', fontWeight: 'bold' }}>
                                             +{t.coins_added} 🪙
+                                        </td>
+                                        <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
+                                            {t.notification_status === 'sent' ? (
+                                                <span title="Mensaje enviado con éxito" style={{ color: '#4ade80', fontSize: '1.2rem' }}>🟢</span>
+                                            ) : t.notification_status === 'error' ? (
+                                                <span title={t.notification_error || "Error al enviar"} style={{ color: '#ef4444', fontSize: '1.2rem', cursor: 'help' }}>🔴</span>
+                                            ) : (
+                                                <span title="Pendiente o sin estado" style={{ color: '#666', fontSize: '1.2rem' }}>⚪</span>
+                                            )}
                                         </td>
                                         <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
                                             <button
