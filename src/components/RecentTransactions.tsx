@@ -80,18 +80,27 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
         }
     };
 
-    // Chart Data Preparation (Reverse for chronological order)
-    const chartData = [...transactions].reverse().map(t => ({
-        date: t.date.substring(5, 10), // MM-DD
-        amount: t.amount
-    }));
+    // Chart Data Preparation (Grouped by date and summed)
+    const groupedData = transactions.reduce((acc: { [key: string]: number }, curr) => {
+        const dateKey = curr.date ? new Date(curr.date).toLocaleDateString() : 'Sin fecha';
+        acc[dateKey] = (acc[dateKey] || 0) + curr.amount;
+        return acc;
+    }, {});
+
+    const chartData = Object.entries(groupedData)
+        .reverse()
+        .map(([date, amount]) => ({
+            date: date.substring(0, 5), // Keep it short for the axis
+            fullDate: date,
+            amount
+        }));
 
     const totalLast10 = transactions.reduce((acc, curr) => acc + curr.amount, 0);
 
     return (
         <div className="glass-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>ÚLTIMOS MOVIMIENTOS</span>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600 }}>
+                <span>Últimos movimientos</span>
                 <span style={{ fontSize: '0.9rem', color: type === 'SALES' ? '#4ade80' : '#ef4444' }}>
                     Total (10): ${totalLast10.toLocaleString()}
                 </span>
@@ -107,11 +116,29 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
                                 <stop offset="95%" stopColor={type === 'SALES' ? '#4ade80' : '#ef4444'} stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} wrapperStyle={{ outline: 'none' }} />
+                        <XAxis
+                            dataKey="date"
+                            hide={false}
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#666', fontSize: 10 }}
+                            interval="preserveStartEnd"
+                        />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '8px' }}
+                            itemStyle={{ color: type === 'SALES' ? '#4ade80' : '#ef4444' }}
+                            wrapperStyle={{ outline: 'none' }}
+                            labelStyle={{ color: '#fff', marginBottom: '4px' }}
+                            labelFormatter={(value, name) => {
+                                const item = chartData.find(d => d.date === value);
+                                return item ? item.fullDate : value;
+                            }}
+                        />
                         <Area
                             type="monotone"
                             dataKey="amount"
                             stroke={type === 'SALES' ? '#4ade80' : '#ef4444'}
+                            strokeWidth={2}
                             fillOpacity={1}
                             fill="url(#colorValue)"
                         />
@@ -124,11 +151,11 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                            <th style={{ padding: '0.5rem' }}>FECHA</th>
-                            <th style={{ padding: '0.5rem' }}>SUC.</th>
-                            <th style={{ padding: '0.5rem' }}>OBS / CAT</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>MONTO</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'center' }}>ACCIONES</th>
+                            <th style={{ padding: '0.5rem' }}>Fecha</th>
+                            <th style={{ padding: '0.5rem' }}>Suc.</th>
+                            <th style={{ padding: '0.5rem' }}>Obs / Cat</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Monto</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'center' }}>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>

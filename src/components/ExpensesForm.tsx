@@ -46,14 +46,14 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
 
     return (
         <div className="glass-card">
-            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--secondary-accent)' }}>
-                NUEVO EGRESO
+            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--secondary-accent)', fontWeight: 600 }}>
+                Nuevo egreso
             </h3>
             <form onSubmit={handleSubmit}>
 
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
                     <div>
-                        <label>FECHA</label>
+                        <label>Fecha</label>
                         <input
                             type="date"
                             value={formData.date}
@@ -62,7 +62,7 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                     </div>
 
                     <div>
-                        <label>SUCURSAL</label>
+                        <label>Sucursal</label>
                         <select
                             value={formData.branch}
                             onChange={e => setFormData({ ...formData, branch: e.target.value })}
@@ -74,7 +74,7 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <div>
-                    <label>CATEGORÍA</label>
+                    <label>Categoría</label>
                     <select
                         value={formData.category}
                         onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -84,7 +84,7 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <div>
-                    <label>IMPORTE ($)</label>
+                    <label>Importe ($)</label>
                     <input
                         type="number"
                         required
@@ -98,7 +98,7 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <div>
-                    <label>OBSERVACIONES</label>
+                    <label>Observaciones</label>
                     <textarea
                         rows={3}
                         value={formData.observations}
@@ -107,7 +107,7 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <button type="submit" disabled={loading} style={{ width: '100%', background: 'linear-gradient(135deg, #db2777, #9d174d)' }}>
-                    {loading ? 'GUARDANDO...' : 'REGISTRAR GASTO'}
+                    {loading ? 'Guardando...' : 'Registrar gasto'}
                 </button>
             </form>
         </div>

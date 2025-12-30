@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VYPER LABS",
+  title: "Vyper Labs",
   description: "Retail & Loyalty Platform",
 };
 

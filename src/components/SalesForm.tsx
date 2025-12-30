@@ -31,13 +31,13 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
 
     return (
         <div className="glass-card">
-            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                NUEVA VENTA
+            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', fontWeight: 600 }}>
+                Nueva venta
             </h3>
             <form onSubmit={handleSubmit}>
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
                     <div>
-                        <label>FECHA</label>
+                        <label>Fecha</label>
                         <input
                             type="date"
                             value={formData.date}
@@ -46,7 +46,7 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                     </div>
 
                     <div>
-                        <label>SUCURSAL</label>
+                        <label>Sucursal</label>
                         <select
                             value={formData.branch}
                             onChange={e => setFormData({ ...formData, branch: e.target.value })}
@@ -58,7 +58,7 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <div>
-                    <label>IMPORTE TOTAL ($)</label>
+                    <label>Importe total ($)</label>
                     <input
                         type="number"
                         required
@@ -72,7 +72,7 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <div>
-                    <label>OBSERVACIONES</label>
+                    <label>Observaciones</label>
                     <textarea
                         rows={3}
                         placeholder="Detalle de medios de pago (Efectivo, MP, etc.)"
@@ -82,7 +82,7 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
 
                 <button type="submit" disabled={loading} style={{ width: '100%' }}>
-                    {loading ? 'GUARDANDO...' : 'REGISTRAR VENTA'}
+                    {loading ? 'Guardando...' : 'Registrar venta'}
                 </button>
             </form>
         </div>

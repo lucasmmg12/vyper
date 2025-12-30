@@ -46,12 +46,12 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
 
     return (
         <div className="glass-card">
-            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                NUEVO CLIENTE
+            <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', fontWeight: 600 }}>
+                Nuevo cliente
             </h3>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label>NOMBRE COMPLETO *</label>
+                    <label>Nombre completo *</label>
                     <input
                         type="text"
                         required
@@ -62,7 +62,7 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                 </div>
 
                 <div>
-                    <label>TELÉFONO / WHATSAPP *</label>
+                    <label>Teléfono / WhatsApp *</label>
                     <input
                         type="tel"
                         required
@@ -74,7 +74,7 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
 
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
                     <div>
-                        <label>VYPER COINS</label>
+                        <label>Vyper Coins</label>
                         <input
                             type="number"
                             min="0"
@@ -85,7 +85,7 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                     </div>
 
                     <div>
-                        <label>DEUDA ($)</label>
+                        <label>Deuda ($)</label>
                         <input
                             type="number"
                             min="0"
@@ -98,7 +98,7 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                 </div>
 
                 <div>
-                    <label>OBSERVACIONES</label>
+                    <label>Observaciones</label>
                     <textarea
                         rows={3}
                         placeholder="Notas adicionales..."
@@ -108,7 +108,7 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                 </div>
 
                 <button type="submit" disabled={loading} style={{ width: '100%', marginTop: '1rem' }}>
-                    {loading ? 'GUARDANDO...' : 'CREAR CLIENTE'}
+                    {loading ? 'Guardando...' : 'Crear cliente'}
                 </button>
             </form>
         </div>

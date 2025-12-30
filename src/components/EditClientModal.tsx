@@ -161,7 +161,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                         {/* Nombre */}
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                NOMBRE COMPLETO *
+                                Nombre completo *
                             </label>
                             <input
                                 type="text"
@@ -176,7 +176,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                         {/* Teléfono */}
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                TELÉFONO / WHATSAPP *
+                                Teléfono / WhatsApp *
                             </label>
                             <input
                                 type="text"
@@ -192,7 +192,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#facc15' }}>
-                                    VYPER COINS 🪙
+                                    Vyper Coins 🪙
                                 </label>
                                 <input
                                     type="number"
@@ -204,7 +204,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ef4444' }}>
-                                    DEUDA ($)
+                                    Deuda ($)
                                 </label>
                                 <input
                                     type="number"
@@ -220,7 +220,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                         {/* Observaciones */}
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                OBSERVACIONES
+                                Observaciones
                             </label>
                             <textarea
                                 name="observations"
@@ -259,7 +259,7 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                                 }}
                             >
                                 <Save size={18} />
-                                {loading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
+                                {loading ? 'Guardando...' : 'Guardar cambios'}
                             </button>
                             <button
                                 type="button"

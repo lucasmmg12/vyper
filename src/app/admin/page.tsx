@@ -24,10 +24,10 @@ export default function AdminPage() {
         <div className="page-container">
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                        VYPER DASHBOARD
+                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                        Vyper Dashboard
                     </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Panel de Control Financiero</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Panel de control financiero</p>
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -48,7 +48,7 @@ export default function AdminPage() {
                                 gap: '0.5rem'
                             }}
                         >
-                            📚 AYUDA
+                            📚 Ayuda
                         </button>
                     </Link>
                     <Link href="/admin/vyper-coins" passHref>
@@ -68,7 +68,7 @@ export default function AdminPage() {
                                 gap: '0.5rem'
                             }}
                         >
-                            🪙 VYPER COINS
+                            🪙 Vyper Coins
                         </button>
                     </Link>
                     <Link href="/admin/debt" passHref>
@@ -88,7 +88,7 @@ export default function AdminPage() {
                                 gap: '0.5rem'
                             }}
                         >
-                            💳 CTA CTE
+                            💳 Cta Cte
                         </button>
                     </Link>
                     <Link href="/admin/clients" passHref>
@@ -108,7 +108,7 @@ export default function AdminPage() {
                                 gap: '0.5rem'
                             }}
                         >
-                            👥 CLIENTES
+                            👥 Clientes
                         </button>
                     </Link>
                     <Link href="/admin/bi" passHref>
@@ -128,7 +128,7 @@ export default function AdminPage() {
                                 gap: '0.5rem'
                             }}
                         >
-                            📊 ANALYTICS
+                            📊 Analytics
                         </button>
                     </Link>
                     <Link href="/" passHref>
@@ -147,7 +147,7 @@ export default function AdminPage() {
                                 justifyContent: 'center'
                             }}
                         >
-                            SALIR
+                            Salir
                         </button>
                     </Link>
                 </div>
@@ -161,14 +161,14 @@ export default function AdminPage() {
                         className={view === 'SALES' ? 'tab-active' : 'tab-inactive'}
                         style={{ borderRadius: '8px', border: 'none', width: '150px' }}
                     >
-                        VENTAS
+                        Ventas
                     </button>
                     <button
                         onClick={() => setView('EXPENSES')}
                         className={view === 'EXPENSES' ? 'tab-active' : 'tab-inactive'}
                         style={{ borderRadius: '8px', border: 'none', width: '150px' }}
                     >
-                        EGRESOS
+                        Egresos
                     </button>
                 </div>
 
@@ -186,7 +186,7 @@ export default function AdminPage() {
                     }}
                 >
                     <Upload size={18} />
-                    {showImporter ? 'CERRAR IMPORTADOR' : 'IMPORTAR EXCEL'}
+                    {showImporter ? 'Cerrar importador' : 'Importar Excel'}
                 </button>
             </div>
 

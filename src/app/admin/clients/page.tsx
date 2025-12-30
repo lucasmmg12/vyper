@@ -69,10 +69,10 @@ export default function ClientsPage() {
         <div className="page-container">
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                        CLIENTES
+                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                        Clientes
                     </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Gestión de Base de Datos</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Gestión de base de datos</p>
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -81,10 +81,10 @@ export default function ClientsPage() {
                         className="secondary"
                         style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#a5b4fc', color: '#a5b4fc' }}
                     >
-                        📁 {showImporter ? 'OCULTAR' : 'IMPORTAR EXCEL'}
+                        📁 {showImporter ? 'Ocultar' : 'Importar Excel'}
                     </button>
                     <Link href="/admin" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>VOLVER</button>
+                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>Volver</button>
                     </Link>
                 </div>
             </header>
@@ -112,7 +112,7 @@ export default function ClientsPage() {
                         <div className="glass-card" style={{ padding: '1.5rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                                 <Trophy size={20} color="#facc15" />
-                                <h4 style={{ fontSize: '1rem', color: '#facc15' }}>TOP VYPER COINS</h4>
+                                <h4 style={{ fontSize: '1rem', color: '#facc15' }}>Top Vyper Coins</h4>
                             </div>
                             {topCoins.map((c, i) => (
                                 <div key={c.id} style={{
@@ -132,7 +132,7 @@ export default function ClientsPage() {
                         <div className="glass-card" style={{ padding: '1.5rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                                 <AlertTriangle size={20} color="#ef4444" />
-                                <h4 style={{ fontSize: '1rem', color: '#ef4444' }}>MAYOR DEUDA</h4>
+                                <h4 style={{ fontSize: '1rem', color: '#ef4444' }}>Mayor deuda</h4>
                             </div>
                             {topDebt.map((c, i) => (
                                 <div key={c.id} style={{
@@ -154,7 +154,7 @@ export default function ClientsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Users size={20} />
-                                <h4 style={{ fontSize: '1rem' }}>TODOS LOS CLIENTES ({filteredClients.length})</h4>
+                                <h4 style={{ fontSize: '1rem' }}>Todos los clientes ({filteredClients.length})</h4>
                             </div>
                             <div style={{ position: 'relative', width: '250px' }}>
                                 <Search size={18} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
@@ -180,10 +180,10 @@ export default function ClientsPage() {
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                                 <thead>
                                     <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.9)' }}>
-                                        <th style={{ padding: '0.75rem 0.5rem' }}>NOMBRE</th>
-                                        <th style={{ padding: '0.75rem 0.5rem' }}>TELÉFONO</th>
-                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>COINS</th>
-                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>DEUDA</th>
+                                        <th style={{ padding: '0.75rem 0.5rem' }}>Nombre</th>
+                                        <th style={{ padding: '0.75rem 0.5rem' }}>Teléfono</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Coins</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Deuda</th>
                                     </tr>
                                 </thead>
                                 <tbody>

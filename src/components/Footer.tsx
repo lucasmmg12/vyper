@@ -30,7 +30,7 @@ export default function Footer() {
                         <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'white' }}>Plataforma Exclusiva</h3>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.5' }}>
                             Esta plataforma ha sido desarrollada única y exclusivamente para
-                            <span style={{ color: 'white', fontWeight: 'bold' }}> VYPER SUPLEMENTOS</span> y la gestión de sus sucursales.
+                            <span style={{ color: 'white', fontWeight: 'bold' }}> Vyper Suplementos</span> y la gestión de sus sucursales.
                         </p>
                         <p style={{ fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
                             Optimización de rendimiento y gestión financiera.

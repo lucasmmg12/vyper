@@ -23,12 +23,12 @@ export default function ClientPage() {
                 setError('');
             } else {
                 // Handle 404 or other errors
-                setError('USUARIO NO ENCONTRADO. EL ADMIN DEBE REGISTRARTE (HACER UNA VENTA).');
+                setError('Usuario no encontrado. El admin debe registrarte.');
                 setUser(null);
             }
         } catch (err) {
             console.error(err);
-            setError('ERROR DE CONEXIÓN. INTENTA MÁS TARDE.');
+            setError('Error de conexión. Intenta más tarde.');
         } finally {
             setLoading(false);
         }
@@ -37,11 +37,11 @@ export default function ClientPage() {
     if (!user) {
         return (
             <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem' }}>
-                <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>VYPER CLIENT ACCESS</h1>
+                <h1 style={{ textAlign: 'center', marginBottom: '2rem', fontWeight: 800 }}>Vyper Client Access</h1>
                 <form onSubmit={fetchUser}>
                     <input
                         type="text"
-                        placeholder="INGRESA TU WHATSAPP"
+                        placeholder="Ingresa tu WhatsApp"
                         value={whatsapp}
                         onChange={e => setWhatsapp(e.target.value)}
                         style={{ marginBottom: '1rem', textAlign: 'center' }}
@@ -59,11 +59,11 @@ export default function ClientPage() {
                         </div>
                     )}
                     <button type="submit" style={{ width: '100%', padding: '1.5rem' }}>
-                        {loading ? 'BUSCANDO...' : 'INGRESAR'}
+                        {loading ? 'Buscando...' : 'Ingresar'}
                     </button>
                 </form>
                 <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                    <Link href="/" style={{ color: 'white', textDecoration: 'underline' }}>VOLVER</Link>
+                    <Link href="/" style={{ color: 'white', textDecoration: 'underline' }}>Volver</Link>
                 </div>
             </div>
         );
@@ -72,19 +72,19 @@ export default function ClientPage() {
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid white', paddingBottom: '1rem' }}>
-                <h2>HOLA, {user.name}</h2>
-                <button onClick={() => setUser(null)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>SALIR</button>
+                <h2>Hola, {user.name}</h2>
+                <button onClick={() => setUser(null)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>Salir</button>
             </header>
 
             <div className="grid-layout" style={{ gap: '1rem', padding: 0 }}>
                 <div className="brutalist-card">
-                    <h3>SALDO VYPER COINS</h3>
+                    <h3>Saldo Vyper Coins</h3>
                     <div className="big-stat">{user.coinBalance}</div>
                 </div>
 
                 {user.debtBalance > 0 && (
                     <div className="brutalist-card" style={{ borderStyle: 'dashed' }}>
-                        <h3>TU DEUDA</h3>
+                        <h3>Tu deuda</h3>
                         <div className="big-stat" style={{ fontSize: '3rem' }}>${user.debtBalance}</div>
                     </div>
                 )}
@@ -95,19 +95,19 @@ export default function ClientPage() {
                     onClick={() => setView('WALLET')}
                     style={{ flex: 1, background: view === 'WALLET' ? 'white' : 'black', color: view === 'WALLET' ? 'black' : 'white', border: '2px solid white' }}
                 >
-                    BILLETERA
+                    Billetera
                 </button>
                 <button
                     onClick={() => setView('MARKET')}
                     style={{ flex: 1, background: view === 'MARKET' ? 'white' : 'black', color: view === 'MARKET' ? 'black' : 'white', border: '2px solid white' }}
                 >
-                    MARKETPLACE
+                    Marketplace
                 </button>
             </nav>
 
             {view === 'WALLET' && (
                 <div className="brutalist-card">
-                    <h3>ÚLTIMOS MOVIMIENTOS</h3>
+                    <h3>Últimos movimientos</h3>
                     {user.transactions.map((t: any) => (
                         <div key={t.id} style={{ borderBottom: '1px solid #333', padding: '1rem 0', display: 'flex', justifyContent: 'space-between' }}>
                             <div>
@@ -136,7 +136,7 @@ export default function ClientPage() {
                             <h4>{r.name}</h4>
                             <p style={{ margin: '1rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{r.cost} COINS</p>
                             <button disabled={user.coinBalance < r.cost} style={{ width: '100%', padding: '0.5rem' }}>
-                                {user.coinBalance >= r.cost ? 'CANJEAR' : 'SALDO INSUFICIENTE'}
+                                {user.coinBalance >= r.cost ? 'Canjear' : 'Saldo insuficiente'}
                             </button>
                         </div>
                     ))}
