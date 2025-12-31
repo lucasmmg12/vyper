@@ -113,8 +113,51 @@ const VYPER_STORES = [
     { name: 'VYPER RAWSON', coords: [-31.5835, -68.5280] as [number, number], color: '#000000' }
 ];
 
+const EVENTS = [
+    {
+        id: 'vueltasj',
+        name: 'VUELTA A SAN JUAN (UCI)',
+        date: '23 Ene - 01 Feb 2026',
+        category: 'Ciclismo de Ruta',
+        impact: 'CRÍTICO',
+        organizer: 'UCI / Gob. San Juan',
+        strategy: {
+            warming: ["Publicar 'Guía Pro de Hidratación para Etapas Largas'.", "Lanzar 'Combo Endurance' con geles y sales.", "Geocerca digital en Av. Circunvalación."],
+            sprint: ["Stand de hidratación rápida en la 'Etapa Reina'.", "Vouchers de descuento para ciclistas federados.", "Muestras de recuperación en zona de meta."],
+            recovery: ["Campaña 'Post-Vuelta': Off en Colágeno y Magnesio.", "Sorteo entre quienes suban foto con su bici y Vyper."]
+        }
+    },
+    {
+        id: 'nightrun',
+        name: 'NIGHT RUN SAN JUAN',
+        date: '31 Enero 2026',
+        category: 'Running Nocturno',
+        impact: 'ALTO',
+        organizer: 'Adventure Pro',
+        strategy: {
+            warming: ["Tips para correr en calor nocturno.", "Promo en electrolitros e isotónicos.", "Ads a corredores locales (18-45 años)."],
+            sprint: ["Banners en acreditaciones Cerro Blanco.", "Flyers con código QR exclusivo para 17K.", "Muestras de pre-entreno explosivo."],
+            recovery: ["Mail a inscriptos: Recuperación muscular express.", "UGC: Etiquetanos en tu medalla para 15% OFF."]
+        }
+    },
+    {
+        id: 'dpn',
+        name: 'DESAFÍO PUNTA NEGRA',
+        date: '22 - 24 Mayo 2026',
+        category: 'Trail Running (Ultra)',
+        impact: 'CRÍTICO',
+        organizer: 'Adventure Pro',
+        strategy: {
+            warming: ["Tutorial: Suplementos para Ultra-Trail.", "Pack 100K: Geles + BCAA + Glucosamina.", "Publicidad en grupos de Trail Running."],
+            sprint: ["Punto de apoyo en Dique Punta Negra.", "Banner en zona de carpas/acampada.", "Kit de emergencia 'Vyper' (Sales/Geles)."],
+            recovery: ["Fisioterapia aliada: Descuento cruzado.", "Album de fotos Vyper del evento."]
+        }
+    }
+];
+
 export default function CompetitorsPage() {
     const [L, setL] = useState<any>(null);
+    const [selectedEvent, setSelectedEvent] = useState(EVENTS[0]);
 
     useEffect(() => {
         // Fix Leaflet marker icons in Next.js
@@ -355,6 +398,109 @@ export default function CompetitorsPage() {
                     </div>
                 </div>
 
+            </div>
+
+            {/* STRATEGIC ROADMAP SECTION */}
+            <div className="glass-card" style={{ marginTop: '2.5rem' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+                        <Trophy size={28} /> RADAR DE EVENTOS & ROADMAP ESTRATÉGICO
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        Planificación táctica de guerrilla marketing para capturar clientes en los picos de demanda deportiva de San Juan.
+                    </p>
+                </div>
+
+                <div className="grid-layout" style={{ gridTemplateColumns: 'minmax(250px, 1fr) 2fr', gap: '2rem' }}>
+                    {/* Event Selector List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            Próximos Eventos Clave
+                        </h4>
+                        {EVENTS.map(ev => (
+                            <div
+                                key={ev.id}
+                                onClick={() => setSelectedEvent(ev)}
+                                style={{
+                                    padding: '1.2rem',
+                                    borderRadius: '15px',
+                                    background: selectedEvent.id === ev.id ? 'white' : 'rgba(255,255,255,0.03)',
+                                    color: selectedEvent.id === ev.id ? 'black' : 'white',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    border: selectedEvent.id === ev.id ? 'none' : '1px solid rgba(255,255,255,0.05)'
+                                }}
+                            >
+                                <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: selectedEvent.id === ev.id ? 0.6 : 0.4 }}>{ev.category.toUpperCase()}</div>
+                                <div style={{ fontSize: '0.95rem', fontWeight: 900, margin: '0.2rem 0' }}>{ev.name}</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.75rem' }}>{ev.date}</span>
+                                    <span style={{
+                                        fontSize: '0.6rem',
+                                        background: ev.impact === 'CRÍTICO' ? '#ef4444' : '#fbbf24',
+                                        color: 'white',
+                                        padding: '0.2rem 0.5rem',
+                                        borderRadius: '50px',
+                                        fontWeight: 800
+                                    }}>
+                                        {ev.impact}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Tactics Roadmap Viewer */}
+                    <div className="glass-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem' }}>
+                        <div style={{ marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '1.4rem' }}>{selectedEvent.name}</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Organiza: {selectedEvent.organizer} | Meta: Captura masiva de prospectos federados.</p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                            {/* Phase 1 */}
+                            <div style={{ display: 'flex', gap: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'black', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '1px solid white' }}>1</div>
+                                    <div style={{ flex: 1, width: '2px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }}></div>
+                                </div>
+                                <div style={{ paddingBottom: '1rem' }}>
+                                    <h4 style={{ color: 'white', marginBottom: '0.75rem' }}>FASE 1: CALENTAMIENTO (30 DÍAS PRE)</h4>
+                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {selectedEvent.strategy.warming.map((m, i) => <li key={i}>{m}</li>)}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Phase 2 */}
+                            <div style={{ display: 'flex', gap: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</div>
+                                    <div style={{ flex: 1, width: '2px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }}></div>
+                                </div>
+                                <div style={{ paddingBottom: '1rem' }}>
+                                    <h4 style={{ color: 'white', marginBottom: '0.75rem' }}>FASE 2: EL SPRINT (EJECUCIÓN / EVENTO)</h4>
+                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {selectedEvent.strategy.sprint.map((m, i) => <li key={i}>{m}</li>)}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Phase 3 */}
+                            <div style={{ display: 'flex', gap: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'black', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.4)' }}>3</div>
+                                </div>
+                                <div>
+                                    <h4 style={{ color: 'white', marginBottom: '0.75rem' }}>FASE 3: RECUPERACIÓN (FIDELIZACIÓN)</h4>
+                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {selectedEvent.strategy.recovery.map((m, i) => <li key={i}>{m}</li>)}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
