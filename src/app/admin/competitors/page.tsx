@@ -60,19 +60,6 @@ const COMPETITORS = [
         score: 75
     },
     {
-        id: 5,
-        name: 'DISFIT',
-        address: 'San Juan Centro',
-        coords: [-31.5340, -68.5200] as [number, number],
-        ads: 'ACTIVOS',
-        adLink: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=AR&q=Disfit',
-        media: { social: true, tv: false, radio: false, events: true },
-        strength: 'Especialistas en importados premium.',
-        weakness: 'Stock inestable.',
-        marketShare: 15,
-        score: 82
-    },
-    {
         id: 2,
         name: 'KICK SUPLEMENTOS',
         address: 'Rivadavia - Av. Libertador 3120',
@@ -115,8 +102,8 @@ const COMPETITORS = [
 
 const MARKET_DATA = [
     { name: 'Scimmia', value: 45, color: '#000000' },
-    { name: 'Disfit', value: 15, color: '#444444' },
-    { name: 'Pirka', value: 12, color: '#666666' },
+    { name: 'Pirka', value: 15, color: '#444444' },
+    { name: 'Kick', value: 12, color: '#666666' },
     { name: 'Strongman', value: 10, color: '#888888' },
     { name: 'Vyper / Otros', value: 18, color: '#cccccc' },
 ];
