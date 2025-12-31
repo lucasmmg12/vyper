@@ -6,109 +6,97 @@ import html2canvas from 'html2canvas';
 export const generateFinancialReport = async (data: any) => {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Helper para títulos con mejor estética
-    const addSectionHeader = (text: string, y: number) => {
-        doc.setFillColor(30, 30, 30);
-        doc.rect(15, y - 6, pageWidth - 30, 8, 'F');
+    // --- ESTILOS DE MARCA (VYPER: Black & White) ---
+    const primaryColor = [0, 0, 0];
+    const secondaryColor = [40, 40, 40];
+    const footerColor = [160, 160, 160];
+
+    // Helper para encabezados de sección profesionales
+    const drawSectionHeader = (title: string, y: number) => {
+        doc.setFillColor(...primaryColor as [number, number, number]);
+        doc.rect(0, y - 8, pageWidth, 12, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.text(text.toUpperCase(), 20, y);
+        doc.setFontSize(12);
+        doc.text(title.toUpperCase(), 15, y);
+    };
+
+    // Helper para subtítulos
+    const drawSubHeader = (text: string, y: number) => {
+        doc.setTextColor(...primaryColor as [number, number, number]);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text(text.toUpperCase(), 15, y);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(15, y + 2, pageWidth - 15, y + 2);
     };
 
     // --- PORTADA ---
     doc.setFillColor(0, 0, 0);
-    doc.rect(0, 0, pageWidth, 60, 'F');
+    doc.rect(0, 0, pageWidth, 70, 'F');
 
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(36);
+    doc.setFontSize(40);
     doc.text('VYPER', 15, 35);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('ESTRATEGIA FINANCIERA & BUSINESS INTELLIGENCE', 15, 45);
+    doc.text('INFORME ESTRATÉGICO DE INTELIGENCIA FINANCIERA', 15, 45);
+
+    doc.setFontSize(9);
+    doc.text('ANÁLISIS DIAGNÓSTICO | EXPLICATIVO | PREDICTIVO | PRESCRIPTIVO', 15, 50);
 
     const dateStr = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
-    doc.text(`EMITIDO: ${dateStr.toUpperCase()}`, pageWidth - 15, 45, { align: 'right' });
+    doc.text(`EMISIÓN: ${dateStr.toUpperCase()}`, pageWidth - 15, 50, { align: 'right' });
 
-    // --- RESUMEN EJECUTIVO ---
+    // --- SECCIÓN 1: ANÁLISIS DESCRIPTIVO / DIAGNÓSTICO (¿QUÉ PASÓ?) ---
+    drawSectionHeader('1. ANÁLISIS DESCRIPTIVO (DIAGNÓSTICO)', 85);
+
     const totalSales = data.timeline.reduce((acc: number, curr: any) => acc + curr.sales, 0);
     const totalExpenses = data.timeline.reduce((acc: number, curr: any) => acc + curr.expenses, 0);
-    const netProfit = totalSales - totalExpenses;
-    const profitMargin = ((netProfit / totalSales) * 100).toFixed(1);
-    const avgSales = totalSales / (data.timeline.length || 1);
-    const avgExpenses = totalExpenses / (data.timeline.length || 1);
+    const netBalance = totalSales - totalExpenses;
 
-    addSectionHeader('RESUMEN DE RENDIMIENTO', 75);
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    const descriptiveInfo = "Esta sección resume el estado histórico de la operación. Se analizan los volúmenes de facturación y egresos acumulados para establecer una línea base de rendimiento.";
+    doc.text(doc.splitTextToSize(descriptiveInfo, pageWidth - 30), 15, 95);
 
     autoTable(doc, {
-        startY: 85,
-        head: [['KPI', 'VALOR', 'ANÁLISIS']],
+        startY: 105,
+        head: [['INDICADOR CLAVE', 'VALOR ACUMULADO', 'CONTEXTO']],
         body: [
-            ['VENTAS TOTALES', `$${totalSales.toLocaleString('es-AR')}`, 'Volumen de facturación acumulado'],
-            ['GASTOS TOTALES', `$${totalExpenses.toLocaleString('es-AR')}`, 'Egresos operativos totales'],
-            ['BALANCE NETO', `$${netProfit.toLocaleString('es-AR')}`, `Margen de rentabilidad: ${profitMargin}%`],
-            ['PROMEDIO VENTAS/MES', `$${avgSales.toLocaleString('es-AR')}`, 'Rendimiento mensual medio'],
-            ['PROMEDIO GASTOS/MES', `$${avgExpenses.toLocaleString('es-AR')}`, 'Carga operativa media']
+            ['VENTAS TOTALES', `$${totalSales.toLocaleString('es-AR')}`, 'Ingresos brutos del período'],
+            ['GASTOS TOTALES', `$${totalExpenses.toLocaleString('es-AR')}`, 'Egresos operativos y administrativos'],
+            ['BALANCE NETO', `$${netBalance.toLocaleString('es-AR')}`, netBalance > 0 ? 'Resultado Superavitario' : 'Resultado Deficitario']
         ],
         theme: 'grid',
-        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 4 }
+        headStyles: { fillColor: primaryColor as [number, number, number] },
+        styles: { fontSize: 9 }
     });
 
-    // --- GRÁFICOS (CAPTURA MEJORADA) ---
-    // Agregamos una página nueva para gráficos para que no se vea amontonado
-    doc.addPage();
-    addSectionHeader('ANÁLISIS VISUAL DE TENDENCIAS', 25);
-
-    const chartConfigs = [
-        { id: 'chart-timeline', label: 'TENDENCIA DE FLUJO: INGRESOS VS EGRESOS' },
-        { id: 'chart-branch', label: 'ESTADÍSTICA COMPARATIVA POR SUCURSAL' },
-        { id: 'chart-forecast', label: 'PROYECCIÓN FINANCIERA (ALGORITMO PREDICTIVO)' }
-    ];
-
-    let currentY = 40;
-
-    for (const config of chartConfigs) {
-        const element = document.getElementById(config.id);
-        if (element) {
-            try {
-                // Captura con alta calidad y fondo blanco para el PDF
-                const canvas = await html2canvas(element, {
-                    scale: 3,
-                    backgroundColor: '#ffffff',
-                    logging: false
-                });
-                const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(9);
-                doc.setTextColor(80, 80, 80);
-                doc.text(config.label, 15, currentY);
-
-                // Marco fino para el gráfico
-                doc.setDrawColor(240, 240, 240);
-                doc.rect(15, currentY + 2, pageWidth - 30, 60);
-
-                doc.addImage(imgData, 'JPEG', 15.5, currentY + 2.5, pageWidth - 31, 59);
-                currentY += 75;
-
-                if (currentY > 240 && config !== chartConfigs[chartConfigs.length - 1]) {
-                    doc.addPage();
-                    currentY = 25;
-                }
-            } catch (e) {
-                console.error(`Error al capturar ${config.id}`, e);
-            }
-        }
+    // Gráfico de Tendencia
+    const timelineChart = document.getElementById('chart-timeline');
+    if (timelineChart) {
+        const canvas = await html2canvas(timelineChart, { scale: 3, backgroundColor: '#ffffff' });
+        doc.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 15, 140, pageWidth - 30, 60);
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text('Fig. 1: Evolución histórica de Ingresos vs Egresos', pageWidth / 2, 205, { align: 'center' });
     }
 
-    // --- ANÁLISIS POR SUCURSAL ---
-    if (currentY + 60 > 280) { doc.addPage(); currentY = 25; } else { currentY += 10; }
+    // --- SECCIÓN 2: ANÁLISIS EXPLICATIVO (¿POR QUÉ PASÓ?) ---
+    doc.addPage();
+    drawSectionHeader('2. ANÁLISIS EXPLICATIVO (CAUSALIDAD)', 25);
 
-    addSectionHeader('RENDIMIENTO POR SUCURSAL', currentY);
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    const explanatoryInfo = "Análisis de los factores que impulsan los resultados. Se evalúa la eficiencia por sucursal y la distribución de costos para identificar áreas de alto impacto.";
+    doc.text(doc.splitTextToSize(explanatoryInfo, pageWidth - 30), 15, 35);
+
+    drawSubHeader('Rendimiento por Unidad de Negocio (Sucursales)', 50);
 
     const branchStats = data.branchComparison.reduce((acc: any, curr: any) => {
         Object.keys(curr).forEach(key => {
@@ -125,47 +113,94 @@ export const generateFinancialReport = async (data: any) => {
     }, {});
 
     autoTable(doc, {
-        startY: currentY + 10,
-        head: [['SUCURSAL', 'VENTA PROM/MES', 'GASTO PROM/MES', 'RATIO EFICIENCIA']],
+        startY: 55,
+        head: [['SUCURSAL', 'VENTA PROMEDIO', 'EFICIENCIA (%)', 'DESEMPEÑO']],
         body: Object.entries(branchStats).map(([name, stats]: any) => {
             const vProm = stats.sales / stats.count;
-            const gProm = stats.expenses / stats.count;
-            const ratio = (stats.expenses / stats.sales).toFixed(2);
+            const efficiency = ((1 - (stats.expenses / stats.sales)) * 100).toFixed(1);
             return [
                 name.toUpperCase(),
                 `$${vProm.toLocaleString('es-AR')}`,
-                `$${gProm.toLocaleString('es-AR')}`,
-                `${(1 - Number(ratio)).toFixed(2)}`
+                `${efficiency}%`,
+                Number(efficiency) > 50 ? 'EXCELENTE' : 'OPTIMIZABLE'
             ];
         }),
         theme: 'striped',
-        headStyles: { fillColor: [60, 60, 60] },
+        headStyles: { fillColor: secondaryColor as [number, number, number] },
         styles: { fontSize: 9 }
     });
 
-    // --- CONCLUSIÓN ---
-    const finalY = (doc as any).lastAutoTable.finalY + 20;
-    if (finalY < 260) {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        const conclusion = "Este informe ha sido generado automáticamente por el motor de Vyper Labs. Los datos reflejan la actividad transaccional real y las proyecciones se basan en tendencias históricas. Este documento es confidencial.";
-        doc.text(doc.splitTextToSize(conclusion, pageWidth - 40), 20, finalY);
+    // Gráfico de Sucursales
+    const branchChart = document.getElementById('chart-branch');
+    if (branchChart) {
+        const canvas = await html2canvas(branchChart, { scale: 3, backgroundColor: '#ffffff' });
+        doc.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 15, 95, pageWidth - 30, 60);
     }
 
-    // --- PIE DE PÁGINA ---
+    // --- SECCIÓN 3: ANÁLISIS PREDICTIVO (¿QUÉ PASARÁ?) ---
+    const nextY = 165;
+    drawSectionHeader('3. ANÁLISIS PREDICTIVO (PROYECCIÓN)', nextY);
+
+    const forecastLast3 = data.forecast.slice(0, 3);
+    const projectedTotal = forecastLast3.reduce((sum: number, f: any) => sum + f.amount, 0);
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    const predictiveInfo = `Basado en modelos de regresión lineal sobre el histórico de Vyper, se proyecta un volumen de facturación de $${projectedTotal.toLocaleString('es-AR')} para el próximo trimestre operativo.`;
+    doc.text(doc.splitTextToSize(predictiveInfo, pageWidth - 30), 15, nextY + 10);
+
+    const forecastChart = document.getElementById('chart-forecast');
+    if (forecastChart) {
+        const canvas = await html2canvas(forecastChart, { scale: 3, backgroundColor: '#ffffff' });
+        doc.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 15, nextY + 25, pageWidth - 30, 60);
+    }
+
+    // --- SECCIÓN 4: ANÁLISIS PRESCRIPTIVO (¿QUÉ HACEMOS?) ---
+    doc.addPage();
+    drawSectionHeader('4. ANÁLISIS PRESCRIPTIVO (RECOMENDACIONES)', 25);
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    const prescriptiveInfo = "A partir de los hallazgos previos, se definen las acciones estratégicas necesarias para maximizar la rentabilidad y asegurar el crecimiento sostenible de Vyper Labs.";
+    doc.text(doc.splitTextToSize(prescriptiveInfo, pageWidth - 30), 15, 35);
+
+    drawSubHeader('Hoja de Ruta Estratégica', 50);
+
+    const recommendationBody = [
+        ['Rendimiento', 'Concentrar esfuerzos en la sucursal de mayor eficiencia detectada en el punto 2 para escalar el modelo.', 'ALTA'],
+        ['Gastos', 'Auditar las 3 categorías principales de egresos que representen más del 15% del total facturado.', 'CRÍTICA'],
+        ['Proyección', 'Ajustar los presupuestos trimestrales con un margen de seguridad del 10% sobre la predicción del punto 3.', 'MEDIA'],
+        ['Operación', 'Incentivar planes de fidelización en los días de menor facturación según el análisis semanal.', 'ESTRATÉGICA']
+    ];
+
+    autoTable(doc, {
+        startY: 55,
+        head: [['EJE', 'ACCIÓN RECOMENDADA', 'PRIORIDAD']],
+        body: recommendationBody,
+        theme: 'grid',
+        headStyles: { fillColor: primaryColor as [number, number, number] },
+        styles: { fontSize: 9, cellPadding: 5 }
+    });
+
+    // --- CIERRE ---
+    const finalNote = "Este reporte consolidado provee la visibilidad necesaria para la toma de decisiones basada en datos. Vyper Labs recomienda una revisión periódica mensual de estos indicadores.";
+    doc.setTextColor(120, 120, 120);
+    doc.setFont('helvetica', 'italic');
+    doc.text(doc.splitTextToSize(finalNote, pageWidth - 40), 20, (doc as any).lastAutoTable.finalY + 20);
+
+    // PIE DE PÁGINA GLOBAL
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setDrawColor(0, 0, 0);
         doc.setLineWidth(0.5);
-        doc.line(15, 285, pageWidth - 15, 285);
+        doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
 
         doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`VYPER LABS - INTELIGENCIA FINANCIERA`, 15, 290);
-        doc.text(`Página ${i} de ${totalPages}`, pageWidth - 15, 290, { align: 'right' });
+        doc.setTextColor(...footerColor as [number, number, number]);
+        doc.text(`CONFIDENCIAL - VYPER LABS BUSINESS INTELLIGENCE`, 15, pageHeight - 10);
+        doc.text(`PÁGINA ${i} DE ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: 'right' });
     }
 
-    doc.save(`INFORME_ESTRATEGICO_VYPER_${new Date().getTime()}.pdf`);
+    doc.save(`VYPER_STRATEGIC_REPORT_${new Date().getTime()}.pdf`);
 };
