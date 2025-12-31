@@ -14,7 +14,8 @@ const CATEGORIES = [
     'Impuestos',
     'Sueldos',
     'Comisiones',
-    'Retiros de capital'
+    'Retiros de capital',
+    'Gastos Varios'
 ];
 
 export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
@@ -67,8 +68,8 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                             value={formData.branch}
                             onChange={e => setFormData({ ...formData, branch: e.target.value })}
                         >
-                            <option value="Rawson">Rawson</option>
-                            <option value="Rivadavia">Rivadavia</option>
+                            <option value="Rawson" style={{ color: 'black' }}>Rawson</option>
+                            <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>
                         </select>
                     </div>
                 </div>
@@ -79,7 +80,11 @@ export default function ExpensesForm({ onSuccess }: { onSuccess: () => void }) {
                         value={formData.category}
                         onChange={e => setFormData({ ...formData, category: e.target.value })}
                     >
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {CATEGORIES.map(c => (
+                            <option key={c} value={c} style={{ color: 'black' }}>
+                                {c}
+                            </option>
+                        ))}
                     </select>
                 </div>
 

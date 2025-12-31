@@ -51,8 +51,8 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                             value={formData.branch}
                             onChange={e => setFormData({ ...formData, branch: e.target.value })}
                         >
-                            <option value="Rawson">Rawson</option>
-                            <option value="Rivadavia">Rivadavia</option>
+                            <option value="Rawson" style={{ color: 'black' }}>Rawson</option>
+                            <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>
                         </select>
                     </div>
                 </div>

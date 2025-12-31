@@ -167,8 +167,8 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
                                         <td><input type="date" value={editForm.date?.split('T')[0]} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={{ padding: '0.3rem', fontSize: '0.8rem' }} /></td>
                                         <td>
                                             <select value={editForm.branch} onChange={e => setEditForm({ ...editForm, branch: e.target.value })} style={{ padding: '0.3rem', fontSize: '0.8rem' }}>
-                                                <option value="Rawson">Rawson</option>
-                                                <option value="Rivadavia">Rivadavia</option>
+                                                <option value="Rawson" style={{ color: 'black' }}>Rawson</option>
+                                                <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>
                                             </select>
                                         </td>
                                         <td>
