@@ -15,9 +15,12 @@ import {
     CheckCircle2,
     ChevronRight,
     Search,
-    TrendingUp
+    TrendingUp,
+    PieChart as PieChartIcon,
+    Award
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { PieChart, Pie, Cell, Tooltip as ReTooltip, ResponsiveContainer, Legend as ReLegend } from 'recharts';
 
 // Dynamically import Map with no SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -31,49 +34,91 @@ import 'leaflet/dist/leaflet.css';
 
 const COMPETITORS = [
     {
+        id: 3,
+        name: 'SCIMMIA SUPLEMENTOS',
+        address: 'Centro / Rawson / Hiper Libertad',
+        coords: [-31.5375, -68.5250] as [number, number],
+        ads: 'ACTIVOS',
+        adLink: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=AR&q=Scimmia%20Suplementos',
+        media: { social: true, tv: true, radio: true, events: true },
+        strength: 'Líder absoluto de mercado, 4 sucursales.',
+        weakness: 'Atención saturada por volumen.',
+        marketShare: 45,
+        score: 98
+    },
+    {
         id: 1,
         name: 'PIRKA SUPLEMENTOS',
-        address: 'Av. Libertador Gral. San Martín Oeste 5230, Rivadavia',
+        address: 'Rivadavia - Av. Libertador 5230',
         coords: [-31.5305, -68.5950] as [number, number],
         ads: 'ACTIVOS',
         adLink: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=AR&view_all_page_id=100063625484841',
         media: { social: true, tv: false, radio: true, events: true },
         strength: 'Cercanía a Sede Rivadavia, mucha variedad.',
-        weakness: 'Precios elevados, rotación lenta.'
+        weakness: 'Sobreprecio percibido.',
+        marketShare: 12,
+        score: 75
+    },
+    {
+        id: 5,
+        name: 'DISFIT',
+        address: 'San Juan Centro',
+        coords: [-31.5340, -68.5200] as [number, number],
+        ads: 'ACTIVOS',
+        adLink: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=AR&q=Disfit',
+        media: { social: true, tv: false, radio: false, events: true },
+        strength: 'Especialistas en importados premium.',
+        weakness: 'Stock inestable.',
+        marketShare: 15,
+        score: 82
     },
     {
         id: 2,
         name: 'KICK SUPLEMENTOS',
-        address: 'Avenida Libertador 3120 Oeste, Rivadavia',
+        address: 'Rivadavia - Av. Libertador 3120',
         coords: [-31.5310, -68.5680] as [number, number],
         ads: 'INACTIVOS',
         adLink: 'https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=AR&q=KICK%20Suplementos',
         media: { social: true, tv: false, radio: false, events: true },
-        strength: 'Fuerte comunidad en Instagram.',
-        weakness: 'Poco stock en marcas premium.'
+        strength: 'Comunidad activa en redes.',
+        weakness: 'Bajo alcance físico.',
+        marketShare: 8,
+        score: 60
     },
     {
-        id: 3,
-        name: 'SCIMMIA SUPLEMENTOS',
-        address: 'Mendoza sur 4331, Rawson',
-        coords: [-31.5830, -68.5250] as [number, number],
-        ads: 'ACTIVOS',
-        adLink: 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=AR&q=Scimmia%20Suplementos',
-        media: { social: true, tv: true, radio: true, events: true },
-        strength: 'Presencia masiva en Rawson y Hiper Libertad.',
-        weakness: 'Atención al cliente demorada.'
+        id: 6,
+        name: 'STRONGMAN',
+        address: 'Villa Krause, Rawson',
+        coords: [-31.5850, -68.5320] as [number, number],
+        ads: 'INACTIVOS',
+        adLink: 'https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=AR&q=Strongman',
+        media: { social: true, tv: false, radio: true, events: false },
+        strength: 'Precios competitivos en nacionales.',
+        weakness: 'Imagen de marca tradicional.',
+        marketShare: 10,
+        score: 55
     },
     {
         id: 4,
         name: 'FRACCIÓN DEPORTES',
-        address: 'Mendoza 163 norte, San Juan Centro',
+        address: 'San Juan Centro',
         coords: [-31.5360, -68.5220] as [number, number],
         ads: 'INACTIVOS',
         adLink: 'https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=AR&q=Fraccion%20Deportes',
         media: { social: true, tv: false, radio: false, events: false },
-        strength: 'Ubicación céntrica estratégica.',
-        weakness: 'Suplementación es secundaria a indumentaria.'
+        strength: 'Ubicación céntrica (Mendoza N).',
+        weakness: 'Suplementos es categoría secundaria.',
+        marketShare: 5,
+        score: 40
     }
+];
+
+const MARKET_DATA = [
+    { name: 'Scimmia', value: 45, color: '#000000' },
+    { name: 'Disfit', value: 15, color: '#444444' },
+    { name: 'Pirka', value: 12, color: '#666666' },
+    { name: 'Strongman', value: 10, color: '#888888' },
+    { name: 'Vyper / Otros', value: 18, color: '#cccccc' },
 ];
 
 const VYPER_STORES = [
@@ -129,6 +174,62 @@ export default function CompetitorsPage() {
                     <button className="secondary">VOLVER</button>
                 </Link>
             </header>
+
+            {/* MARKET STRUCTURE SECTION */}
+            <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: '2rem' }}>
+                {/* Market Share Donut */}
+                <div className="glass-card" style={{ height: '350px' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <PieChartIcon size={20} /> SHARE DE MERCADO (ESTIMADO)
+                    </h3>
+                    <ResponsiveContainer width="100%" height="80%">
+                        <PieChart>
+                            <Pie
+                                data={MARKET_DATA}
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {MARKET_DATA.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" />
+                                ))}
+                            </Pie>
+                            <ReTooltip
+                                contentStyle={{ backgroundColor: '#000', border: '1px solid #333', fontSize: '0.8rem' }}
+                                itemStyle={{ color: '#fff' }}
+                            />
+                            <ReLegend />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Leaderboard Ranking */}
+                <div className="glass-card" style={{ height: '350px' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                        <Award size={20} /> RANKING DE COMPETITIVIDAD
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', overflowY: 'auto', maxHeight: '250px' }}>
+                        {[...COMPETITORS].sort((a, b) => b.score - a.score).map((c, i) => (
+                            <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.2rem', fontWeight: 900, color: i === 0 ? '#facc15' : 'rgba(255,255,255,0.2)' }}>#{i + 1}</span>
+                                    <div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{c.name}</div>
+                                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', width: '100px', marginTop: '4px' }}>
+                                            <div style={{ height: '100%', background: 'white', width: `${c.score}%`, borderRadius: '2px' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{c.score} pts</div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>MKT Power</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
             {/* MAP SECTION */}
             <div className="glass-card" style={{ marginBottom: '2rem', height: '500px', padding: '1rem' }}>
