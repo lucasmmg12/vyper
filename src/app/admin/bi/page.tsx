@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Download } from 'lucide-react';
+import { generateFinancialReport } from '@/utils/generateFinancialReport';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     LineChart, Line, AreaChart, Area, PieChart, Pie, Cell
@@ -74,6 +76,22 @@ export default function BusinessIntelligence() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                        onClick={() => generateFinancialReport(data)}
+                        className="secondary"
+                        style={{
+                            padding: '0.5rem 1.5rem',
+                            fontSize: '0.8rem',
+                            borderColor: '#db2777',
+                            color: '#db2777',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}
+                    >
+                        <Download size={16} />
+                        DESCARGAR INFORME
+                    </button>
                     <Link href="/admin" passHref>
                         <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>VOLVER</button>
                     </Link>
@@ -105,8 +123,8 @@ export default function BusinessIntelligence() {
             <div className="grid-layout" style={{ gridTemplateColumns: '1fr', gap: '2rem' }}>
 
                 {/* Branch Comparison */}
-                <div className="glass-card" style={{ height: '400px' }}>
-                    <h3 style={{ marginBottom: '1rem', color: '#6d28d9' }}>COMPARATIVA SUCURSALES (TENDENCIA)</h3>
+                <div className="glass-card" style={{ height: '400px' }} id="chart-branch">
+                    <h3 style={{ marginBottom: '1rem', color: '#ffffff' }}>COMPARATIVA SUCURSALES (TENDENCIA)</h3>
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={data.branchComparison}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -124,28 +142,28 @@ export default function BusinessIntelligence() {
                                 return `${branch.toUpperCase()} ${type === 'sales' ? 'VENTAS' : 'GASTOS'}`;
                             }} />
 
-                            <Line type="monotone" dataKey="Rawson_sales" name="Rawson_sales" stroke="#4ade80" strokeWidth={3} dot={{ r: 4 }} />
-                            <Line type="monotone" dataKey="Rawson_expenses" name="Rawson_expenses" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 3" />
-                            <Line type="monotone" dataKey="Rivadavia_sales" name="Rivadavia_sales" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
-                            <Line type="monotone" dataKey="Rivadavia_expenses" name="Rivadavia_expenses" stroke="#facc15" strokeWidth={2} strokeDasharray="3 3" />
+                            <Line type="monotone" dataKey="Rawson_sales" name="Rawson_sales" stroke="#ffffff" strokeWidth={3} dot={{ r: 4 }} />
+                            <Line type="monotone" dataKey="Rawson_expenses" name="Rawson_expenses" stroke="#888888" strokeWidth={2} strokeDasharray="3 3" />
+                            <Line type="monotone" dataKey="Rivadavia_sales" name="Rivadavia_sales" stroke="#cccccc" strokeWidth={3} dot={{ r: 4 }} />
+                            <Line type="monotone" dataKey="Rivadavia_expenses" name="Rivadavia_expenses" stroke="#444444" strokeWidth={2} strokeDasharray="3 3" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
 
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                     {/* Sales vs Expenses Trend */}
-                    <div className="glass-card" style={{ height: '400px' }}>
+                    <div className="glass-card" style={{ height: '400px' }} id="chart-timeline">
                         <h3 style={{ marginBottom: '1rem' }}>TENDENCIA: INGRESOS VS EGRESOS</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data.timeline}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#888888" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#888888" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -156,8 +174,8 @@ export default function BusinessIntelligence() {
                                     formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                                 />
                                 <Legend />
-                                <Area type="monotone" dataKey="sales" name="Ventas" stroke="#4ade80" fillOpacity={1} fill="url(#colorSales)" />
-                                <Area type="monotone" dataKey="expenses" name="Egresos" stroke="#ef4444" fillOpacity={1} fill="url(#colorExpenses)" />
+                                <Area type="monotone" dataKey="sales" name="Ventas" stroke="#ffffff" fillOpacity={1} fill="url(#colorSales)" />
+                                <Area type="monotone" dataKey="expenses" name="Egresos" stroke="#888888" fillOpacity={1} fill="url(#colorExpenses)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -183,7 +201,7 @@ export default function BusinessIntelligence() {
 
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                     {/* Forecast Chart */}
-                    <div className="glass-card" style={{ height: '400px' }}>
+                    <div className="glass-card" style={{ height: '400px' }} id="chart-forecast">
                         <h3 style={{ marginBottom: '1rem' }}>PREDICCIÓN DE FACTURACIÓN</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={combinedForecastData}>
@@ -198,8 +216,8 @@ export default function BusinessIntelligence() {
                                     formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="sales" name="Histórico" stroke="#4ade80" strokeWidth={2} dot={{ r: 4 }} />
-                                <Line type="monotone" dataKey="forecast" name="Proyección" stroke="#6d28d9" strokeWidth={2} strokeDasharray="5 5" />
+                                <Line type="monotone" dataKey="sales" name="Histórico" stroke="#ffffff" strokeWidth={2} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="forecast" name="Proyección" stroke="#888888" strokeWidth={2} strokeDasharray="5 5" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
