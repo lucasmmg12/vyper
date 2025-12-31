@@ -30,123 +30,34 @@ export default function AdminPage() {
                     <p style={{ color: 'var(--text-muted)' }}>Panel de control financiero</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div className="nav-pill-container">
                     <Link href="/tutorial" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: '#fbbf24',
-                                color: '#fbbf24',
-                                background: 'transparent',
-                                minWidth: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
+                        <button className="nav-pill-button help">
                             📚 Ayuda
                         </button>
                     </Link>
                     <Link href="/admin/vyper-coins" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                color: '#ffffff',
-                                background: 'transparent',
-                                minWidth: '140px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
+                        <button className="nav-pill-button">
                             🪙 Vyper Coins
                         </button>
                     </Link>
                     <Link href="/admin/debt" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                color: '#ffffff',
-                                background: 'transparent',
-                                minWidth: '140px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
+                        <button className="nav-pill-button">
                             💳 Cta Cte
                         </button>
                     </Link>
                     <Link href="/admin/clients" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                color: '#ffffff',
-                                background: 'transparent',
-                                minWidth: '140px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
+                        <button className="nav-pill-button">
                             👥 Clientes
                         </button>
                     </Link>
                     <Link href="/admin/bi" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                color: '#ffffff',
-                                background: 'transparent',
-                                minWidth: '140px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
+                        <button className="nav-pill-button">
                             📊 Analytics
                         </button>
                     </Link>
                     <Link href="/" passHref>
-                        <button
-                            className="secondary"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                color: '#ffffff',
-                                background: 'transparent',
-                                minWidth: '100px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
+                        <button className="nav-pill-button" style={{ color: '#ef4444' }}>
                             Salir
                         </button>
                     </Link>
@@ -155,18 +66,18 @@ export default function AdminPage() {
 
             {/* Tabs */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '12px', width: 'fit-content' }}>
+                <div className="nav-pill-container" style={{ padding: '0.4rem' }}>
                     <button
                         onClick={() => setView('SALES')}
-                        className={view === 'SALES' ? 'tab-active' : 'tab-inactive'}
-                        style={{ borderRadius: '8px', border: 'none', width: '150px' }}
+                        className={`nav-pill-button ${view === 'SALES' ? 'active' : ''}`}
+                        style={{ width: '140px', justifyContent: 'center' }}
                     >
                         Ventas
                     </button>
                     <button
                         onClick={() => setView('EXPENSES')}
-                        className={view === 'EXPENSES' ? 'tab-active' : 'tab-inactive'}
-                        style={{ borderRadius: '8px', border: 'none', width: '150px' }}
+                        className={`nav-pill-button ${view === 'EXPENSES' ? 'active' : ''}`}
+                        style={{ width: '140px', justifyContent: 'center' }}
                     >
                         Egresos
                     </button>
