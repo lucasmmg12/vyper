@@ -179,9 +179,12 @@ export default function CompetitorsPage() {
             <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: '2rem' }}>
                 {/* Market Share Donut */}
                 <div className="glass-card" style={{ height: '350px' }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                         <PieChartIcon size={20} /> SHARE DE MERCADO (ESTIMADO)
                     </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                        Distribución estimada de las ventas locales. Identifica quién domina el volumen de facturación en San Juan.
+                    </p>
                     <ResponsiveContainer width="100%" height="80%">
                         <PieChart>
                             <Pie
@@ -206,9 +209,12 @@ export default function CompetitorsPage() {
 
                 {/* Leaderboard Ranking */}
                 <div className="glass-card" style={{ height: '350px' }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                         <Award size={20} /> RANKING DE COMPETITIVIDAD
                     </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                        Clasificación basada en el 'MKT Power', que evalúa presencia física, alcance digital y capacidad publicitaria.
+                    </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', overflowY: 'auto', maxHeight: '250px' }}>
                         {[...COMPETITORS].sort((a, b) => b.score - a.score).map((c, i) => (
                             <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -237,6 +243,9 @@ export default function CompetitorsPage() {
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <MapPin size={20} /> MAPA DE COBERTURA & OVERLAP
                     </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Visualización de los 'Radios de Acción'. Las zonas donde los círculos se cruzan son áreas de alta competencia.
+                    </p>
                     <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                             <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'black' }}></div> Vyper
@@ -282,6 +291,9 @@ export default function CompetitorsPage() {
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Facebook size={20} /> AUDITORÍA DE ANUNCIOS & MEDIOS
                     </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                        Control en tiempo real de la actividad publicitaria y canales de difusión de tus competidores.
+                    </p>
                     <div className="grid-layout" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
                         {COMPETITORS.map(c => (
                             <div key={c.id} className="glass-card" style={{ padding: '1.5rem' }}>
@@ -327,9 +339,12 @@ export default function CompetitorsPage() {
 
                 {/* OPPORTUNITIES & INSIGHTS */}
                 <div>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                         <TrendingUp size={20} /> DETECCIÓN DE OPORTUNIDADES
                     </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                        Hallazgos estratégicos listos para ejecutar basados en las debilidades detectadas en la competencia local.
+                    </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {opportunities.map((o, idx) => (
                             <div key={idx} className="glass-card" style={{ borderLeft: '4px solid white' }}>
