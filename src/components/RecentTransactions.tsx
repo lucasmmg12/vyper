@@ -29,7 +29,8 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
             const endpoint = type === 'SALES' ? '/api/sales?limit=10' : '/api/expenses?limit=10';
             const res = await fetch(endpoint);
             const data = await res.json();
-            setTransactions(type === 'SALES' ? data.sales : data.expenses);
+            const result = type === 'SALES' ? data.sales : data.expenses;
+            setTransactions(Array.isArray(result) ? result : []);
         } catch (error) {
             console.error(error);
         } finally {
@@ -81,7 +82,7 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
     };
 
     // Chart Data Preparation (Grouped by date and summed)
-    const groupedData = transactions.reduce((acc: { [key: string]: number }, curr) => {
+    const groupedData = (transactions || []).reduce((acc: { [key: string]: number }, curr) => {
         const dateKey = curr.date ? new Date(curr.date).toLocaleDateString() : 'Sin fecha';
         acc[dateKey] = (acc[dateKey] || 0) + curr.amount;
         return acc;
@@ -95,7 +96,7 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
             amount
         }));
 
-    const totalLast10 = transactions.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalLast10 = (transactions || []).reduce((acc, curr) => acc + curr.amount, 0);
 
     return (
         <div className="glass-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

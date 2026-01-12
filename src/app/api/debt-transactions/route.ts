@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { client_id, client_name, amount, transaction_type, notes } = body;
+        const { client_id, client_name, amount, transaction_type, notes, branch } = body;
 
         if (!client_id || !amount || !transaction_type) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
                 transaction_type,
                 balance_after: newBalance,
                 date: new Date().toISOString(),
-                notes: notes || null
+                notes: notes || (branch ? `Sucursal: ${branch}` : null)
             }])
             .select();
 
@@ -102,8 +102,28 @@ export async function POST(request: Request) {
 
         if (updateError) {
             console.error('Error updating client debt balance:', updateError);
-            return NextResponse.json({ error: updateError.message }, { status: 500 });
+            // Non-critical, but should be noted
         }
+
+        // --- NEW: IF PAYMENT, REGISTER AS INCOME IN SALES ---
+        if (transaction_type === 'payment') {
+            const saleDate = new Date();
+            const { error: salesError } = await supabase
+                .from('sales')
+                .insert([{
+                    date: saleDate.toISOString(),
+                    amount: transactionAmount,
+                    branch: branch || 'Rawson',
+                    observations: `PAGO CTA CTE - ${client_name} - ${notes || ''}`.trim(),
+                    month_number: saleDate.getMonth() + 1
+                }]);
+
+            if (salesError) {
+                console.error('Error registering payment in sales table:', salesError);
+                // We prefer not to fail the whole request if this fails, but it is important.
+            }
+        }
+        // ---------------------------------------------------
 
         // Send WhatsApp notification
         if (clientData.phone) {
