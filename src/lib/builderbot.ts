@@ -35,8 +35,6 @@ export async function sendWhatsAppNotification(
 Has realizado una compra por *${formattedAmount}* 💸
 ¡Ya tenés *${totalCoins} Vyper Coins*! 🪙
 
-🎯 Entrá ahora a la app y canjeá tus monedas por suplementos, accesorios o combos exclusivos 🎁
-
 👉 Cuanto más comprás, más recompensas acumulás 🔥
 
 ────────────────────
