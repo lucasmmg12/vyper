@@ -6,13 +6,36 @@ import SalesForm from '@/components/SalesForm';
 import ExpensesForm from '@/components/ExpensesForm';
 import RecentTransactions from '@/components/RecentTransactions';
 import ExcelImporter from '@/components/ExcelImporter';
-import { Upload } from 'lucide-react';
+import { Upload, Send } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
     const [view, setView] = useState<'SALES' | 'EXPENSES'>('SALES');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [showImporter, setShowImporter] = useState(false);
+    const [sendingSummary, setSendingSummary] = useState(false);
+
+    const handleSendDailySummary = async () => {
+        if (sendingSummary) return;
+        const confirmed = confirm('¿Enviar resumen diario por WhatsApp al dueño?');
+        if (!confirmed) return;
+
+        setSendingSummary(true);
+        try {
+            const res = await fetch('/api/daily-summary', { method: 'POST' });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert(`✅ Resumen enviado!\n\n💰 Ventas: $${data.summary.totalSales.toLocaleString()}\n💸 Egresos: $${data.summary.totalExpenses.toLocaleString()}\n${data.summary.netProfit >= 0 ? '📈' : '📉'} Neto: $${data.summary.netProfit.toLocaleString()}\n🚨 Alertas: ${data.summary.alertsCount}`);
+            } else {
+                alert('❌ Error al enviar el resumen: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión al enviar el resumen');
+        } finally {
+            setSendingSummary(false);
+        }
+    };
 
     const handleSuccess = () => {
         alert(view === 'SALES' ? 'Venta guardada' : 'Gasto guardado');
@@ -61,6 +84,22 @@ export default function AdminPage() {
                             ⚔️ Competencia
                         </button>
                     </Link>
+                    <button
+                        className="nav-pill-button"
+                        onClick={handleSendDailySummary}
+                        disabled={sendingSummary}
+                        style={{
+                            color: '#00FF88',
+                            borderColor: sendingSummary ? 'rgba(0,255,136,0.3)' : undefined,
+                            opacity: sendingSummary ? 0.6 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <Send size={14} style={sendingSummary ? { animation: 'pulse 1s infinite' } : {}} />
+                        {sendingSummary ? 'Enviando...' : '📋 Resumen Diario'}
+                    </button>
                     <Link href="/" passHref>
                         <button className="nav-pill-button" style={{ color: '#ef4444' }}>
                             Salir
