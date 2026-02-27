@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Send, Loader2, TrendingUp, TrendingDown, AlertTriangle, Store, Coins, CreditCard, FolderOpen, Users } from 'lucide-react';
+import { X, Send, Loader2, TrendingUp, TrendingDown, AlertTriangle, Store, Coins, CreditCard, Users, HelpCircle, DollarSign, UserX } from 'lucide-react';
+
+interface TopDebtor {
+    name: string;
+    debt: number;
+}
 
 interface SummaryData {
     totalSales: number;
@@ -16,6 +21,12 @@ interface SummaryData {
     payments: number;
     alertsCount: number;
     totalClients: number;
+    // New metrics
+    totalDebt: number;
+    debtClientsCount: number;
+    topDebtors: TopDebtor[];
+    avgLTV: number;
+    totalHistoricalSales: number;
 }
 
 interface DailySummaryModalProps {
@@ -41,7 +52,6 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
     const fetchPreview = async () => {
         setLoading(true);
         try {
-            // Fetch all data for preview (same queries as the API but client-side)
             const [salesRes, expensesRes, coinsRes, debtRes, clientsRes] = await Promise.all([
                 fetch('/api/sales?limit=10000'),
                 fetch('/api/expenses?limit=10000'),
@@ -69,10 +79,12 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
                 return d >= today && d <= todayEnd;
             };
 
-            const todaySales = (salesData.sales || []).filter((s: any) => isToday(s.date || s.created_at));
+            const allSales = salesData.sales || [];
+            const todaySales = allSales.filter((s: any) => isToday(s.date || s.created_at));
             const todayExpenses = (expensesData.expenses || []).filter((e: any) => isToday(e.date || e.created_at));
             const todayCoins = (coinsData.transactions || []).filter((c: any) => isToday(c.date || c.created_at));
             const todayDebt = (debtData.transactions || []).filter((d: any) => isToday(d.date || d.created_at));
+            const allClients = clientsData.clients || [];
 
             const totalSales = todaySales.reduce((sum: number, s: any) => sum + Number(s.amount), 0);
             const totalExpenses = todayExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -82,8 +94,20 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
             const newCharges = todayDebt.filter((d: any) => d.transaction_type === 'charge').reduce((sum: number, d: any) => sum + Number(d.amount), 0);
             const payments = todayDebt.filter((d: any) => d.transaction_type === 'payment').reduce((sum: number, d: any) => sum + Number(d.amount), 0);
 
-            const debtClients = (clientsData.clients || []).filter((c: any) => Number(c.debt_balance) > 0);
-            const totalClients = (clientsData.clients || []).filter((c: any) => c.user_status !== false).length;
+            // Debt metrics
+            const debtClients = allClients.filter((c: any) => Number(c.debt_balance) > 0);
+            const totalDebt = debtClients.reduce((sum: number, c: any) => sum + Number(c.debt_balance), 0);
+            const topDebtors: TopDebtor[] = debtClients
+                .sort((a: any, b: any) => Number(b.debt_balance) - Number(a.debt_balance))
+                .slice(0, 5)
+                .map((c: any) => ({ name: c.name, debt: Number(c.debt_balance) }));
+
+            // LTV calculation: total historical sales / total active clients
+            const totalHistoricalSales = allSales.reduce((sum: number, s: any) => sum + Number(s.amount), 0);
+            const activeClients = allClients.filter((c: any) => c.user_status !== false);
+            const avgLTV = activeClients.length > 0 ? totalHistoricalSales / activeClients.length : 0;
+
+            const totalClients = activeClients.length;
 
             const alerts: string[] = [];
             if (debtClients.length > 0) alerts.push('deuda');
@@ -103,6 +127,11 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
                 payments,
                 alertsCount: alerts.length,
                 totalClients,
+                totalDebt,
+                debtClientsCount: debtClients.length,
+                topDebtors,
+                avgLTV,
+                totalHistoricalSales,
             });
         } catch (err) {
             setError('Error al cargar los datos');
@@ -131,7 +160,7 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
 
     if (!isOpen) return null;
 
-    const formatCurrency = (n: number) => `$${n.toLocaleString('es-AR')}`;
+    const fmt = (n: number) => `$${n.toLocaleString('es-AR')}`;
 
     return (
         <div
@@ -151,8 +180,8 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     width: '100%',
-                    maxWidth: '600px',
-                    maxHeight: '85vh',
+                    maxWidth: '640px',
+                    maxHeight: '90vh',
                     overflowY: 'auto',
                     background: '#0a0a0a',
                     border: '1px solid rgba(255,255,255,0.1)',
@@ -194,73 +223,125 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
                     </div>
                 ) : data ? (
                     <>
-                        {/* Main Stats */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        {/* ═══ RESULTADO DEL DÍA ═══ */}
+                        <SectionTitle icon={<TrendingUp size={16} />} title="Resultado del Día" tooltip="Resumen financiero de las operaciones registradas hoy en ambas sucursales." />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
                             <StatCard
                                 label="Ventas"
-                                value={formatCurrency(data.totalSales)}
-                                sub={`${data.salesCount} ops`}
-                                icon={<TrendingUp size={18} />}
+                                value={fmt(data.totalSales)}
+                                sub={`${data.salesCount} operaciones`}
+                                icon={<TrendingUp size={16} />}
                                 color="#4ade80"
                             />
                             <StatCard
                                 label="Egresos"
-                                value={formatCurrency(data.totalExpenses)}
-                                icon={<TrendingDown size={18} />}
+                                value={fmt(data.totalExpenses)}
+                                icon={<TrendingDown size={16} />}
                                 color="#ef4444"
                             />
                             <StatCard
-                                label="Neto"
-                                value={formatCurrency(data.netProfit)}
-                                icon={data.netProfit >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                                label="Ganancia Neta"
+                                value={fmt(data.netProfit)}
+                                icon={data.netProfit >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                                 color={data.netProfit >= 0 ? '#00FF88' : '#ef4444'}
                                 highlight
                             />
                         </div>
 
-                        {/* Ticket Promedio */}
-                        <div style={{
-                            padding: '0.75rem 1rem',
-                            background: 'rgba(255,255,255,0.03)',
-                            borderRadius: '10px',
-                            marginBottom: '1.5rem',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.85rem',
-                        }}>
-                            <span style={{ color: 'var(--text-muted)' }}>🎫 Ticket Promedio</span>
-                            <span style={{ fontWeight: 700, color: '#fff' }}>{formatCurrency(data.avgTicket)}</span>
+                        {/* Ticket Promedio + LTV */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                            <MetricRow
+                                emoji="🎫"
+                                label="Ticket Promedio"
+                                value={fmt(data.avgTicket)}
+                                tooltip="Cuánto gasta en promedio cada cliente por compra hoy. Se calcula: Ventas del día ÷ Cantidad de operaciones."
+                            />
+                            <MetricRow
+                                emoji="💎"
+                                label="LTV Promedio"
+                                value={fmt(data.avgLTV)}
+                                tooltip="Lifetime Value: cuánto dinero ha gastado en promedio cada cliente desde que empezó a comprar. Se calcula: Ventas históricas totales ÷ Clientes activos."
+                                highlight
+                            />
                         </div>
 
-                        {/* Branch Breakdown */}
+                        {/* ═══ POR SUCURSAL ═══ */}
                         {(data.salesRivadavia > 0 || data.salesRawson > 0) && (
                             <div style={{ marginBottom: '1.5rem' }}>
-                                <SectionTitle icon={<Store size={16} />} title="Por Sucursal" />
+                                <SectionTitle icon={<Store size={16} />} title="Por Sucursal" tooltip="Desglose de las ventas del día por ubicación física del local." />
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                                    <MiniStat label="📍 Rivadavia" value={formatCurrency(data.salesRivadavia)} />
-                                    <MiniStat label="📍 Rawson" value={formatCurrency(data.salesRawson)} />
+                                    <MiniStat label="📍 Rivadavia" value={fmt(data.salesRivadavia)} />
+                                    <MiniStat label="📍 Rawson" value={fmt(data.salesRawson)} />
                                 </div>
                             </div>
                         )}
 
-                        {/* Coins & Debt */}
+                        {/* ═══ COINS & CTA CTE ═══ */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                            {data.totalCoinsGiven > 0 && (
-                                <div>
-                                    <SectionTitle icon={<Coins size={16} />} title="Vyper Coins" />
-                                    <MiniStat label="Entregadas" value={`${data.totalCoinsGiven} 🪙`} />
-                                </div>
-                            )}
-                            {(data.newCharges > 0 || data.payments > 0) && (
-                                <div>
-                                    <SectionTitle icon={<CreditCard size={16} />} title="Cta Corriente" />
-                                    {data.newCharges > 0 && <MiniStat label="🔴 Cargos" value={formatCurrency(data.newCharges)} />}
-                                    {data.payments > 0 && <MiniStat label="🟢 Pagos" value={formatCurrency(data.payments)} />}
+                            <div>
+                                <SectionTitle icon={<Coins size={16} />} title="Vyper Coins" tooltip="Monedas de fidelización entregadas hoy. Cada $1.000 en compras = 1 Vyper Coin." />
+                                <MiniStat label="Entregadas hoy" value={`${data.totalCoinsGiven} 🪙`} />
+                            </div>
+                            <div>
+                                <SectionTitle icon={<CreditCard size={16} />} title="Cta Corriente" tooltip="Movimientos de cuenta corriente del día. Cargos = nueva deuda. Pagos = cobros de deuda." />
+                                <MiniStat label="🔴 Cargos" value={fmt(data.newCharges)} />
+                                {data.payments > 0 && <div style={{ marginTop: '0.5rem' }}><MiniStat label="🟢 Pagos" value={fmt(data.payments)} /></div>}
+                            </div>
+                        </div>
+
+                        {/* ═══ DEUDAS ═══ */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <SectionTitle
+                                icon={<UserX size={16} />}
+                                title="Estado de Deudas"
+                                tooltip="Dinero total que los clientes le deben al negocio en cuenta corriente. Incluye los clientes con mayor saldo pendiente."
+                            />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                                <MetricRow
+                                    emoji="💳"
+                                    label="Deuda Total"
+                                    value={fmt(data.totalDebt)}
+                                    tooltip="Suma de todas las deudas pendientes de todos los clientes con cuenta corriente activa."
+                                    valueColor="#ef4444"
+                                />
+                                <MetricRow
+                                    emoji="👥"
+                                    label="Clientes en deuda"
+                                    value={`${data.debtClientsCount}`}
+                                    tooltip="Cantidad de clientes que tienen un saldo pendiente mayor a $0."
+                                    valueColor="#facc15"
+                                />
+                            </div>
+
+                            {data.topDebtors.length > 0 && (
+                                <div style={{
+                                    background: 'rgba(239,68,68,0.05)',
+                                    border: '1px solid rgba(239,68,68,0.15)',
+                                    borderRadius: '10px',
+                                    padding: '0.75rem 1rem',
+                                }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        Top Deudores
+                                    </div>
+                                    {data.topDebtors.map((d, i) => (
+                                        <div key={i} style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            padding: '0.35rem 0',
+                                            borderBottom: i < data.topDebtors.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                            fontSize: '0.85rem',
+                                        }}>
+                                            <span style={{ color: 'var(--text-muted)' }}>
+                                                {i + 1}. {d.name}
+                                            </span>
+                                            <span style={{ fontWeight: 700, color: '#f87171' }}>{fmt(d.debt)}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* Footer Info */}
+                        {/* ═══ RESUMEN GENERAL ═══ */}
                         <div style={{
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -271,7 +352,8 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
                             fontSize: '0.8rem',
                             color: 'var(--text-muted)',
                         }}>
-                            <span><Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> {data.totalClients} clientes</span>
+                            <span><Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> {data.totalClients} clientes activos</span>
+                            <span>Ventas históricas: <strong style={{ color: '#4ade80' }}>{fmt(data.totalHistoricalSales)}</strong></span>
                             {data.alertsCount > 0 && (
                                 <span style={{ color: '#facc15' }}>
                                     <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
@@ -363,30 +445,63 @@ export default function DailySummaryModal({ isOpen, onClose }: DailySummaryModal
     );
 }
 
-// Sub-components
+// ═══ Sub-components ═══
+
 function StatCard({ label, value, sub, icon, color, highlight }: {
     label: string; value: string; sub?: string; icon: React.ReactNode; color: string; highlight?: boolean;
 }) {
     return (
         <div style={{
-            padding: '1rem',
+            padding: '0.85rem',
             background: highlight ? `${color}10` : 'rgba(255,255,255,0.03)',
             border: `1px solid ${highlight ? color + '40' : 'rgba(255,255,255,0.06)'}`,
             borderRadius: '12px',
             textAlign: 'center',
         }}>
-            <div style={{ color, marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>{icon}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: highlight ? color : '#fff' }}>{value}</div>
-            {sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{sub}</div>}
+            <div style={{ color, marginBottom: '0.4rem', display: 'flex', justifyContent: 'center' }}>{icon}</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: highlight ? color : '#fff' }}>{value}</div>
+            {sub && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{sub}</div>}
         </div>
     );
 }
 
-function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
+function SectionTitle({ icon, title, tooltip }: { icon: React.ReactNode; title: string; tooltip?: string }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {icon} {title}
+            {tooltip && (
+                <span title={tooltip} style={{ cursor: 'help', opacity: 0.5, display: 'inline-flex' }}>
+                    <HelpCircle size={13} />
+                </span>
+            )}
+        </div>
+    );
+}
+
+function MetricRow({ emoji, label, value, tooltip, highlight, valueColor }: {
+    emoji: string; label: string; value: string; tooltip?: string; highlight?: boolean; valueColor?: string;
+}) {
+    return (
+        <div style={{
+            padding: '0.65rem 0.85rem',
+            background: highlight ? 'rgba(185,242,255,0.05)' : 'rgba(255,255,255,0.03)',
+            border: highlight ? '1px solid rgba(185,242,255,0.15)' : '1px solid rgba(255,255,255,0.04)',
+            borderRadius: '10px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.85rem',
+        }}>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                {emoji} {label}
+                {tooltip && (
+                    <span title={tooltip} style={{ cursor: 'help', opacity: 0.4, display: 'inline-flex' }}>
+                        <HelpCircle size={12} />
+                    </span>
+                )}
+            </span>
+            <span style={{ fontWeight: 700, color: valueColor || (highlight ? '#b9f2ff' : '#fff') }}>{value}</span>
         </div>
     );
 }
