@@ -59,6 +59,11 @@ export default function AdminPage() {
                                 📊 Analytics
                             </button>
                         </Link>
+                        <Link href="/admin/retention" passHref>
+                            <button className="nav-pill-button">
+                                🔄 Retención
+                            </button>
+                        </Link>
                         <Link href="/admin/competitors" passHref>
                             <button className="nav-pill-button">
                                 ⚔️ Competencia
