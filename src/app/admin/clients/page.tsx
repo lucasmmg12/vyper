@@ -7,6 +7,7 @@ import ClientsExcelImporter from '@/components/ClientsExcelImporter';
 import EditClientModal from '@/components/EditClientModal';
 import { Trophy, AlertTriangle, Users, Search } from 'lucide-react';
 import Link from 'next/link';
+import { TierBadge } from '@/utils/tiers';
 
 interface Client {
     id: number;
@@ -121,7 +122,9 @@ export default function ClientsPage() {
                                     padding: '0.5rem 0',
                                     borderBottom: i < topCoins.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
                                 }}>
-                                    <span style={{ fontSize: '0.9rem' }}>{c.name}</span>
+                                    <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        {c.name} <TierBadge coins={c.coin_balance} size="sm" />
+                                    </span>
                                     <span style={{ fontWeight: 'bold', color: '#facc15' }}>{c.coin_balance} 🪙</span>
                                 </div>
                             ))}
@@ -199,7 +202,9 @@ export default function ClientsPage() {
                                             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         >
-                                            <td style={{ padding: '0.75rem 0.5rem' }}>{c.name}</td>
+                                            <td style={{ padding: '0.75rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {c.name} <TierBadge coins={c.coin_balance} size="sm" />
+                                            </td>
                                             <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)' }}>{c.phone}</td>
                                             <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#facc15' }}>{c.coin_balance}</td>
                                             <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: c.debt_balance > 0 ? '#ef4444' : '#4ade80' }}>

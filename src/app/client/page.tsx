@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { TierBadge, TierProgressBar, getTier } from '@/utils/tiers';
 
 export default function ClientPage() {
     const [whatsapp, setWhatsapp] = useState('');
@@ -72,7 +73,10 @@ export default function ClientPage() {
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid white', paddingBottom: '1rem' }}>
-                <h2>Hola, {user.name}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h2>Hola, {user.name}</h2>
+                    <TierBadge coins={user.coinBalance} size="lg" />
+                </div>
                 <button onClick={() => setUser(null)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>Salir</button>
             </header>
 
@@ -88,6 +92,24 @@ export default function ClientPage() {
                         <div className="big-stat" style={{ fontSize: '3rem' }}>${user.debtBalance}</div>
                     </div>
                 )}
+            </div>
+
+            {/* Tier Progress Card */}
+            <div style={{
+                padding: '1.5rem',
+                marginBottom: '2rem',
+                background: getTier(user.coinBalance).bgColor,
+                border: `1px solid ${getTier(user.coinBalance).borderColor}`,
+                borderRadius: '12px',
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Tu Nivel Vyper</h3>
+                    <TierBadge coins={user.coinBalance} size="md" />
+                </div>
+                <TierProgressBar coins={user.coinBalance} />
+                <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    🪙 {user.coinBalance} Vyper Coins acumuladas
+                </div>
             </div>
 
             <nav style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Coins, Search, TrendingUp, Edit2, Trash2, History } from 'lucide-react';
 import Link from 'next/link';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { TierBadge, TierProgressBar } from '@/utils/tiers';
 
 interface Client {
     id: number;
@@ -254,7 +255,9 @@ export default function VyperCoinsPage() {
                                         alignItems: 'center'
                                     }}>
                                         <div>
-                                            <p style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{selectedClient.name}</p>
+                                            <p style={{ fontWeight: 'bold', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {selectedClient.name} <TierBadge coins={selectedClient.coin_balance} size="sm" />
+                                            </p>
                                             <p style={{ color: '#facc15', fontSize: '0.8rem' }}>
                                                 {selectedClient.coin_balance} 🪙
                                             </p>
@@ -305,7 +308,9 @@ export default function VyperCoinsPage() {
                                                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                                     >
-                                                        <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{client.name}</p>
+                                                        <p style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            {client.name} <TierBadge coins={client.coin_balance} size="sm" />
+                                                        </p>
                                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                                             {client.phone} • {client.coin_balance} 🪙
                                                         </p>
@@ -352,7 +357,8 @@ export default function VyperCoinsPage() {
                                     </div>
                                     <div style={{ textAlign: 'center' }}>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>NUEVO BALANCE</p>
-                                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4ade80' }}>{newBalance} 🪙</p>
+                                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4ade80', marginBottom: '0.5rem' }}>{newBalance} 🪙</p>
+                                        <TierBadge coins={newBalance} size="md" />
                                     </div>
                                 </div>
                             )}

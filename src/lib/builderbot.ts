@@ -1,4 +1,5 @@
 // Helper function to send WhatsApp messages via BuilderBot webhook
+import { getTierText, getTier } from '@/utils/tiers';
 
 interface BuilderBotMessage {
     messages: {
@@ -30,10 +31,19 @@ export async function sendWhatsAppNotification(
         // Format amount as currency
         const formattedAmount = `$${amount.toLocaleString()}`;
 
+        // Get tier info
+        const tierInfo = getTier(totalCoins);
+        const tierText = getTierText(totalCoins);
+        const tierProgress = tierInfo.coinsToNext !== null
+            ? `\n🎯 Te faltan *${tierInfo.coinsToNext} coins* para subir a *${tierInfo.nextTier}*`
+            : '\n🏆 ¡Sos *nivel máximo*! Felicitaciones';
+
         // Build message content
         const messageContent = `👋 Hola, ${clientName}
 Has realizado una compra por *${formattedAmount}* 💸
 ¡Ya tenés *${totalCoins} Vyper Coins*! 🪙
+
+🏅 Tu nivel: *${tierText}*${tierProgress}
 
 👉 Cuanto más comprás, más recompensas acumulás 🔥
 
