@@ -12,6 +12,17 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        let formattedWhatsapp = String(whatsapp).trim().replace(/[\s-]/g, '');
+        if (!formattedWhatsapp.startsWith('+549')) {
+            if (formattedWhatsapp.startsWith('+54') && !formattedWhatsapp.startsWith('+549')) {
+                formattedWhatsapp = '+549' + formattedWhatsapp.slice(3);
+            } else if (formattedWhatsapp.startsWith('549')) {
+                formattedWhatsapp = '+' + formattedWhatsapp;
+            } else {
+                formattedWhatsapp = '+549' + formattedWhatsapp;
+            }
+        }
+
         const amountNum = parseFloat(amount);
         const earnedCoins = Math.floor(amountNum / 1000);
         const now = new Date().toISOString();
@@ -20,7 +31,7 @@ export async function POST(request: Request) {
         let { data: user, error: fetchError } = await supabase
             .from('users')
             .select('*')
-            .eq('phone', whatsapp)
+            .eq('phone', formattedWhatsapp)
             .single();
 
         if (fetchError && fetchError.code !== 'PGRST116') {
@@ -96,7 +107,7 @@ export async function POST(request: Request) {
                         content: message,
                         mediaUrl: "https://www.builderbot.app/assets/brand/logo-alone.png"
                     },
-                    number: whatsapp,
+                    number: formattedWhatsapp.replace(/\D/g, ''),
                     checkIfExists: false
                 },
                 {

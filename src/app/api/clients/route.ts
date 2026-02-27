@@ -54,7 +54,22 @@ export async function POST(request: Request) {
             name: item.name || item.Nombre,
             last_load_date: item.last_load_date || item['Fecha de Ultima carga'] || new Date().toISOString(),
             observations: item.observations || item.Observaciones,
-            phone: item.phone?.toString() || item.Telefono?.toString(),
+            phone: (() => {
+                const raw = item.phone?.toString() || item.Telefono?.toString();
+                if (!raw) return undefined;
+                let formatted = raw.trim().replace(/[\s-]/g, '');
+                if (!formatted) return undefined;
+                if (!formatted.startsWith('+549')) {
+                    if (formatted.startsWith('+54') && !formatted.startsWith('+549')) {
+                        formatted = '+549' + formatted.slice(3);
+                    } else if (formatted.startsWith('549')) {
+                        formatted = '+' + formatted;
+                    } else {
+                        formatted = '+549' + formatted;
+                    }
+                }
+                return formatted;
+            })(),
             user_password: item.user_password || item['UsuarioContraseña'] || item.UsuarioContraseña,
             user_view: toBool(item.user_view ?? item.UsuarioVer),
             user_photo: item.user_photo || item.UsuarioFoto,

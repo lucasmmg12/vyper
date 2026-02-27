@@ -48,12 +48,15 @@ export default function AdminPOS() {
             <form onSubmit={handleSubmit} className="grid-layout" style={{ gridTemplateColumns: '1fr', gap: '1rem' }}>
 
                 <div>
-                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>WHATSAPP CLIENTE</label>
+                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>WHATSAPP CLIENTE</label>
+                    <span style={{ fontSize: '0.75rem', color: '#00D1FF', display: 'block', marginBottom: '0.5rem' }}>
+                        ⚠️ Ingrese solo el número local (sin +549). Ej: 2645438114
+                    </span>
                     <input
                         type="text"
                         value={whatsapp}
                         onChange={(e) => setWhatsapp(e.target.value)}
-                        placeholder="Ej: 54911..."
+                        placeholder="Ej: 2645438114"
                         required
                     />
                 </div>

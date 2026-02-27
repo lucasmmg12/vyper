@@ -54,7 +54,15 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
     };
 
     useEffect(() => {
-        setFormData(client);
+        // Remove +549 or +549 prefix from phone so the user only sees the local number
+        let phoneToDisplay = client.phone || '';
+        if (phoneToDisplay.startsWith('+549')) {
+            phoneToDisplay = phoneToDisplay.slice(4);
+        } else if (phoneToDisplay.startsWith('549')) {
+            phoneToDisplay = phoneToDisplay.slice(3);
+        }
+
+        setFormData({ ...client, phone: phoneToDisplay });
         fetchHistory();
     }, [client]);
 
@@ -75,11 +83,24 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
         setLoading(true);
         setError('');
 
+        let formattedPhone = (formData.phone || '').trim().replace(/[\s-]/g, '');
+        if (formattedPhone && !formattedPhone.startsWith('+549')) {
+            if (formattedPhone.startsWith('+54') && !formattedPhone.startsWith('+549')) {
+                formattedPhone = '+549' + formattedPhone.slice(3);
+            } else if (formattedPhone.startsWith('549')) {
+                formattedPhone = '+' + formattedPhone;
+            } else {
+                formattedPhone = '+549' + formattedPhone;
+            }
+        }
+
+        const dataToSubmit = { ...formData, phone: formattedPhone };
+
         try {
             const res = await fetch('/api/clients', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(dataToSubmit)
             });
 
             if (res.ok) {
@@ -240,8 +261,11 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
 
                         {/* Teléfono */}
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                Teléfono / WhatsApp *
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.25rem' }}>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Teléfono / WhatsApp *</span>
+                                <span style={{ fontSize: '0.75rem', color: '#00D1FF' }}>
+                                    ⚠️ Ingrese solo el número local (sin +549). Ej: 2645438114
+                                </span>
                             </label>
                             <input
                                 type="text"
