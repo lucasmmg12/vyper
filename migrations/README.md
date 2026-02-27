@@ -77,8 +77,8 @@ WHERE tablename = 'debt_transactions';
 2. **Verifica las variables de entorno**
    - Asegúrate de que `.env` o `.env.local` tenga:
      ```
-     BUILDERBOT_WEBHOOK_URL=https://app.builderbot.cloud/api/v2/c3fd918b-b736-40dc-a841-cbb73d3b2a8d/messages
-     BUILDERBOT_API_KEY=bb-3c45fa69-2776-4275-82b6-2d6df9e08ec6
+     BUILDERBOT_WEBHOOK_URL=https://app.builderbot.cloud/api/v2/1a3be0ed-27c1-4b67-a2f0-d0a2ac8fe949/messages
+     BUILDERBOT_API_KEY=bb-0921a9b4-81a2-4fd2-b45d-680480138bdc
      ```
 
 3. **Reinicia el servidor de desarrollo**

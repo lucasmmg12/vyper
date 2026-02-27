@@ -38,8 +38,7 @@ Has realizado una compra por *${formattedAmount}* 💸
 👉 Cuanto más comprás, más recompensas acumulás 🔥
 
 ────────────────────
-🤖 Automatización creada por *Grow Labs*.
-Si desea obtener una respuesta, comuníquese al número de Vyper: *5492646298880*`;
+🤖 Automatización creada por *Grow Labs*.`;
 
         const payload: BuilderBotMessage = {
             messages: {
@@ -111,8 +110,7 @@ Has realizado una compra en *Cuenta Corriente* por *${formattedAmount}* 💳
 💡 Recordá que podés abonar tu cuenta en cualquier momento en nuestras sucursales o mediante transferencia 💰
 
 ────────────────────
-🤖 Automatización creada por *Grow Labs*.
-Si desea obtener una respuesta, comuníquese al número de Vyper: *5492646298880*`;
+🤖 Automatización creada por *Grow Labs*.`;
         } else {
             // Pago
             messageContent = `✅ Hola, ${clientName}
@@ -123,8 +121,7 @@ Si desea obtener una respuesta, comuníquese al número de Vyper: *5492646298880
 ${newBalance === 0 ? '🎉 ¡Felicitaciones! Tu cuenta está al día ✨' : '💡 Seguí abonando para mantener tu cuenta al día 👍'}
 
 ────────────────────
-🤖 Automatización creada por *Grow Labs*.
-Si desea obtener una respuesta, comuníquese al número de Vyper: *5492646298880*`;
+🤖 Automatización creada por *Grow Labs*.`;
         }
 
         const payload: BuilderBotMessage = {

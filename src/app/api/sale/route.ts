@@ -90,7 +90,7 @@ export async function POST(request: Request) {
             const message = `*VYPER LABS NOTIFICATION*\n------------------\n¡Compra registrada!\nMonto: $${amountNum}\nGanaste: ${earnedCoins} Coins\nTotal Coins: ${newCoins}\n${isCredit ? `Deuda Actual: $${newDebt}` : ''}`;
 
             await axios.post(
-                'https://app.builderbot.cloud/api/v2/c3fd918b-b736-40dc-a841-cbb73d3b2a8d/messages',
+                'https://app.builderbot.cloud/api/v2/1a3be0ed-27c1-4b67-a2f0-d0a2ac8fe949/messages',
                 {
                     messages: {
                         content: message,
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-builderbot': 'bb-3c45fa69-2776-4275-82b6-2d6df9e08ec6'
+                        'x-api-builderbot': 'bb-0921a9b4-81a2-4fd2-b45d-680480138bdc'
                     }
                 }
             );
