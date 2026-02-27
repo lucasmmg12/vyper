@@ -115,29 +115,29 @@ const VYPER_STORES = [
 
 const EVENTS = [
     {
-        id: 'vueltasj',
-        name: 'VUELTA A SAN JUAN (UCI)',
-        date: '23 Ene - 01 Feb 2026',
+        id: 'granfondo',
+        name: 'GRAN FONDO MENDOZA',
+        date: '01 Marzo 2026',
         category: 'Ciclismo de Ruta',
         impact: 'CRÍTICO',
-        organizer: 'UCI / Gob. San Juan',
+        organizer: 'Gob. Mendoza / Fed. Ciclismo',
         strategy: {
-            warming: ["Publicar 'Guía Pro de Hidratación para Etapas Largas'.", "Lanzar 'Combo Endurance' con geles y sales.", "Geocerca digital en Av. Circunvalación."],
-            sprint: ["Stand de hidratación rápida en la 'Etapa Reina'.", "Vouchers de descuento para ciclistas federados.", "Muestras de recuperación en zona de meta."],
-            recovery: ["Campaña 'Post-Vuelta': Off en Colágeno y Magnesio.", "Sorteo entre quienes suban foto con su bici y Vyper."]
+            warming: ["Publicar 'Guía de Hidratación para Fondos +100km'.", "Lanzar 'Pack Endurance': Geles + Sales + Isotónico.", "Ads geolocalizado a ciclistas de San Juan y Mendoza."],
+            sprint: ["Stand de hidratación y muestras en zona de largada.", "Vouchers de descuento exclusivos para ciclistas.", "Fotos con marca Vyper en zona de meta y premiación."],
+            recovery: ["Campaña 'Post-Fondo': 20% OFF en Colágeno y Magnesio.", "Sorteo entre ciclistas que suban foto con producto Vyper.", "Email a contactos nuevos: 'Tu recuperación empieza acá'."]
         }
     },
     {
-        id: 'nightrun',
-        name: 'NIGHT RUN SAN JUAN',
-        date: '31 Enero 2026',
-        category: 'Running Nocturno',
+        id: 'crossfit_open',
+        name: 'CROSSFIT OPEN 2026',
+        date: '12 - 31 Marzo 2026',
+        category: 'CrossFit',
         impact: 'ALTO',
-        organizer: 'Adventure Pro',
+        organizer: 'CrossFit Inc.',
         strategy: {
-            warming: ["Tips para correr en calor nocturno.", "Promo en electrolitros e isotónicos.", "Ads a corredores locales (18-45 años)."],
-            sprint: ["Banners en acreditaciones Cerro Blanco.", "Flyers con código QR exclusivo para 17K.", "Muestras de pre-entreno explosivo."],
-            recovery: ["Mail a inscriptos: Recuperación muscular express.", "UGC: Etiquetanos en tu medalla para 15% OFF."]
+            warming: ["Tips de nutrición pre-WOD en Instagram Reels.", "Promo en pre-entreno y BCAA con código 'OPEN2026'.", "Challenge en stories: Mejor tiempo = descuento."],
+            sprint: ["Sponsorear boxes locales con banners Vyper.", "Kits de hidratación gratis en boxes de San Juan.", "Descuento cruzado con boxes: 15% en proteína."],
+            recovery: ["Campaña 'Post-Open': Pack Recuperación muscular.", "UGC: Compartí tu resultado y ganá Vyper Coins."]
         }
     },
     {
