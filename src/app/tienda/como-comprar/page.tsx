@@ -232,7 +232,7 @@ export default function ComoComprarPage() {
             </button>
           </Link>
           <a
-            href="https://api.whatsapp.com/send/?phone=5492643229503&text=Hola%20Vyper!%20Tengo%20una%20consulta&type=phone_number&app_absent=0"
+            href="https://api.whatsapp.com/send/?phone=5492646298880&text=Hola%20Vyper!%20Tengo%20una%20consulta&type=phone_number&app_absent=0"
             target="_blank"
             rel="noopener noreferrer"
           >
