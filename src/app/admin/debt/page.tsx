@@ -61,10 +61,14 @@ export default function DebtManagementPage() {
         }
     };
 
-    const filteredClients = clients.filter(c =>
-        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone?.includes(searchTerm)
-    );
+    const filteredClients = clients.filter(c => {
+        const term = searchTerm.toLowerCase();
+        const nameMatch = c.name?.toLowerCase().includes(term);
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const phoneDigits = (c.phone || '').replace(/\D/g, '');
+        const phoneMatch = searchDigits.length > 0 && phoneDigits.includes(searchDigits);
+        return nameMatch || phoneMatch;
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -131,17 +135,12 @@ export default function DebtManagementPage() {
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <CreditCard size={40} color="#ffffff" />
-                        CUENTA CORRIENTE
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Gestión de Deudas y Pagos</p>
-                </div>
-                <Link href="/admin" passHref>
-                    <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>VOLVER</button>
-                </Link>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <CreditCard size={28} />
+                    CUENTA CORRIENTE
+                </h1>
+                <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>Gestión de Deudas y Pagos</p>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>

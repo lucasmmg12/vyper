@@ -149,35 +149,28 @@ export default function BusinessIntelligence() {
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                         ANALYTICS
                     </h1>
                     <p style={{ color: 'var(--text-muted)' }}>Business Intelligence Dashboard</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={() => generateFinancialReport(data)}
-                        className="secondary"
-                        style={{
-                            padding: '0.5rem 1.5rem',
-                            fontSize: '0.8rem',
-                            borderColor: '#db2777',
-                            color: '#db2777',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}
-                    >
-                        <Download size={16} />
-                        DESCARGAR INFORME
-                    </button>
-                    <Link href="/admin" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>VOLVER</button>
-                    </Link>
-                </div>
+                <button
+                    onClick={() => generateFinancialReport(data)}
+                    className="secondary"
+                    style={{
+                        padding: '0.5rem 1.25rem',
+                        fontSize: '0.8125rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}
+                >
+                    <Download size={16} />
+                    DESCARGAR INFORME
+                </button>
             </header>
 
             {/* ═══════════════════════════════════════════════ */}
@@ -382,14 +375,14 @@ export default function BusinessIntelligence() {
 
                 {/* Branch Comparison */}
                 <div className="glass-card" style={{ height: '400px' }} id="chart-branch">
-                    <h3 style={{ marginBottom: '1rem', color: '#ffffff' }}>COMPARATIVA SUCURSALES (TENDENCIA)</h3>
+                    <h3 style={{ marginBottom: '1rem' }}>COMPARATIVA SUCURSALES (TENDENCIA)</h3>
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={data.branchComparison}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
                             <XAxis dataKey="month" stroke="#a3a3a3" />
                             <YAxis stroke="#a3a3a3" />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                                contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 formatter={(value: number, name: string) => {
                                     const [branch, type] = name.split('_');
                                     return [`$${value.toLocaleString()}`, `${branch} (${type === 'sales' ? 'Ventas' : 'Gastos'})`];
@@ -400,10 +393,10 @@ export default function BusinessIntelligence() {
                                 return `${branch.toUpperCase()} ${type === 'sales' ? 'VENTAS' : 'GASTOS'}`;
                             }} />
 
-                            <Line type="monotone" dataKey="Rawson_sales" name="Rawson_sales" stroke="#ffffff" strokeWidth={3} dot={{ r: 4 }} />
+                            <Line type="monotone" dataKey="Rawson_sales" name="Rawson_sales" stroke="#111111" strokeWidth={3} dot={{ r: 4 }} />
                             <Line type="monotone" dataKey="Rawson_expenses" name="Rawson_expenses" stroke="#888888" strokeWidth={2} strokeDasharray="3 3" />
-                            <Line type="monotone" dataKey="Rivadavia_sales" name="Rivadavia_sales" stroke="#cccccc" strokeWidth={3} dot={{ r: 4 }} />
-                            <Line type="monotone" dataKey="Rivadavia_expenses" name="Rivadavia_expenses" stroke="#444444" strokeWidth={2} strokeDasharray="3 3" />
+                            <Line type="monotone" dataKey="Rivadavia_sales" name="Rivadavia_sales" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
+                            <Line type="monotone" dataKey="Rivadavia_expenses" name="Rivadavia_expenses" stroke="#93c5fd" strokeWidth={2} strokeDasharray="3 3" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
@@ -416,39 +409,39 @@ export default function BusinessIntelligence() {
                             <AreaChart data={data.timeline}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#111111" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#111111" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#888888" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#888888" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
                                 <XAxis dataKey="month" stroke="#a3a3a3" />
                                 <YAxis stroke="#a3a3a3" />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                     formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                                 />
                                 <Legend />
-                                <Area type="monotone" dataKey="sales" name="Ventas" stroke="#ffffff" fillOpacity={1} fill="url(#colorSales)" />
-                                <Area type="monotone" dataKey="expenses" name="Egresos" stroke="#888888" fillOpacity={1} fill="url(#colorExpenses)" />
+                                <Area type="monotone" dataKey="sales" name="Ventas" stroke="#111111" fillOpacity={1} fill="url(#colorSales)" />
+                                <Area type="monotone" dataKey="expenses" name="Egresos" stroke="#ef4444" fillOpacity={1} fill="url(#colorExpenses)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
 
                     {/* Weekday Analysis */}
                     <div className="glass-card" style={{ height: '400px' }}>
-                        <h3 style={{ marginBottom: '1rem', color: '#facc15' }}>VENTAS POR DÍA SEMANA</h3>
+                        <h3 style={{ marginBottom: '1rem' }}>VENTAS POR DÍA SEMANA</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.weekdayStats}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
                                 <XAxis dataKey="day" stroke="#a3a3a3" />
                                 <YAxis stroke="#a3a3a3" />
                                 <Tooltip
-                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Ventas']}
                                 />
                                 <Bar dataKey="sales" fill="#facc15" radius={[4, 4, 0, 0]} />
@@ -463,18 +456,18 @@ export default function BusinessIntelligence() {
                         <h3 style={{ marginBottom: '1rem' }}>PREDICCIÓN DE FACTURACIÓN</h3>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={combinedForecastData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
                                 <XAxis dataKey="month" stroke="#a3a3a3" />
                                 <YAxis
                                     stroke="#a3a3a3"
                                     tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
                                 />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                     formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="sales" name="Histórico" stroke="#ffffff" strokeWidth={2} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="sales" name="Histórico" stroke="#111111" strokeWidth={2} dot={{ r: 4 }} />
                                 <Line type="monotone" dataKey="forecast" name="Proyección" stroke="#888888" strokeWidth={2} strokeDasharray="5 5" />
                             </LineChart>
                         </ResponsiveContainer>
@@ -501,7 +494,7 @@ export default function BusinessIntelligence() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} contentStyle={{ backgroundColor: '#1a1a1a' }} />
+                                <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8 }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
@@ -531,7 +524,7 @@ function KPICard({ label, value, color, icon, tooltip, highlight, sub }: {
                     <HelpCircle size={12} />
                 </span>
             </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: highlight ? color : '#fff' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: highlight ? color : '#111111' }}>
                 {value}
             </div>
             {sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>{sub}</div>}

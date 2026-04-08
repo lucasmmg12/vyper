@@ -61,33 +61,33 @@ export default function ClientsPage() {
         setShowImporter(false);
     };
 
-    const filteredClients = clients.filter(c =>
-        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone?.includes(searchTerm)
-    );
+    const filteredClients = clients.filter(c => {
+        const term = searchTerm.toLowerCase();
+        const nameMatch = c.name?.toLowerCase().includes(term);
+        // Normalize phone: strip non-digits so "2645438114" matches "+5492645438114"
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const phoneDigits = (c.phone || '').replace(/\D/g, '');
+        const phoneMatch = searchDigits.length > 0 && phoneDigits.includes(searchDigits);
+        return nameMatch || phoneMatch;
+    });
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                         Clientes
                     </h1>
                     <p style={{ color: 'var(--text-muted)' }}>Gestión de base de datos</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={() => setShowImporter(!showImporter)}
-                        className="secondary"
-                        style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem', borderColor: '#a5b4fc', color: '#a5b4fc' }}
-                    >
-                        📁 {showImporter ? 'Ocultar' : 'Importar Excel'}
-                    </button>
-                    <Link href="/admin" passHref>
-                        <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>Volver</button>
-                    </Link>
-                </div>
+                <button
+                    onClick={() => setShowImporter(!showImporter)}
+                    className="secondary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.8125rem' }}
+                >
+                    📁 {showImporter ? 'Ocultar' : 'Importar Excel'}
+                </button>
             </header>
 
             {/* Excel Importer (Conditional) */}
@@ -182,11 +182,11 @@ export default function ClientsPage() {
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                                 <thead>
-                                    <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.9)' }}>
-                                        <th style={{ padding: '0.75rem 0.5rem' }}>Nombre</th>
-                                        <th style={{ padding: '0.75rem 0.5rem' }}>Teléfono</th>
-                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Coins</th>
-                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Deuda</th>
+                                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, background: '#ffffff', color: '#111' }}>
+                                        <th style={{ padding: '0.75rem 0.5rem', color: '#111' }}>Nombre</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', color: '#111' }}>Teléfono</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Coins</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Deuda</th>
                                     </tr>
                                 </thead>
                                 <tbody>

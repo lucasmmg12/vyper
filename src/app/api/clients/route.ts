@@ -5,15 +5,62 @@ import { supabase } from '@/lib/supabase';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sort = searchParams.get('sort'); // 'coins', 'debt', 'recent'
-    const limit = searchParams.get('limit') || '50';
+    const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search');
 
+    // For large fetches (>1000), paginate to bypass Supabase's 1000-row default cap
+    if (limit > 1000 && !search) {
+        try {
+            let allData: any[] = [];
+            const pageSize = 1000;
+            let from = 0;
+            let hasMore = true;
+
+            while (hasMore) {
+                let query = supabase
+                    .from('users')
+                    .select('*');
+
+                if (sort === 'coins') {
+                    query = query.order('coin_balance', { ascending: false });
+                } else if (sort === 'debt') {
+                    query = query.order('debt_balance', { ascending: false });
+                } else {
+                    query = query.order('created_at', { ascending: false });
+                }
+
+                query = query.range(from, from + pageSize - 1);
+                const { data, error } = await query;
+
+                if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+                if (data && data.length > 0) {
+                    allData = allData.concat(data);
+                    from += pageSize;
+                    hasMore = data.length === pageSize;
+                } else {
+                    hasMore = false;
+                }
+
+                // Safety cap to prevent infinite loops
+                if (allData.length >= limit) {
+                    hasMore = false;
+                }
+            }
+
+            return NextResponse.json({ clients: allData });
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
+
+    // Standard query for small fetches or search queries
     let query = supabase
         .from('users')
         .select('*');
 
     if (search) {
-        query = query.ilike('name', `%${search}%`);
+        query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%`);
     }
 
     if (sort === 'coins') {
@@ -24,7 +71,7 @@ export async function GET(request: Request) {
         query = query.order('created_at', { ascending: false });
     }
 
-    query = query.limit(parseInt(limit));
+    query = query.limit(limit);
 
     const { data, error } = await query;
 

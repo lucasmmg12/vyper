@@ -105,23 +105,22 @@ export default function RetentionPage() {
         window.open(waUrl, '_blank');
     };
 
-    const filteredOps = opportunities.filter(op =>
-        op.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        op.client.phone.includes(searchTerm)
-    );
+    const filteredOps = opportunities.filter(op => {
+        const term = searchTerm.toLowerCase();
+        const nameMatch = op.client.name.toLowerCase().includes(term);
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const phoneDigits = (op.client.phone || '').replace(/\D/g, '');
+        const phoneMatch = searchDigits.length > 0 && phoneDigits.includes(searchDigits);
+        return nameMatch || phoneMatch;
+    });
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <RefreshCcw size={36} color="#00FF88" /> Retención
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Motor de Recompra Inteligente (Follow-Up)</p>
-                </div>
-                <Link href="/admin" passHref>
-                    <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>Volver al Panel</button>
-                </Link>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <RefreshCcw size={24} /> Retención
+                </h1>
+                <p style={{ color: 'var(--text-muted)' }}>Motor de Recompra Inteligente (Follow-Up)</p>
             </header>
 
             {/* Context Widget */}

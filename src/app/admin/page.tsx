@@ -7,7 +7,6 @@ import ExpensesForm from '@/components/ExpensesForm';
 import RecentTransactions from '@/components/RecentTransactions';
 import ExcelImporter from '@/components/ExcelImporter';
 import { Upload, Send } from 'lucide-react';
-import Link from 'next/link';
 import DailySummaryModal from '@/components/DailySummaryModal';
 
 export default function AdminPage() {
@@ -25,72 +24,7 @@ export default function AdminPage() {
     return (
         <>
             <div className="page-container">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                    <div>
-                        <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                            Vyper Dashboard
-                        </h1>
-                        <p style={{ color: 'var(--text-muted)' }}>Panel de control financiero</p>
-                    </div>
-
-                    <div className="nav-pill-container">
-                        <Link href="/tutorial" passHref>
-                            <button className="nav-pill-button help">
-                                📚 Ayuda
-                            </button>
-                        </Link>
-                        <Link href="/admin/vyper-coins" passHref>
-                            <button className="nav-pill-button">
-                                🪙 Vyper Coins
-                            </button>
-                        </Link>
-                        <Link href="/admin/debt" passHref>
-                            <button className="nav-pill-button">
-                                💳 Cta Cte
-                            </button>
-                        </Link>
-                        <Link href="/admin/clients" passHref>
-                            <button className="nav-pill-button">
-                                👥 Clientes
-                            </button>
-                        </Link>
-                        <Link href="/admin/bi" passHref>
-                            <button className="nav-pill-button">
-                                📊 Analytics
-                            </button>
-                        </Link>
-                        <Link href="/admin/retention" passHref>
-                            <button className="nav-pill-button">
-                                🔄 Retención
-                            </button>
-                        </Link>
-                        <Link href="/admin/competitors" passHref>
-                            <button className="nav-pill-button">
-                                ⚔️ Competencia
-                            </button>
-                        </Link>
-                        <button
-                            className="nav-pill-button"
-                            onClick={() => setShowSummaryModal(true)}
-                            style={{
-                                color: '#00FF88',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <Send size={14} />
-                            📋 Resumen Diario
-                        </button>
-                        <Link href="/" passHref>
-                            <button className="nav-pill-button" style={{ color: '#ef4444' }}>
-                                Salir
-                            </button>
-                        </Link>
-                    </div>
-                </header>
-
-                {/* Tabs */}
+                {/* Tabs & Actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                     <div className="nav-pill-container" style={{ padding: '0.4rem' }}>
                         <button
@@ -109,22 +43,37 @@ export default function AdminPage() {
                         </button>
                     </div>
 
-                    <button
-                        onClick={() => setShowImporter(!showImporter)}
-                        className="secondary"
-                        style={{
-                            padding: '0.5rem 1.5rem',
-                            fontSize: '0.9rem',
-                            borderColor: showImporter ? '#4ade80' : '#a5b4fc',
-                            color: showImporter ? '#4ade80' : '#a5b4fc',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}
-                    >
-                        <Upload size={18} />
-                        {showImporter ? 'Cerrar importador' : 'Importar Excel'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            onClick={() => setShowSummaryModal(true)}
+                            className="btn-green"
+                            style={{
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.8125rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.375rem'
+                            }}
+                        >
+                            <Send size={14} />
+                            Resumen Diario
+                        </button>
+
+                        <button
+                            onClick={() => setShowImporter(!showImporter)}
+                            className="secondary"
+                            style={{
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.8125rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.375rem'
+                            }}
+                        >
+                            <Upload size={14} />
+                            {showImporter ? 'Cerrar' : 'Importar Excel'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Excel Importer */}

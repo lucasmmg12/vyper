@@ -44,7 +44,7 @@ export async function POST(request: Request) {
             const { data: newUser, error: createError } = await supabase
                 .from('users')
                 .insert({
-                    phone: whatsapp,
+                    phone: formattedWhatsapp,
                     name: clientName || `Cliente ${whatsapp}`,
                     user_profile: 'CLIENT',
                     coin_balance: 0,

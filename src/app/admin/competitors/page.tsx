@@ -193,16 +193,11 @@ export default function CompetitorsPage() {
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, textTransform: 'uppercase' }}>
-                        INTELIGENCIA COMPETITIVA
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Análisis de Mercado - San Juan, Argentina</p>
-                </div>
-                <Link href="/admin">
-                    <button className="secondary">VOLVER</button>
-                </Link>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 900, textTransform: 'uppercase' }}>
+                    INTELIGENCIA COMPETITIVA
+                </h1>
+                <p style={{ color: 'var(--text-muted)' }}>Análisis de Mercado - San Juan, Argentina</p>
             </header>
 
             {/* MARKET STRUCTURE SECTION */}

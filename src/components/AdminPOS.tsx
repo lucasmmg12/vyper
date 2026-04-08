@@ -49,9 +49,20 @@ export default function AdminPOS() {
 
                 <div>
                     <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>WHATSAPP CLIENTE</label>
-                    <span style={{ fontSize: '0.75rem', color: '#00D1FF', display: 'block', marginBottom: '0.5rem' }}>
-                        ⚠️ Ingrese solo el número local (sin +549). Ej: 2645438114
-                    </span>
+                    <div style={{
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(0, 0, 0, 0.04)',
+                        border: '1px solid rgba(0, 0, 0, 0.12)',
+                        borderRadius: '8px',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.78rem',
+                        color: '#111111',
+                        lineHeight: 1.4
+                    }}>
+                        📱 Ingresá solo el número local <strong>sin el +549</strong>.
+                        <br />
+                        Ejemplo: <strong style={{ fontFamily: 'monospace' }}>2645438114</strong> → se guarda como <strong style={{ fontFamily: 'monospace' }}>+5492645438114</strong>
+                    </div>
                     <input
                         type="text"
                         value={whatsapp}
@@ -59,6 +70,21 @@ export default function AdminPOS() {
                         placeholder="Ej: 2645438114"
                         required
                     />
+                    {whatsapp.trim() && (
+                        <p style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.35rem', fontFamily: 'monospace' }}>
+                            ✅ Se guardará como: <strong>{
+                                (() => {
+                                    let p = whatsapp.trim().replace(/[\s-]/g, '');
+                                    if (!p.startsWith('+549')) {
+                                        if (p.startsWith('+54') && !p.startsWith('+549')) p = '+549' + p.slice(3);
+                                        else if (p.startsWith('549')) p = '+' + p;
+                                        else p = '+549' + p;
+                                    }
+                                    return p;
+                                })()
+                            }</strong>
+                        </p>
+                    )}
                 </div>
 
                 <div>

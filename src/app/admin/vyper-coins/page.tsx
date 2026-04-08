@@ -63,10 +63,14 @@ export default function VyperCoinsPage() {
         }
     };
 
-    const filteredClients = clients.filter(c =>
-        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone?.includes(searchTerm)
-    );
+    const filteredClients = clients.filter(c => {
+        const term = searchTerm.toLowerCase();
+        const nameMatch = c.name?.toLowerCase().includes(term);
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const phoneDigits = (c.phone || '').replace(/\D/g, '');
+        const phoneMatch = searchDigits.length > 0 && phoneDigits.includes(searchDigits);
+        return nameMatch || phoneMatch;
+    });
 
     const coinsToAdd = Math.floor(amount / 1000);
     const newBalance = (selectedClient?.coin_balance || 0) + coinsToAdd;
@@ -200,17 +204,12 @@ export default function VyperCoinsPage() {
 
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <Coins size={40} color="#ffffff" />
-                        VYPER COINS
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Sistema de Recompensas - $1000 = 1 Coin 🪙</p>
-                </div>
-                <Link href="/admin" passHref>
-                    <button className="secondary" style={{ padding: '0.5rem 1.5rem', fontSize: '0.8rem' }}>VOLVER</button>
-                </Link>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Coins size={28} />
+                    VYPER COINS
+                </h1>
+                <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>Sistema de Recompensas - $1000 = 1 Coin 🪙</p>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>

@@ -78,10 +78,21 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                 <div>
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.25rem' }}>
                         <span>Teléfono / WhatsApp *</span>
-                        <span style={{ fontSize: '0.75rem', color: '#00D1FF' }}>
-                            ⚠️ Ingrese solo el número local (sin +549). Ej: 2645438114
-                        </span>
                     </label>
+                    <div style={{
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(0, 0, 0, 0.04)',
+                        border: '1px solid rgba(0, 0, 0, 0.12)',
+                        borderRadius: '8px',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.78rem',
+                        color: '#111111',
+                        lineHeight: 1.4
+                    }}>
+                        📱 Ingresá solo el número local <strong>sin el +549</strong>.
+                        <br />
+                        Ejemplo: <strong style={{ fontFamily: 'monospace' }}>2645438114</strong> → se guarda como <strong style={{ fontFamily: 'monospace' }}>+5492645438114</strong>
+                    </div>
                     <input
                         type="tel"
                         required
@@ -89,6 +100,21 @@ export default function NewClientForm({ onSuccess }: { onSuccess: () => void }) 
                         value={formData.phone}
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
+                    {formData.phone.trim() && (
+                        <p style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.35rem', fontFamily: 'monospace' }}>
+                            ✅ Se guardará como: <strong>{
+                                (() => {
+                                    let p = formData.phone.trim().replace(/[\s-]/g, '');
+                                    if (!p.startsWith('+549')) {
+                                        if (p.startsWith('+54') && !p.startsWith('+549')) p = '+549' + p.slice(3);
+                                        else if (p.startsWith('549')) p = '+' + p;
+                                        else p = '+549' + p;
+                                    }
+                                    return p;
+                                })()
+                            }</strong>
+                        </p>
+                    )}
                 </div>
 
                 <div className="grid-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
