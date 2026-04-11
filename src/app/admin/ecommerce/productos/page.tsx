@@ -282,91 +282,118 @@ export default function ProductosAdminPage() {
           }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem', marginBottom: '1rem' }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label>Nombre *</label>
                 <input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Whey Protein 1kg" />
               </div>
-              <div>
-                <label>💰 Precio de Costo *</label>
-                <input type="number" value={form.precio_costo} onChange={e => setForm({ ...form, precio_costo: e.target.value })} placeholder="0" style={{ borderColor: form.precio_costo ? 'var(--accent-green)' : undefined }} />
+            </div>
+
+            {/* SEGMENTO DE PRECIOS */}
+            <div style={{ 
+              background: 'var(--bg-secondary)', 
+              padding: '1.5rem', 
+              borderRadius: '12px', 
+              border: '1px solid var(--border-color)',
+              marginBottom: '1rem',
+            }}>
+              <h4 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
+                <span>💰</span> Configuración de Precios
+              </h4>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label>Precio de Costo *</label>
+                <input type="number" value={form.precio_costo} onChange={e => setForm({ ...form, precio_costo: e.target.value })} placeholder="0" style={{ borderColor: form.precio_costo ? 'var(--accent-green)' : undefined, maxWidth: '250px' }} />
               </div>
 
-              {/* Mayorista Lista */}
-              <div>
-                <label>🛒 Base Mayorista</label>
-                <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
-                  <option value="">Por defecto</option>
-                  {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default ? ' [Default Actual]' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+                {/* Mayorista Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0', borderRight: '1px solid var(--border-color)', paddingRight: '1.5rem' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--accent-green)', marginBottom: '1rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛒 Canal Mayorista</div>
+                  
+                  <div>
+                    <label>Base Mayorista</label>
+                    <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
+                      <option value="">Por defecto</option>
+                      {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default ? ' [Default]' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Mayorista Lista Escalonada */}
-              <div>
-                <label>📉 Escalonada Mayorista</label>
-                <select value={selectedListaEscalonadaId} onChange={e => setSelectedListaEscalonadaId(e.target.value)}>
-                  <option value="">Ninguna</option>
-                  {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.nombre}
-                    </option>
-                  ))}
-                </select>
-                {form.precio_costo && (() => {
-                  const listaActiva = selectedListaId 
-                        ? listas.find(l => l.id === selectedListaId) 
-                        : listas.find(l => l.es_default && l.activo);
-                  const costo = parseFloat(form.precio_costo) || 0;
-                  const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
-                  return (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      💰 P. Mayorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
-                    </div>
-                  );
-                })()}
-              </div>
+                  <div>
+                    <label>Escalonada Mayorista (Opcional)</label>
+                    <select value={selectedListaEscalonadaId} onChange={e => setSelectedListaEscalonadaId(e.target.value)}>
+                      <option value="">Ninguna</option>
+                      {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Minorista Lista */}
-              <div>
-                <label>🛍️ Base Minorista</label>
-                <select value={selectedListaMinoristaId} onChange={e => setSelectedListaMinoristaId(e.target.value)}>
-                  <option value="">Por defecto (Minorista)</option>
-                  {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default_minorista ? ' [Default Actual]' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {form.precio_costo && (() => {
+                    const listaActiva = selectedListaId 
+                          ? listas.find(l => l.id === selectedListaId) 
+                          : listas.find(l => l.es_default && l.activo);
+                    const costo = parseFloat(form.precio_costo) || 0;
+                    const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
+                    return (
+                      <div style={{ fontSize: '0.875rem', color: 'var(--accent-green)', marginTop: '0.5rem', fontWeight: 700, padding: '0.5rem', background: 'rgba(0, 255, 136, 0.05)', borderRadius: '8px' }}>
+                         PRECIO VENTA: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                      </div>
+                    );
+                  })()}
+                </div>
 
-              {/* Minorista Lista Escalonada */}
-              <div>
-                <label>📉 Escalonada Minorista</label>
-                <select value={selectedListaEscalonadaMinoristaId} onChange={e => setSelectedListaEscalonadaMinoristaId(e.target.value)}>
-                  <option value="">Ninguna</option>
-                  {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.nombre}
-                    </option>
-                  ))}
-                </select>
-                {form.precio_costo && (() => {
-                  const listaActiva = selectedListaMinoristaId 
-                        ? listas.find(l => l.id === selectedListaMinoristaId) 
-                        : listas.find(l => l.es_default_minorista && l.activo);
-                  const costo = parseFloat(form.precio_costo) || 0;
-                  const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
-                  return (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-pink)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      🛍️ P. Minorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
-                    </div>
-                  );
-                })()}
+                {/* Minorista Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--accent-pink)', marginBottom: '1rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛍️ Canal Minorista</div>
+                  
+                  <div>
+                    <label>Base Minorista</label>
+                    <select value={selectedListaMinoristaId} onChange={e => setSelectedListaMinoristaId(e.target.value)}>
+                      <option value="">Por defecto (Minorista)</option>
+                      {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default_minorista ? ' [Default]' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Escalonada Minorista (Opcional)</label>
+                    <select value={selectedListaEscalonadaMinoristaId} onChange={e => setSelectedListaEscalonadaMinoristaId(e.target.value)}>
+                      <option value="">Ninguna</option>
+                      {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {form.precio_costo && (() => {
+                    const listaActiva = selectedListaMinoristaId 
+                          ? listas.find(l => l.id === selectedListaMinoristaId) 
+                          : listas.find(l => l.es_default_minorista && l.activo);
+                    const costo = parseFloat(form.precio_costo) || 0;
+                    const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
+                    return (
+                      <div style={{ fontSize: '0.875rem', color: 'var(--accent-pink)', marginTop: '0.5rem', fontWeight: 700, padding: '0.5rem', background: 'rgba(255, 49, 49, 0.05)', borderRadius: '8px' }}>
+                         PRECIO VENTA: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
 
               <div>
                 <label>Stock</label>
