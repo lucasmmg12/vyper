@@ -340,6 +340,29 @@ export default function TiendaPage() {
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '1rem 1.5rem 3rem' }}>
 
+      {/* ===== VIDEO DE PORTADA ===== */}
+      <div style={{
+        width: '100%',
+        aspectRatio: '16/9',
+        marginBottom: '1.5rem',
+        borderRadius: 16,
+        overflow: 'hidden',
+        background: '#000',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
+      }}>
+        <iframe 
+          width="100%" 
+          height="100%" 
+          src="https://www.youtube.com/embed/XBfY8ZtRqQk?si=604rD7BQeXQTJx7l" 
+          title="YouTube video player" 
+          frameBorder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          referrerPolicy="strict-origin-when-cross-origin" 
+          allowFullScreen
+          style={{ display: 'block', border: 'none' }}
+        />
+      </div>
+
       {/* ===== HERO ===== */}
       <div style={{
         borderRadius: 16,
