@@ -297,9 +297,13 @@ export default function ProductosAdminPage() {
               border: '1px solid var(--border-color)',
               marginBottom: '1rem',
             }}>
-              <h4 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
+              <h4 style={{ marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
                 <span>💰</span> Configuración de Precios
               </h4>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.4 }}>
+                El precio final de venta se calcula automáticamente a partir del <b>Costo</b>. <br/>
+                La <b>Base</b> aplica el margen de ganancia principal (ej. +20%). La <b>Escalonada</b> te permite hacer descuentos automáticos por volumen (ej. -5% si llevan más de 10 unid).
+              </p>
               
               <div style={{ marginBottom: '1.5rem' }}>
                 <label>Precio de Costo *</label>
@@ -309,7 +313,8 @@ export default function ProductosAdminPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
                 {/* Mayorista Column */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0', borderRight: '1px solid var(--border-color)', paddingRight: '1.5rem' }}>
-                  <div style={{ fontWeight: 600, color: 'var(--accent-green)', marginBottom: '1rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛒 Canal Mayorista</div>
+                  <div style={{ fontWeight: 600, color: 'var(--accent-green)', marginBottom: '0.25rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛒 Canal Mayorista</div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.3 }}>Precios mostrados en tu ecommerce para clientes mayoristas habilitados.</p>
                   
                   <div>
                     <label>Base Mayorista</label>
@@ -351,7 +356,8 @@ export default function ProductosAdminPage() {
 
                 {/* Minorista Column */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                  <div style={{ fontWeight: 600, color: 'var(--accent-pink)', marginBottom: '1rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛍️ Canal Minorista</div>
+                  <div style={{ fontWeight: 600, color: 'var(--accent-pink)', marginBottom: '0.25rem', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>🛍️ Canal Minorista</div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.3 }}>Precios mostrados en tu ecommerce abierto destinado al público general.</p>
                   
                   <div>
                     <label>Base Minorista</label>
