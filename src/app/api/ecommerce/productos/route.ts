@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:listas_precios_escalones(*))', { count: 'exact' });
+    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:lista_precio_escalones(*))', { count: 'exact' });
 
   if (!all) {
     query = query.eq('activo', true).gt('stock', 0);
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
   // Fetch default markup if needed
   const { data: defaultList } = await supabase
     .from('listas_precios')
-    .select('*, escalones:listas_precios_escalones(*)')
+    .select('*, escalones:lista_precio_escalones(*)')
     .eq('activo', true)
     .eq('es_default', true)
     .single();

@@ -10,7 +10,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:listas_precios_escalones(*))')
+    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:lista_precio_escalones(*))')
     .eq('id', id)
     .single();
 
@@ -20,7 +20,7 @@ export async function GET(
 
   const { data: defaultList } = await supabase
     .from('listas_precios')
-    .select('*, escalones:listas_precios_escalones(*)')
+    .select('*, escalones:lista_precio_escalones(*)')
     .eq('activo', true)
     .eq('es_default', true)
     .single();
