@@ -191,7 +191,7 @@ function ProductSection({ title, icon, products, formatPrice, onAdd, addedId, ac
       </div>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))',
         gap: '0.875rem',
       }}>
         {products.map(p => (
@@ -424,6 +424,7 @@ export default function TiendaPage() {
       {/* ===== NAV TABS ===== */}
       <div style={{
         display: 'flex',
+        flexWrap: 'wrap',
         gap: '0.25rem',
         marginBottom: '2rem',
         borderBottom: '1px solid #e5e7eb',
@@ -659,7 +660,7 @@ export default function TiendaPage() {
 
           {/* Product Grid */}
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '0.875rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: '0.875rem' }}>
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="glass-card" style={{ height: 300 }}>
                   <div style={{ height: 180, background: '#f3f4f6', borderRadius: 12, marginBottom: '0.75rem' }} />
@@ -681,7 +682,7 @@ export default function TiendaPage() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '0.875rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: '0.875rem' }}>
                 {productos.map(p => (
                   <ProductCard
                     key={p.id}
