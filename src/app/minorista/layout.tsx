@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, Search, Menu, X, ChevronRight, Package, HelpCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart';
+import MarqueeBar from '@/components/tienda/MarqueeBar';
 
 export default function TiendaLayout({ children }: { children: React.ReactNode }) {
   const { getItemCount, isLoaded } = useCart();
@@ -27,6 +28,9 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
+      {/* ===== MARQUEE ===== */}
+      <MarqueeBar storeType="minorista" />
+
       {/* ===== HEADER ===== */}
       <header style={{
         position: 'sticky',

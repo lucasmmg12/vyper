@@ -16,6 +16,7 @@ import {
     LogOut,
     Send,
     UserCog,
+    Settings,
 } from 'lucide-react';
 
 interface CurrentUser {
@@ -34,6 +35,7 @@ const navItems = [
     { href: '/admin/retention', label: 'Retención', icon: RefreshCcw },
     { href: '/admin/competitors', label: 'Competencia', icon: Swords },
     { href: '/admin/ecommerce', label: 'Ecommerce', icon: ShoppingCart },
+    { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
 ];
 
 const bottomItems = [
