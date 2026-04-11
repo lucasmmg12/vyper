@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Plus, Search, Edit, Trash2, Eye, EyeOff, Star, Package, Upload, X, Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Producto } from '@/types/ecommerce';
+import { Producto, ListaPrecio } from '@/types/ecommerce';
 
 export default function ProductosAdminPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -37,6 +37,8 @@ export default function ProductosAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [generatingDesc, setGeneratingDesc] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [listas, setListas] = useState<ListaPrecio[]>([]);
+  const [selectedListaId, setSelectedListaId] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -54,15 +56,21 @@ export default function ProductosAdminPage() {
   };
 
   const fetchFilters = async () => {
-    const [rubrosRes, catRes, marcaRes] = await Promise.all([
+    const [rubrosRes, catRes, marcaRes, listasRes] = await Promise.all([
       fetch('/api/ecommerce/rubros'),
       fetch('/api/ecommerce/categorias'),
       fetch('/api/ecommerce/marcas'),
+      fetch('/api/ecommerce/listas-precios'),
     ]);
-    const [rubrosData, catData, marcaData] = await Promise.all([rubrosRes.json(), catRes.json(), marcaRes.json()]);
+    const [rubrosData, catData, marcaData, listasData] = await Promise.all([rubrosRes.json(), catRes.json(), marcaRes.json(), listasRes.json()]);
     setRubros(rubrosData.rubros || []);
     setCategorias(catData.categorias || []);
     setMarcas(marcaData.marcas || []);
+    const fetchedListas: ListaPrecio[] = listasData.listas || [];
+    setListas(fetchedListas);
+    // Auto-select default lista
+    const defaultLista = fetchedListas.find(l => l.es_default && l.activo);
+    if (defaultLista && !selectedListaId) setSelectedListaId(defaultLista.id);
   };
 
   const handleCreateCategoria = async () => {
@@ -118,11 +126,17 @@ export default function ProductosAdminPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    // Calculate precio_mayorista from selected lista
+    const costo = parseFloat(form.precio_costo) || 0;
+    const selectedLista = listas.find(l => l.id === selectedListaId);
+    const markup = selectedLista ? selectedLista.markup : 1;
+    const precioMayorista = Math.round(costo * markup);
+
     const payload = {
       nombre: form.nombre,
       descripcion: form.descripcion,
-      precio_costo: parseFloat(form.precio_costo) || 0,
-      precio_mayorista: parseFloat(form.precio_mayorista) || 0,
+      precio_costo: costo,
+      precio_mayorista: precioMayorista,
       precio_unitario: parseFloat(form.precio_unitario) || 0,
       stock: parseInt(form.stock) || 0,
       cantidad_minima: parseInt(form.cantidad_minima) || 1,
@@ -261,8 +275,25 @@ export default function ProductosAdminPage() {
                 <input type="number" value={form.precio_costo} onChange={e => setForm({ ...form, precio_costo: e.target.value })} placeholder="0" style={{ borderColor: form.precio_costo ? 'var(--accent-green)' : undefined }} />
               </div>
               <div>
-                <label>Precio Mayorista</label>
-                <input type="number" value={form.precio_mayorista} onChange={e => setForm({ ...form, precio_mayorista: e.target.value })} placeholder="Se calcula con lista de precios" />
+                <label>📊 Lista de Precios</label>
+                <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
+                  <option value="">Sin lista (manual)</option>
+                  {listas.filter(l => l.activo).map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%)
+                    </option>
+                  ))}
+                </select>
+                {form.precio_costo && selectedListaId && (() => {
+                  const lista = listas.find(l => l.id === selectedListaId);
+                  const costo = parseFloat(form.precio_costo) || 0;
+                  const calculado = lista ? Math.round(costo * lista.markup) : costo;
+                  return (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                      💰 Precio Mayorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <label>Precio Unitario</label>
