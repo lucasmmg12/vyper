@@ -14,7 +14,7 @@ export default function ProductosAdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     nombre: '', descripcion: '',
-    precio_mayorista: '', precio_unitario: '',
+    precio_costo: '', precio_mayorista: '', precio_unitario: '',
     stock: '', cantidad_minima: '1',
     categoria_id: '', marca_id: '',
     activo: true, destacado: false, en_oferta: false,
@@ -114,6 +114,7 @@ export default function ProductosAdminPage() {
     const payload = {
       nombre: form.nombre,
       descripcion: form.descripcion,
+      precio_costo: parseFloat(form.precio_costo) || 0,
       precio_mayorista: parseFloat(form.precio_mayorista) || 0,
       precio_unitario: parseFloat(form.precio_unitario) || 0,
       stock: parseInt(form.stock) || 0,
@@ -156,6 +157,7 @@ export default function ProductosAdminPage() {
     setForm({
       nombre: p.nombre,
       descripcion: p.descripcion || '',
+      precio_costo: p.precio_costo ? String(p.precio_costo) : '',
       precio_mayorista: String(p.precio_mayorista),
       precio_unitario: String(p.precio_unitario),
       stock: String(p.stock),
@@ -190,7 +192,7 @@ export default function ProductosAdminPage() {
   const resetForm = () => {
     setForm({
       nombre: '', descripcion: '',
-      precio_mayorista: '', precio_unitario: '',
+      precio_costo: '', precio_mayorista: '', precio_unitario: '',
       stock: '', cantidad_minima: '1',
       categoria_id: '', marca_id: '',
       activo: true, destacado: false, en_oferta: false,
@@ -248,8 +250,12 @@ export default function ProductosAdminPage() {
                 <input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Whey Protein 1kg" />
               </div>
               <div>
-                <label>Precio Mayorista *</label>
-                <input type="number" value={form.precio_mayorista} onChange={e => setForm({ ...form, precio_mayorista: e.target.value })} placeholder="0" />
+                <label>💰 Precio de Costo *</label>
+                <input type="number" value={form.precio_costo} onChange={e => setForm({ ...form, precio_costo: e.target.value })} placeholder="0" style={{ borderColor: form.precio_costo ? 'var(--accent-green)' : undefined }} />
+              </div>
+              <div>
+                <label>Precio Mayorista</label>
+                <input type="number" value={form.precio_mayorista} onChange={e => setForm({ ...form, precio_mayorista: e.target.value })} placeholder="Se calcula con lista de precios" />
               </div>
               <div>
                 <label>Precio Unitario</label>
@@ -601,7 +607,7 @@ export default function ProductosAdminPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['', 'Producto', 'Precio May.', 'Stock', 'Estado', 'Acciones'].map(h => (
+                  {['', 'Producto', 'Costo', 'Precio May.', 'Stock', 'Estado', 'Acciones'].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '0.75rem 1rem',
                       fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)',
@@ -652,6 +658,9 @@ export default function ProductosAdminPage() {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {p.marca?.nombre} {p.categoria ? `· ${p.categoria.nombre}` : ''}
                       </div>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      {formatPrice(p.precio_costo || 0)}
                     </td>
                     <td style={{ padding: '0.75rem 1rem', fontWeight: 700 }}>
                       {formatPrice(p.precio_mayorista)}

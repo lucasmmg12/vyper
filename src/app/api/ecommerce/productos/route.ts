@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       nombre: body.nombre,
       descripcion: body.descripcion,
       sku: `VYP-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.random().toString(36).toUpperCase().slice(2, 4)}`,
+      precio_costo: body.precio_costo || 0,
       precio_mayorista: body.precio_mayorista || 0,
       precio_unitario: body.precio_unitario || 0,
       stock: body.stock || 0,

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS public.productos (
   nombre text NOT NULL,
   descripcion text,
   sku text,
+  precio_costo numeric DEFAULT 0.0,
   precio_mayorista numeric DEFAULT 0.0,
   precio_unitario numeric DEFAULT 0.0,
   stock integer DEFAULT 0,

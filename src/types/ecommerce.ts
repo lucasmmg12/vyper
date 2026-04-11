@@ -38,6 +38,7 @@ export interface Producto {
   nombre: string;
   descripcion?: string;
   sku?: string;
+  precio_costo: number;
   precio_mayorista: number;
   precio_unitario: number;
   stock: number;
@@ -54,6 +55,7 @@ export interface Producto {
   // Joined
   categoria?: Categoria;
   marca?: Marca;
+  promociones?: ProductoPromocion[];
 }
 
 export interface Pedido {
@@ -79,6 +81,82 @@ export interface PedidoItem {
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
+  // Joined
+  producto?: Producto;
+}
+
+// ============================================
+// COMPRAS (Purchases / Stock Entry)
+// ============================================
+
+export interface Compra {
+  id: string;
+  proveedor?: string;
+  numero_factura?: string;
+  notas?: string;
+  total: number;
+  estado: 'pendiente' | 'confirmada' | 'cancelada';
+  fecha: string;
+  created_at: string;
+  // Joined
+  items?: CompraItem[];
+}
+
+export interface CompraItem {
+  id: string;
+  compra_id: string;
+  producto_id?: string;
+  producto_nombre: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  created_at: string;
+  // Joined
+  producto?: Producto;
+}
+
+// ============================================
+// LISTAS DE PRECIOS (Price Lists)
+// ============================================
+
+export interface ListaPrecio {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  tipo: 'markup' | 'escalonada';
+  markup: number;
+  activo: boolean;
+  es_default: boolean;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  escalones?: ListaPrecioEscalon[];
+}
+
+export interface ListaPrecioEscalon {
+  id: string;
+  lista_id: string;
+  cantidad_minima: number;
+  multiplicador: number;
+  orden: number;
+  created_at: string;
+}
+
+// ============================================
+// PROMOCIONES POR PRODUCTO
+// ============================================
+
+export interface ProductoPromocion {
+  id: string;
+  producto_id: string;
+  nombre: string;
+  tipo: 'markup' | 'precio_fijo' | 'descuento';
+  valor: number;
+  cantidad_minima: number;
+  activo: boolean;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  created_at: string;
   // Joined
   producto?: Producto;
 }
