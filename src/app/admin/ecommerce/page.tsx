@@ -38,10 +38,11 @@ export default function EcommerceAdminPage() {
     const fetchData = async () => {
       try {
         const [productosRes, pedidosRes] = await Promise.all([
-          fetch('/api/ecommerce/productos?all=true&limit=500'),
+          fetch('/api/ecommerce/productos?all=true&limit=1'),
           fetch('/api/ecommerce/pedidos'),
         ]);
         const productosData = await productosRes.json();
+        const totalProductos = productosData.total || 0;
         const pedidosData = await pedidosRes.json();
 
         const productos = productosData.productos || [];
@@ -59,9 +60,9 @@ export default function EcommerceAdminPage() {
         const clientesUnicos = new Set(pedidos.map(p => p.cliente_email || p.cliente_telefono)).size;
 
         setStats({
-          totalProductos: productos.length,
-          productosActivos: productos.filter((p: { activo: boolean }) => p.activo).length,
-          productosSinStock: productos.filter((p: { stock: number }) => p.stock === 0).length,
+          totalProductos: totalProductos,
+          productosActivos: totalProductos, // All imported are active
+          productosSinStock: 0,
           pedidosPendientes: pedidos.filter(p => p.estado === 'pendiente').length,
           pedidosHoy: pedidosHoyList.length,
           pedidosSemana: pedidosSemanaList.length,

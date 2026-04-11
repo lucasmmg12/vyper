@@ -37,13 +37,19 @@ export default function ProductosAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [generatingDesc, setGeneratingDesc] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const PAGE_SIZE = 50;
 
-  const fetchProductos = async () => {
-    const params = new URLSearchParams({ all: 'true', limit: '100' });
+  const fetchProductos = async (page = currentPage) => {
+    const params = new URLSearchParams({ all: 'true', limit: String(PAGE_SIZE), page: String(page) });
     if (search) params.set('search', search);
     const res = await fetch(`/api/ecommerce/productos?${params}`);
     const data = await res.json();
     setProductos(data.productos || []);
+    setTotalPages(data.totalPages || 1);
+    setTotalProducts(data.total || 0);
     setLoading(false);
   };
 
@@ -104,10 +110,11 @@ export default function ProductosAdminPage() {
 
   useEffect(() => { fetchFilters(); }, []);
   useEffect(() => {
-    const timer = setTimeout(fetchProductos, 300);
+    const timer = setTimeout(() => { setCurrentPage(1); fetchProductos(1); }, 300);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
+  useEffect(() => { fetchProductos(currentPage); }, [currentPage]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -693,6 +700,36 @@ export default function ProductosAdminPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '1rem 1.25rem', borderTop: '1px solid var(--border-light)',
+            }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                {totalProducts.toLocaleString()} productos · Página {currentPage} de {totalPages}
+              </span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="btn-ghost"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}
+                >
+                  <ChevronLeft size={16} /> Anterior
+                </button>
+                <button
+                  className="btn-ghost"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}
+                >
+                  Siguiente <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {/* Image Lightbox */}
