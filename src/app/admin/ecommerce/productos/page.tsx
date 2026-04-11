@@ -14,7 +14,7 @@ export default function ProductosAdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     nombre: '', descripcion: '',
-    precio_costo: '', precio_mayorista: '', precio_unitario: '',
+    precio_costo: '', precio_mayorista: '',
     stock: '', cantidad_minima: '1',
     categoria_id: '', marca_id: '',
     activo: true, destacado: false, en_oferta: false,
@@ -137,7 +137,7 @@ export default function ProductosAdminPage() {
       descripcion: form.descripcion,
       precio_costo: costo,
       precio_mayorista: precioMayorista,
-      precio_unitario: parseFloat(form.precio_unitario) || 0,
+      precio_unitario: 0,
       stock: parseInt(form.stock) || 0,
       cantidad_minima: parseInt(form.cantidad_minima) || 1,
       categoria_id: form.categoria_id || null,
@@ -180,7 +180,7 @@ export default function ProductosAdminPage() {
       descripcion: p.descripcion || '',
       precio_costo: p.precio_costo ? String(p.precio_costo) : '',
       precio_mayorista: String(p.precio_mayorista),
-      precio_unitario: String(p.precio_unitario),
+
       stock: String(p.stock),
       cantidad_minima: String(p.cantidad_minima),
       categoria_id: p.categoria_id || '',
@@ -213,7 +213,7 @@ export default function ProductosAdminPage() {
   const resetForm = () => {
     setForm({
       nombre: '', descripcion: '',
-      precio_costo: '', precio_mayorista: '', precio_unitario: '',
+      precio_costo: '', precio_mayorista: '',
       stock: '', cantidad_minima: '1',
       categoria_id: '', marca_id: '',
       activo: true, destacado: false, en_oferta: false,
@@ -295,10 +295,7 @@ export default function ProductosAdminPage() {
                   );
                 })()}
               </div>
-              <div>
-                <label>Precio Unitario</label>
-                <input type="number" value={form.precio_unitario} onChange={e => setForm({ ...form, precio_unitario: e.target.value })} placeholder="0" />
-              </div>
+
               <div>
                 <label>Stock</label>
                 <input type="number" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} placeholder="0" />
