@@ -510,8 +510,12 @@ export default function ProductosAdminPage() {
                           body: JSON.stringify({ nombre: form.nombre, categoria: catName, marca: marcaName }),
                         });
                         const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Error al generar la descripción');
                         if (data.descripcion) setForm(f => ({ ...f, descripcion: data.descripcion }));
-                      } catch (err) { console.error(err); }
+                      } catch (err: any) { 
+                        console.error(err);
+                        alert(err.message || 'Error de conexión');
+                      }
                       setGeneratingDesc(false);
                     }}
                     style={{
