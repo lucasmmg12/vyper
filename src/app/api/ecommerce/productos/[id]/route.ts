@@ -8,9 +8,18 @@ export async function GET(
 ) {
   const { id } = await params;
 
+  const searchParams = request.nextUrl.searchParams;
+  const tienda = searchParams.get('tienda') || 'mayorista';
+
   const { data, error } = await supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:lista_precio_escalones(*))')
+    .select(`
+      *, 
+      categoria:categorias(*,rubro:rubros(*)), 
+      marca:marcas(*), 
+      lista_precio:listas_precios!lista_precio_id(*, escalones:lista_precio_escalones(*)),
+      lista_precio_minorista:listas_precios!lista_precio_minorista_id(*, escalones:lista_precio_escalones(*))
+    `)
     .eq('id', id)
     .single();
 
@@ -22,14 +31,19 @@ export async function GET(
     .from('listas_precios')
     .select('*, escalones:lista_precio_escalones(*)')
     .eq('activo', true)
-    .eq('es_default', true)
+    .eq(tienda === 'minorista' ? 'es_default_minorista' : 'es_default', true)
     .single();
 
-  const listToUse = data.lista_precio_id && data.lista_precio ? data.lista_precio : defaultList;
+  const overrideList = tienda === 'minorista' ? data.lista_precio_minorista : data.lista_precio;
+  const listToUse = overrideList || defaultList;
   const appliedMarkup = listToUse?.markup || 1;
-  const computedMayorista = data.precio_costo ? Math.round(data.precio_costo * appliedMarkup) : data.precio_mayorista;
+  const computedPrice = data.precio_costo ? Math.round(data.precio_costo * appliedMarkup) : (tienda === 'minorista' ? data.precio_unitario : data.precio_mayorista);
 
-  const mappedData = { ...data, precio_mayorista: computedMayorista, lista_activa: listToUse };
+  const mappedData = {
+    ...data,
+    precio_mayorista: computedPrice,
+    lista_activa: listToUse
+  };
 
   return NextResponse.json({ producto: mappedData });
 }

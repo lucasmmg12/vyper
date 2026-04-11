@@ -15,12 +15,21 @@ export async function GET(request: NextRequest) {
   const all = searchParams.get('all'); // for admin: return all including inactive
   const offset = (page - 1) * limit;
 
+  const tienda = searchParams.get('tienda') || 'mayorista'; // 'mayorista' | 'minorista'
+
   let query = supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:lista_precio_escalones(*))', { count: 'exact' });
+    .select(`
+      *, 
+      categoria:categorias(*,rubro:rubros(*)), 
+      marca:marcas(*), 
+      lista_precio:listas_precios!lista_precio_id(*, escalones:lista_precio_escalones(*)),
+      lista_precio_minorista:listas_precios!lista_precio_minorista_id(*, escalones:lista_precio_escalones(*))
+    `, { count: 'exact' });
 
   if (!all) {
     query = query.eq('activo', true).gt('stock', 0);
+    query = query.eq(tienda === 'minorista' ? 'activo_minorista' : 'activo_mayorista', true);
   }
 
   if (search) {
@@ -61,21 +70,21 @@ export async function GET(request: NextRequest) {
     .from('listas_precios')
     .select('*, escalones:lista_precio_escalones(*)')
     .eq('activo', true)
-    .eq('es_default', true)
+    .eq(tienda === 'minorista' ? 'es_default_minorista' : 'es_default', true)
     .single();
-  const defaultMarkup = defaultList?.markup || 1;
 
   // Apply dynamic pricing
   const mappedData = filtered.map((p: any) => {
-    // If the product has a specific lista_precio, use it, otherwise use the global default
-    const listToUse = p.lista_precio_id && p.lista_precio ? p.lista_precio : defaultList;
+    // 1. Elegir la lista de precios a utilizar basa en el tipo de tienda
+    const overrideList = tienda === 'minorista' ? p.lista_precio_minorista : p.lista_precio;
+    const listToUse = overrideList || defaultList;
     const appliedMarkup = listToUse?.markup || 1;
-    const computedMayorista = p.precio_costo ? Math.round(p.precio_costo * appliedMarkup) : p.precio_mayorista;
+    const computedPrice = p.precio_costo ? Math.round(p.precio_costo * appliedMarkup) : (tienda === 'minorista' ? p.precio_unitario : p.precio_mayorista);
     
     // Remove the nested object to keep the payload clean (optional, keeping it for info in admin)
     return {
       ...p,
-      precio_mayorista: computedMayorista,
+      precio_mayorista: computedPrice,
       lista_activa: listToUse,
     };
   });
