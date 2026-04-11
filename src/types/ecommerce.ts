@@ -58,9 +58,18 @@ export interface Producto {
   promociones?: ProductoPromocion[];
   lista_precio_id?: string;
   lista_precio_minorista_id?: string;
+  lista_escalonada_id?: string;
+  lista_escalonada_minorista_id?: string;
+  
+  // Relations
   lista_precio?: ListaPrecio;
   lista_precio_minorista?: ListaPrecio;
-  lista_activa?: ListaPrecio; // Virtual field injected by API
+  lista_escalonada?: ListaPrecio;
+  lista_escalonada_minorista?: ListaPrecio;
+
+  // Runtime injected
+  lista_activa?: ListaPrecio;
+  lista_escalonada_activa?: ListaPrecio;
 }
 
 export interface Pedido {

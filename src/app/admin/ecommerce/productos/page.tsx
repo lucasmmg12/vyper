@@ -17,6 +17,8 @@ export default function ProductosAdminPage() {
     precio_costo: '',
     lista_precio_id: '',
     lista_precio_minorista_id: '',
+    lista_escalonada_id: '',
+    lista_escalonada_minorista_id: '',
     stock: '', cantidad_minima: '1',
     categoria_id: '', marca_id: '',
     activo: true, destacado: false, en_oferta: false,
@@ -42,6 +44,8 @@ export default function ProductosAdminPage() {
   const [listas, setListas] = useState<ListaPrecio[]>([]);
   const [selectedListaId, setSelectedListaId] = useState<string>('');
   const [selectedListaMinoristaId, setSelectedListaMinoristaId] = useState<string>('');
+  const [selectedListaEscalonadaId, setSelectedListaEscalonadaId] = useState<string>('');
+  const [selectedListaEscalonadaMinoristaId, setSelectedListaEscalonadaMinoristaId] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -138,6 +142,8 @@ export default function ProductosAdminPage() {
       marca_id: form.marca_id || null,
       lista_precio_id: selectedListaId || null,
       lista_precio_minorista_id: selectedListaMinoristaId || null,
+      lista_escalonada_id: selectedListaEscalonadaId || null,
+      lista_escalonada_minorista_id: selectedListaEscalonadaMinoristaId || null,
       activo: form.activo,
       destacado: form.destacado,
       imagenes: form.imagenes,
@@ -177,6 +183,8 @@ export default function ProductosAdminPage() {
       precio_costo: p.precio_costo ? String(p.precio_costo) : '',
       lista_precio_id: p.lista_precio_id || '',
       lista_precio_minorista_id: (p as any).lista_precio_minorista_id || '',
+      lista_escalonada_id: (p as any).lista_escalonada_id || '',
+      lista_escalonada_minorista_id: (p as any).lista_escalonada_minorista_id || '',
 
       stock: String(p.stock),
       cantidad_minima: String(p.cantidad_minima),
@@ -191,6 +199,8 @@ export default function ProductosAdminPage() {
     setEditingId(p.id);
     setSelectedListaId(p.lista_precio_id || '');
     setSelectedListaMinoristaId((p as any).lista_precio_minorista_id || '');
+    setSelectedListaEscalonadaId((p as any).lista_escalonada_id || '');
+    setSelectedListaEscalonadaMinoristaId((p as any).lista_escalonada_minorista_id || '');
     setShowForm(true);
   };
 
@@ -215,6 +225,8 @@ export default function ProductosAdminPage() {
       precio_costo: '',
       lista_precio_id: '',
       lista_precio_minorista_id: '',
+      lista_escalonada_id: '',
+      lista_escalonada_minorista_id: '',
       stock: '', cantidad_minima: '1',
       categoria_id: '', marca_id: '',
       activo: true, destacado: false, en_oferta: false,
@@ -223,6 +235,8 @@ export default function ProductosAdminPage() {
     });
     setSelectedListaId('');
     setSelectedListaMinoristaId('');
+    setSelectedListaEscalonadaId('');
+    setSelectedListaEscalonadaMinoristaId('');
   };
 
   const formatPrice = (price: number) =>
@@ -280,12 +294,25 @@ export default function ProductosAdminPage() {
 
               {/* Mayorista Lista */}
               <div>
-                <label>🛒 Lista Mayorista</label>
+                <label>🛒 Base Mayorista</label>
                 <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
                   <option value="">Por defecto</option>
-                  {listas.filter(l => l.activo).map(l => (
+                  {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
                     <option key={l.id} value={l.id}>
                       {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default ? ' [Default Actual]' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Mayorista Lista Escalonada */}
+              <div>
+                <label>📉 Escalonada Mayorista</label>
+                <select value={selectedListaEscalonadaId} onChange={e => setSelectedListaEscalonadaId(e.target.value)}>
+                  <option value="">Ninguna</option>
+                  {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre}
                     </option>
                   ))}
                 </select>
@@ -305,12 +332,25 @@ export default function ProductosAdminPage() {
 
               {/* Minorista Lista */}
               <div>
-                <label>🛍️ Lista Minorista</label>
+                <label>🛍️ Base Minorista</label>
                 <select value={selectedListaMinoristaId} onChange={e => setSelectedListaMinoristaId(e.target.value)}>
                   <option value="">Por defecto (Minorista)</option>
-                  {listas.filter(l => l.activo).map(l => (
+                  {listas.filter(l => l.activo && l.tipo === 'markup').map(l => (
                     <option key={l.id} value={l.id}>
                       {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default_minorista ? ' [Default Actual]' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Minorista Lista Escalonada */}
+              <div>
+                <label>📉 Escalonada Minorista</label>
+                <select value={selectedListaEscalonadaMinoristaId} onChange={e => setSelectedListaEscalonadaMinoristaId(e.target.value)}>
+                  <option value="">Ninguna</option>
+                  {listas.filter(l => l.activo && l.tipo === 'escalonada').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre}
                     </option>
                   ))}
                 </select>

@@ -122,6 +122,8 @@ export async function POST(request: NextRequest) {
       precio_oferta: body.precio_oferta || 0,
       lista_precio_id: body.lista_precio_id || null,
       lista_precio_minorista_id: body.lista_precio_minorista_id || null,
+      lista_escalonada_id: body.lista_escalonada_id || null,
+      lista_escalonada_minorista_id: body.lista_escalonada_minorista_id || null,
     }])
     .select()
     .single();

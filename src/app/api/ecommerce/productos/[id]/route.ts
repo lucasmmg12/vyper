@@ -18,7 +18,9 @@ export async function GET(
       categoria:categorias(*,rubro:rubros(*)), 
       marca:marcas(*), 
       lista_precio:listas_precios!lista_precio_id(*, escalones:lista_precio_escalones(*)),
-      lista_precio_minorista:listas_precios!lista_precio_minorista_id(*, escalones:lista_precio_escalones(*))
+      lista_precio_minorista:listas_precios!lista_precio_minorista_id(*, escalones:lista_precio_escalones(*)),
+      lista_escalonada:listas_precios!lista_escalonada_id(*, escalones:lista_precio_escalones(*)),
+      lista_escalonada_minorista:listas_precios!lista_escalonada_minorista_id(*, escalones:lista_precio_escalones(*))
     `)
     .eq('id', id)
     .single();
@@ -38,11 +40,14 @@ export async function GET(
   const listToUse = overrideList || defaultList;
   const appliedMarkup = listToUse?.markup || 1;
   const computedPrice = data.precio_costo ? Math.round(data.precio_costo * appliedMarkup) : (tienda === 'minorista' ? data.precio_unitario : data.precio_mayorista);
+  
+  const escalonadaToUse = tienda === 'minorista' ? data.lista_escalonada_minorista : data.lista_escalonada;
 
   const mappedData = {
     ...data,
     precio_mayorista: computedPrice,
-    lista_activa: listToUse
+    lista_activa: listToUse,
+    lista_escalonada_activa: escalonadaToUse,
   };
 
   return NextResponse.json({ producto: mappedData });
