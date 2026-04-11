@@ -191,10 +191,19 @@ export default function ComprasAdminPage() {
           <div className="glass-card animate-scaleIn" style={{
             width: '100%', maxWidth: 720, maxHeight: '90vh', overflowY: 'auto',
           }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>
-              <PackagePlus size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-              Nueva Compra
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0 }}>
+                <PackagePlus size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Nueva Compra
+              </h3>
+              <button 
+                className="btn-ghost" 
+                onClick={() => setShowForm(false)} 
+                style={{ padding: '0.25rem', minHeight: 'auto', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
             {/* Header fields */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>

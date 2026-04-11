@@ -280,7 +280,16 @@ export default function ProductosAdminPage() {
           <div className="glass-card animate-scaleIn" style={{
             width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto',
           }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0 }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+              <button 
+                className="btn-ghost" 
+                onClick={() => { setShowForm(false); setEditingId(null); }} 
+                style={{ padding: '0.25rem', minHeight: 'auto', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem', marginBottom: '1rem' }}>
               <div style={{ gridColumn: 'span 2' }}>
