@@ -353,13 +353,12 @@ export default function TiendaPage() {
         <iframe 
           width="100%" 
           height="100%" 
-          src="https://www.youtube.com/embed/XBfY8ZtRqQk?si=604rD7BQeXQTJx7l" 
-          title="YouTube video player" 
+          src="https://www.youtube.com/embed/XBfY8ZtRqQk?autoplay=1&mute=1&loop=1&playlist=XBfY8ZtRqQk&controls=0&rel=0&showinfo=0" 
+          title="Vyper Suplementos" 
           frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-          referrerPolicy="strict-origin-when-cross-origin" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
           allowFullScreen
-          style={{ display: 'block', border: 'none' }}
+          style={{ display: 'block', border: 'none', pointerEvents: 'none' }}
         />
       </div>
 
