@@ -437,97 +437,60 @@ export default function TiendaPage() {
             {tab.icon} {tab.label}
           </button>
         ))}
+        
+        {/* Dropdown de Categorías/Rubros posicionado a la derecha de las tabs */}
+        <div style={{ marginLeft: 'auto', position: 'relative', alignSelf: 'center' }}>
+           <select
+             onChange={(e) => {
+               const val = e.target.value;
+               if (!val) return;
+               
+               if (val.startsWith('RUB_')) {
+                 setSelectedRubro(val.replace('RUB_', ''));
+                 setSelectedCategoria('');
+               } else if (val.startsWith('CAT_')) {
+                 const catId = val.replace('CAT_', '');
+                 const cat = categorias.find(c => c.id === catId);
+                 if (cat) setSelectedRubro(cat.rubro_id || '');
+                 setSelectedCategoria(catId);
+               }
+               setPage(1);
+               setActiveSection('catalog');
+               e.target.value = ''; // Reset select text to default
+             }}
+             style={{
+               background: '#f9fafb',
+               border: '1px solid #e5e7eb',
+               borderRadius: 20,
+               padding: '0.375rem 2rem 0.375rem 1rem',
+               fontSize: '0.8125rem',
+               fontWeight: 600,
+               color: '#111',
+               cursor: 'pointer',
+               outline: 'none',
+               appearance: 'none',
+               WebkitAppearance: 'none',
+             }}
+           >
+             <option value="">Explorar por Rubro...</option>
+             <optgroup label="🏷️ Rubros Generales">
+               {rubros.map(r => (
+                 <option key={r.id} value={`RUB_${r.id}`}>{r.nombre}</option>
+               ))}
+             </optgroup>
+             <optgroup label="📂 Categorías Específicas">
+               {categorias.map(c => (
+                 <option key={c.id} value={`CAT_${c.id}`}>{c.nombre}</option>
+               ))}
+             </optgroup>
+           </select>
+           <ChevronDown size={14} color="#666" style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        </div>
       </div>
 
       {/* ═══════════════════════ HOME VIEW ═══════════════════════ */}
       {activeSection === 'home' && (
         <>
-          {/* Quick Browse by Rubro & Categoria */}
-          <div style={{ marginBottom: '2.5rem' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-main)' }}>
-              Explorar el catálogo
-            </h3>
-            
-            {/* Rubros Carousel */}
-            {rubros.length > 0 && (
-              <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Rubros</p>
-                <div style={{ 
-                  display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem',
-                  scrollbarWidth: 'none', msOverflowStyle: 'none'
-                }}>
-                  {rubros.map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => {
-                        setSelectedRubro(r.id);
-                        setSelectedCategoria('');
-                        setPage(1);
-                        setActiveSection('catalog');
-                      }}
-                      style={{
-                        flexShrink: 0,
-                        background: '#fff',
-                        border: '1px solid var(--border-color)',
-                        padding: '0.625rem 1rem',
-                        borderRadius: 100,
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        whiteSpace: 'nowrap',
-                      }}
-                      onMouseOver={e => { e.currentTarget.style.borderColor = '#111'; e.currentTarget.style.color = '#111'; }}
-                      onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    >
-                      {r.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Categorias Carousel */}
-            {categorias.length > 0 && (
-              <div>
-                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Categorías</p>
-                <div style={{ 
-                  display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem',
-                  scrollbarWidth: 'none', msOverflowStyle: 'none'
-                }}>
-                  {categorias.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        setSelectedRubro(c.rubro_id || '');
-                        setSelectedCategoria(c.id);
-                        setPage(1);
-                        setActiveSection('catalog');
-                      }}
-                      style={{
-                        flexShrink: 0,
-                        background: '#f9fafb',
-                        border: '1px solid transparent',
-                        padding: '0.5rem 1rem',
-                        borderRadius: 8,
-                        fontSize: '0.8125rem',
-                        fontWeight: 500,
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        whiteSpace: 'nowrap',
-                      }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    >
-                      {c.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
           {/* Ofertas */}
           <ProductSection
             title="Ofertas"
