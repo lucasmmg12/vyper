@@ -11,7 +11,7 @@ import { ListaPrecio, ListaPrecioEscalon, ProductoPromocion, Producto } from '@/
 
 interface EscalonForm {
   cantidad_minima: string;
-  multiplicador: string;
+  porcentaje: string;
 }
 
 export default function ListasPreciosAdminPage() {
@@ -25,10 +25,10 @@ export default function ListasPreciosAdminPage() {
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [listForm, setListForm] = useState({
     nombre: '', descripcion: '', tipo: 'markup' as 'markup' | 'escalonada',
-    markup: '1.50', activo: true, es_default: false,
+    markup_pct: '50', activo: true, es_default: false,
   });
   const [escalones, setEscalones] = useState<EscalonForm[]>([
-    { cantidad_minima: '1', multiplicador: '2.00' },
+    { cantidad_minima: '1', porcentaje: '100' },
   ]);
   const [savingList, setSavingList] = useState(false);
   const [expandedListId, setExpandedListId] = useState<string | null>(null);
@@ -76,21 +76,21 @@ export default function ListasPreciosAdminPage() {
 
   // ═══════ LIST HANDLERS ═══════
   const resetListForm = () => {
-    setListForm({ nombre: '', descripcion: '', tipo: 'markup', markup: '1.50', activo: true, es_default: false });
-    setEscalones([{ cantidad_minima: '1', multiplicador: '2.00' }]);
+    setListForm({ nombre: '', descripcion: '', tipo: 'markup', markup_pct: '50', activo: true, es_default: false });
+    setEscalones([{ cantidad_minima: '1', porcentaje: '100' }]);
     setEditingListId(null);
   };
 
   const handleEditList = (lista: ListaPrecio) => {
     setListForm({
       nombre: lista.nombre, descripcion: lista.descripcion || '',
-      tipo: lista.tipo, markup: String(lista.markup),
+      tipo: lista.tipo, markup_pct: String(Math.round((lista.markup - 1) * 100)),
       activo: lista.activo, es_default: lista.es_default,
     });
     setEscalones(
       (lista.escalones || []).length > 0
-        ? lista.escalones!.map(e => ({ cantidad_minima: String(e.cantidad_minima), multiplicador: String(e.multiplicador) }))
-        : [{ cantidad_minima: '1', multiplicador: '2.00' }]
+        ? lista.escalones!.map(e => ({ cantidad_minima: String(e.cantidad_minima), porcentaje: String(Math.round((e.multiplicador - 1) * 100)) }))
+        : [{ cantidad_minima: '1', porcentaje: '100' }]
     );
     setEditingListId(lista.id);
     setShowListForm(true);
@@ -100,21 +100,22 @@ export default function ListasPreciosAdminPage() {
     if (!listForm.nombre) return;
     setSavingList(true);
 
+    const markupMultiplier = 1 + (parseFloat(listForm.markup_pct) || 0) / 100;
     const payload: Record<string, unknown> = {
       nombre: listForm.nombre,
       descripcion: listForm.descripcion || null,
       tipo: listForm.tipo,
-      markup: parseFloat(listForm.markup) || 1.0,
+      markup: markupMultiplier,
       activo: listForm.activo,
       es_default: listForm.es_default,
     };
 
     if (listForm.tipo === 'escalonada') {
       payload.escalones = escalones
-        .filter(e => e.cantidad_minima && e.multiplicador)
+        .filter(e => e.cantidad_minima && e.porcentaje)
         .map(e => ({
           cantidad_minima: parseInt(e.cantidad_minima),
-          multiplicador: parseFloat(e.multiplicador),
+          multiplicador: 1 + (parseFloat(e.porcentaje) || 0) / 100,
         }));
     }
 
@@ -174,7 +175,9 @@ export default function ListasPreciosAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...promoForm,
-          valor: parseFloat(promoForm.valor),
+          valor: promoForm.tipo === 'markup'
+            ? 1 + (parseFloat(promoForm.valor) || 0) / 100
+            : parseFloat(promoForm.valor),
           cantidad_minima: parseInt(promoForm.cantidad_minima) || 1,
           fecha_inicio: promoForm.fecha_inicio || null,
           fecha_fin: promoForm.fecha_fin || null,
@@ -319,14 +322,18 @@ export default function ListasPreciosAdminPage() {
                   {/* Markup field (for fixed) */}
                   {listForm.tipo === 'markup' && (
                     <div style={{ gridColumn: 'span 2' }}>
-                      <label>Multiplicador (markup)</label>
-                      <input
-                        type="number" step="0.01" min="1" value={listForm.markup}
-                        onChange={e => setListForm({ ...listForm, markup: e.target.value })}
-                        placeholder="1.50"
-                      />
+                      <label>Markup (%)</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number" step="1" min="0" value={listForm.markup_pct}
+                          onChange={e => setListForm({ ...listForm, markup_pct: e.target.value })}
+                          placeholder="50"
+                          style={{ paddingRight: '2.5rem' }}
+                        />
+                        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem', marginTop: '-0.375rem' }}>%</span>
+                      </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--accent-blue)', marginTop: '-0.75rem', marginBottom: '1rem' }}>
-                        💡 Ej: 1.50 = 50% markup sobre el costo · Producto de costo $100 → venta a $150
+                        💡 Ej: 50% = Producto de costo $100 → venta a $150
                       </div>
                     </div>
                   )}
@@ -336,7 +343,7 @@ export default function ListasPreciosAdminPage() {
                     <div style={{ gridColumn: 'span 2' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <label style={{ margin: 0 }}>Escalones por Cantidad</label>
-                        <button className="btn-ghost" onClick={() => setEscalones([...escalones, { cantidad_minima: '', multiplicador: '' }])}
+                        <button className="btn-ghost" onClick={() => setEscalones([...escalones, { cantidad_minima: '', porcentaje: '' }])}
                           style={{ fontSize: '0.75rem', color: 'var(--accent-blue)', padding: '0.25rem 0.5rem' }}>
                           <Plus size={12} /> Agregar
                         </button>
@@ -358,13 +365,16 @@ export default function ListasPreciosAdminPage() {
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Multiplicador</label>
-                            <input type="number" step="0.01" min="1" value={esc.multiplicador}
-                              onChange={e => {
-                                const u = [...escalones]; u[idx].multiplicador = e.target.value; setEscalones(u);
-                              }}
-                              placeholder="1.70" style={{ marginBottom: 0 }}
-                            />
+                            <label style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Markup (%)</label>
+                            <div style={{ position: 'relative' }}>
+                              <input type="number" step="1" min="0" value={esc.porcentaje}
+                                onChange={e => {
+                                  const u = [...escalones]; u[idx].porcentaje = e.target.value; setEscalones(u);
+                                }}
+                                placeholder="70" style={{ marginBottom: 0, paddingRight: '2rem' }}
+                              />
+                              <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.8125rem' }}>%</span>
+                            </div>
                           </div>
                           <button className="btn-ghost" onClick={() => setEscalones(escalones.filter((_, i) => i !== idx))}
                             disabled={escalones.length <= 1}
@@ -375,7 +385,7 @@ export default function ListasPreciosAdminPage() {
                       ))}
 
                       <div style={{ fontSize: '0.75rem', color: 'var(--accent-blue)', marginBottom: '1rem' }}>
-                        💡 Ej: 1 unidad → ×2.00 (100% markup) · 3 unidades → ×1.50 (50% markup)
+                        💡 Ej: 1 unidad → 100% (costo $100 → $200) · 3 unidades → 50% (costo $100 → $150)
                       </div>
                     </div>
                   )}
@@ -444,7 +454,7 @@ export default function ListasPreciosAdminPage() {
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             {lista.tipo === 'markup'
-                              ? `Markup fijo: ×${lista.markup} (${Math.round((lista.markup - 1) * 100)}%)`
+                              ? `Markup fijo: ${Math.round((lista.markup - 1) * 100)}%`
                               : `Escalonada · ${(lista.escalones || []).length} escalones`}
                           </div>
                         </div>
@@ -482,7 +492,7 @@ export default function ListasPreciosAdminPage() {
                                     {esc.cantidad_minima === 1 ? '1 unidad' : `${esc.cantidad_minima}+ unidades`}
                                   </span>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-blue)', fontSize: '0.875rem' }}>
-                                    {formatMultiplier(esc.multiplicador)}
+                                    {Math.round((esc.multiplicador - 1) * 100)}%
                                   </span>
                                 </div>
                               ))}
@@ -496,7 +506,7 @@ export default function ListasPreciosAdminPage() {
                             }}>
                               <strong>💡 Ejemplo:</strong> Producto de costo $1.000
                               {(lista.escalones || []).map((esc, i) => (
-                                <span key={i}> · {esc.cantidad_minima}u → {formatPrice(1000 * esc.multiplicador)}</span>
+                                <span key={i}> · {esc.cantidad_minima}u → {formatPrice(1000 * esc.multiplicador)} ({Math.round((esc.multiplicador - 1) * 100)}%)</span>
                               ))}
                             </div>
                           </div>
@@ -508,7 +518,7 @@ export default function ListasPreciosAdminPage() {
                             padding: '0.75rem 1rem', background: 'var(--accent-blue-light)',
                             borderRadius: 8, fontSize: '0.75rem', color: 'var(--accent-blue)', marginBottom: '1rem',
                           }}>
-                            <strong>💡 Ejemplo:</strong> Producto de costo $1.000 → Precio venta: {formatPrice(1000 * lista.markup)} (×{lista.markup})
+                            <strong>💡 Ejemplo:</strong> Producto de costo $1.000 → Precio venta: {formatPrice(1000 * lista.markup)} ({Math.round((lista.markup - 1) * 100)}% markup)
                           </div>
                         )}
 
@@ -614,7 +624,7 @@ export default function ListasPreciosAdminPage() {
                 {/* Type */}
                 <label>Tipo</label>
                 <select value={promoForm.tipo} onChange={e => setPromoForm({ ...promoForm, tipo: e.target.value as 'markup' | 'precio_fijo' | 'descuento' })}>
-                  <option value="markup">Markup especial (multiplicador)</option>
+                  <option value="markup">Markup especial (%)</option>
                   <option value="precio_fijo">Precio fijo</option>
                   <option value="descuento">Descuento %</option>
                 </select>
@@ -622,11 +632,18 @@ export default function ListasPreciosAdminPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
                   <div>
                     <label>
-                      {promoForm.tipo === 'markup' ? 'Multiplicador' : promoForm.tipo === 'precio_fijo' ? 'Precio ($)' : 'Descuento (%)'}
+                      {promoForm.tipo === 'markup' ? 'Markup (%)' : promoForm.tipo === 'precio_fijo' ? 'Precio ($)' : 'Descuento (%)'}
                     </label>
-                    <input type="number" step="0.01" min="0" value={promoForm.valor}
-                      onChange={e => setPromoForm({ ...promoForm, valor: e.target.value })}
-                      placeholder={promoForm.tipo === 'markup' ? '1.30' : promoForm.tipo === 'precio_fijo' ? '5000' : '10'} />
+                    <div style={{ position: 'relative' }}>
+                      <input type="number" step="1" min="0" value={promoForm.valor}
+                        onChange={e => setPromoForm({ ...promoForm, valor: e.target.value })}
+                        placeholder={promoForm.tipo === 'markup' ? '50' : promoForm.tipo === 'precio_fijo' ? '5000' : '10'}
+                        style={promoForm.tipo !== 'precio_fijo' ? { paddingRight: '2.5rem' } : {}}
+                      />
+                      {promoForm.tipo !== 'precio_fijo' && (
+                        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem', marginTop: '-0.375rem' }}>%</span>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label>Cant. Mínima</label>
@@ -650,7 +667,7 @@ export default function ListasPreciosAdminPage() {
                     padding: '0.75rem 1rem', background: 'var(--accent-blue-light)', borderRadius: 8,
                     fontSize: '0.75rem', color: 'var(--accent-blue)', marginBottom: '1rem',
                   }}>
-                    💡 ×{promoForm.valor} = {Math.round((parseFloat(promoForm.valor) - 1) * 100)}% markup sobre costo
+                    💡 {promoForm.valor}% markup → Producto de costo $1.000 → venta a {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(1000 * (1 + (parseFloat(promoForm.valor) || 0) / 100))}
                   </div>
                 )}
 
@@ -704,7 +721,7 @@ export default function ListasPreciosAdminPage() {
                           </span>
                         </td>
                         <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                          {promo.tipo === 'markup' ? `×${promo.valor}` : promo.tipo === 'precio_fijo' ? formatPrice(promo.valor) : `${promo.valor}%`}
+                          {promo.tipo === 'markup' ? `${Math.round((promo.valor - 1) * 100)}%` : promo.tipo === 'precio_fijo' ? formatPrice(promo.valor) : `${promo.valor}%`}
                         </td>
                         <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-mono)' }}>{promo.cantidad_minima}</td>
                         <td style={{ padding: '0.75rem 1rem' }}>
