@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*)', { count: 'exact' });
+    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*)', { count: 'exact' });
 
   if (!all) {
     query = query.eq('activo', true).gt('stock', 0);
@@ -56,8 +56,30 @@ export async function GET(request: NextRequest) {
     ? (data || []).filter((p: Record<string, unknown>) => p.categoria !== null)
     : data;
 
+  // Fetch default markup if needed
+  const { data: defaultList } = await supabase
+    .from('listas_precios')
+    .select('markup')
+    .eq('activo', true)
+    .eq('es_default', true)
+    .single();
+  const defaultMarkup = defaultList?.markup || 1;
+
+  // Apply dynamic pricing
+  const mappedData = filtered.map((p: any) => {
+    // If the product has a specific lista_precio, use it, otherwise use the global default
+    const appliedMarkup = p.lista_precio_id && p.lista_precio ? p.lista_precio.markup : defaultMarkup;
+    const computedMayorista = p.precio_costo ? Math.round(p.precio_costo * appliedMarkup) : p.precio_mayorista;
+    
+    // Remove the nested object to keep the payload clean (optional, keeping it for info in admin)
+    return {
+      ...p,
+      precio_mayorista: computedMayorista,
+    };
+  });
+
   return NextResponse.json({
-    productos: filtered,
+    productos: mappedData,
     total: count || 0,
     page,
     limit,
@@ -87,6 +109,7 @@ export async function POST(request: NextRequest) {
       destacado: body.destacado ?? false,
       en_oferta: body.en_oferta ?? false,
       precio_oferta: body.precio_oferta || 0,
+      lista_precio_id: body.lista_precio_id || null,
     }])
     .select()
     .single();

@@ -14,7 +14,8 @@ export default function ProductosAdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     nombre: '', descripcion: '',
-    precio_costo: '', precio_mayorista: '',
+    precio_costo: '',
+    lista_precio_id: '',
     stock: '', cantidad_minima: '1',
     categoria_id: '', marca_id: '',
     activo: true, destacado: false, en_oferta: false,
@@ -68,9 +69,7 @@ export default function ProductosAdminPage() {
     setMarcas(marcaData.marcas || []);
     const fetchedListas: ListaPrecio[] = listasData.listas || [];
     setListas(fetchedListas);
-    // Auto-select default lista
-    const defaultLista = fetchedListas.find(l => l.es_default && l.activo);
-    if (defaultLista && !selectedListaId) setSelectedListaId(defaultLista.id);
+    // Default is empty string => "Por defecto (automático)"
   };
 
   const handleCreateCategoria = async () => {
@@ -126,22 +125,16 @@ export default function ProductosAdminPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Calculate precio_mayorista from selected lista
-    const costo = parseFloat(form.precio_costo) || 0;
-    const selectedLista = listas.find(l => l.id === selectedListaId);
-    const markup = selectedLista ? selectedLista.markup : 1;
-    const precioMayorista = Math.round(costo * markup);
 
     const payload = {
       nombre: form.nombre,
       descripcion: form.descripcion,
-      precio_costo: costo,
-      precio_mayorista: precioMayorista,
-      precio_unitario: 0,
+      precio_costo: parseFloat(form.precio_costo) || 0,
       stock: parseInt(form.stock) || 0,
       cantidad_minima: parseInt(form.cantidad_minima) || 1,
       categoria_id: form.categoria_id || null,
       marca_id: form.marca_id || null,
+      lista_precio_id: selectedListaId || null,
       activo: form.activo,
       destacado: form.destacado,
       imagenes: form.imagenes,
@@ -179,7 +172,7 @@ export default function ProductosAdminPage() {
       nombre: p.nombre,
       descripcion: p.descripcion || '',
       precio_costo: p.precio_costo ? String(p.precio_costo) : '',
-      precio_mayorista: String(p.precio_mayorista),
+      lista_precio_id: p.lista_precio_id || '',
 
       stock: String(p.stock),
       cantidad_minima: String(p.cantidad_minima),
@@ -192,6 +185,7 @@ export default function ProductosAdminPage() {
       precio_oferta: p.precio_oferta ? String(p.precio_oferta) : '',
     });
     setEditingId(p.id);
+    setSelectedListaId(p.lista_precio_id || '');
     setShowForm(true);
   };
 
@@ -213,13 +207,15 @@ export default function ProductosAdminPage() {
   const resetForm = () => {
     setForm({
       nombre: '', descripcion: '',
-      precio_costo: '', precio_mayorista: '',
+      precio_costo: '',
+    lista_precio_id: '',
       stock: '', cantidad_minima: '1',
       categoria_id: '', marca_id: '',
       activo: true, destacado: false, en_oferta: false,
       imagenes: [],
       precio_oferta: '',
     });
+    setSelectedListaId('');
   };
 
   const formatPrice = (price: number) =>
@@ -277,20 +273,22 @@ export default function ProductosAdminPage() {
               <div>
                 <label>📊 Lista de Precios</label>
                 <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
-                  <option value="">Sin lista (manual)</option>
+                  <option value="">Por defecto (Automático en toda la tienda)</option>
                   {listas.filter(l => l.activo).map(l => (
                     <option key={l.id} value={l.id}>
-                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%)
+                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default ? ' [Default Actual]' : ''}
                     </option>
                   ))}
                 </select>
-                {form.precio_costo && selectedListaId && (() => {
-                  const lista = listas.find(l => l.id === selectedListaId);
+                {form.precio_costo && (() => {
+                  const listaActiva = selectedListaId 
+                        ? listas.find(l => l.id === selectedListaId) 
+                        : listas.find(l => l.es_default && l.activo);
                   const costo = parseFloat(form.precio_costo) || 0;
-                  const calculado = lista ? Math.round(costo * lista.markup) : costo;
+                  const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
                   return (
                     <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      💰 Precio Mayorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                      💰 Precio Mayorista Calculado: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
                     </div>
                   );
                 })()}

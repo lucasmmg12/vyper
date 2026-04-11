@@ -56,6 +56,8 @@ export interface Producto {
   categoria?: Categoria;
   marca?: Marca;
   promociones?: ProductoPromocion[];
+  lista_precio_id?: string;
+  lista_precio?: ListaPrecio;
 }
 
 export interface Pedido {
