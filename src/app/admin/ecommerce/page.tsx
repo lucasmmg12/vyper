@@ -308,40 +308,77 @@ export default function EcommerceAdminPage() {
         </div>
       </div>
 
-      {/* ═══════════ TIENDA LINK BANNER ═══════════ */}
-      <div style={{
-        marginTop: '2rem',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        borderRadius: 16, padding: '1.5rem 2rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        gap: '1rem', flexWrap: 'wrap',
-      }}>
-        <div>
-          <div style={{ color: 'white', fontWeight: 800, fontSize: '1.0625rem', marginBottom: '0.25rem' }}>
-            🛒 Tienda Mayorista Online
+      {/* ═══════════ TIENDA LINK BANNERS ═══════════ */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          borderRadius: 16, padding: '1.5rem 2rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '1rem', flexWrap: 'wrap',
+        }}>
+          <div>
+            <div style={{ color: 'white', fontWeight: 800, fontSize: '1.0625rem', marginBottom: '0.25rem' }}>
+              🛒 Tienda Mayorista Online
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8125rem' }}>
+              Compartí el link con tus clientes mayoristas
+            </div>
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8125rem' }}>
-            Compartí el link con tus clientes para que hagan pedidos
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <code style={{
+              background: 'rgba(255,255,255,0.1)', color: '#10b981',
+              padding: '0.5rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem',
+              fontFamily: 'var(--font-mono)',
+            }}>
+              /tienda
+            </code>
+            <Link href="/tienda" target="_blank">
+              <button style={{
+                background: '#10b981', color: 'white', fontSize: '0.8125rem',
+                padding: '0.5rem 1rem', border: 'none', borderRadius: 8, cursor: 'pointer',
+                fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6,
+                minHeight: 'auto', boxShadow: 'none', letterSpacing: 0,
+              }}>
+                Abrir <ExternalLink size={14} />
+              </button>
+            </Link>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <code style={{
-            background: 'rgba(255,255,255,0.1)', color: '#10b981',
-            padding: '0.5rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem',
-            fontFamily: 'var(--font-mono)',
-          }}>
-            /tienda
-          </code>
-          <Link href="/tienda" target="_blank">
-            <button style={{
-              background: '#10b981', color: 'white', fontSize: '0.8125rem',
-              padding: '0.5rem 1rem', border: 'none', borderRadius: 8, cursor: 'pointer',
-              fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6,
-              minHeight: 'auto', boxShadow: 'none', letterSpacing: 0,
+
+        <div style={{
+          background: 'linear-gradient(135deg, #2a0f28 0%, #3b1e38 100%)',
+          borderRadius: 16, padding: '1.5rem 2rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '1rem', flexWrap: 'wrap',
+          boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+        }}>
+          <div>
+            <div style={{ color: 'white', fontWeight: 800, fontSize: '1.0625rem', marginBottom: '0.25rem' }}>
+              🛍️ Tienda Minorista Online
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8125rem' }}>
+              Link de acceso directo para venta al público
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <code style={{
+              background: 'rgba(255,255,255,0.1)', color: '#ec4899',
+              padding: '0.5rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem',
+              fontFamily: 'var(--font-mono)',
             }}>
-              Abrir <ExternalLink size={14} />
-            </button>
-          </Link>
+              /minorista
+            </code>
+            <Link href="/minorista" target="_blank">
+              <button style={{
+                background: '#ec4899', color: 'white', fontSize: '0.8125rem',
+                padding: '0.5rem 1rem', border: 'none', borderRadius: 8, cursor: 'pointer',
+                fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6,
+                minHeight: 'auto', boxShadow: 'none', letterSpacing: 0,
+              }}>
+                Abrir <ExternalLink size={14} />
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
