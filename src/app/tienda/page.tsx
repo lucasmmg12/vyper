@@ -367,8 +367,11 @@ export default function TiendaPage() {
           <h1 style={{ color: 'white', fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 900, letterSpacing: '-0.01em' }}>
             Catálogo Mayorista 🛒
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9375rem', marginBottom: '1.5rem', maxWidth: '480px', lineHeight: 1.5 }}>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9375rem', marginBottom: '0.5rem', maxWidth: '480px', lineHeight: 1.5 }}>
             Armá tu pedido con precios exclusivos. Suplementos, indumentaria y accesorios deportivos.
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', marginBottom: '1.25rem' }}>
+            📦 Solo se muestran productos con stock disponible
           </p>
           <div style={{ position: 'relative', maxWidth: '480px' }}>
             <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />

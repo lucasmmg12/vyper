@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*)', { count: 'exact' });
 
   if (!all) {
-    query = query.eq('activo', true);
+    query = query.eq('activo', true).gt('stock', 0);
   }
 
   if (search) {
