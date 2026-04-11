@@ -58,6 +58,7 @@ export interface Producto {
   promociones?: ProductoPromocion[];
   lista_precio_id?: string;
   lista_precio?: ListaPrecio;
+  lista_activa?: ListaPrecio; // Virtual field injected by API
 }
 
 export interface Pedido {
@@ -172,6 +173,8 @@ export interface CartItem {
   imagen?: string;
   stock: number;
   cantidad_minima: number;
+  venta_costo?: number;
+  venta_lista?: ListaPrecio;
 }
 
 export interface CheckoutData {

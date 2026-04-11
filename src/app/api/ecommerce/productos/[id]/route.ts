@@ -10,7 +10,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('productos')
-    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*)')
+    .select('*, categoria:categorias(*,rubro:rubros(*)), marca:marcas(*), lista_precio:listas_precios(*, escalones:listas_precios_escalones(*))')
     .eq('id', id)
     .single();
 
@@ -20,16 +20,16 @@ export async function GET(
 
   const { data: defaultList } = await supabase
     .from('listas_precios')
-    .select('markup')
+    .select('*, escalones:listas_precios_escalones(*)')
     .eq('activo', true)
     .eq('es_default', true)
     .single();
-  const defaultMarkup = defaultList?.markup || 1;
 
-  const appliedMarkup = data.lista_precio_id && data.lista_precio ? data.lista_precio.markup : defaultMarkup;
+  const listToUse = data.lista_precio_id && data.lista_precio ? data.lista_precio : defaultList;
+  const appliedMarkup = listToUse?.markup || 1;
   const computedMayorista = data.precio_costo ? Math.round(data.precio_costo * appliedMarkup) : data.precio_mayorista;
 
-  const mappedData = { ...data, precio_mayorista: computedMayorista };
+  const mappedData = { ...data, precio_mayorista: computedMayorista, lista_activa: listToUse };
 
   return NextResponse.json({ producto: mappedData });
 }

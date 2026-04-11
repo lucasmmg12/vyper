@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Plus, Minus, ArrowLeft, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, ArrowLeft, ChevronLeft, ChevronRight, Tag, Sparkles } from 'lucide-react';
 import { Producto } from '@/types/ecommerce';
 import { useCart } from '@/lib/cart';
 
@@ -34,16 +34,32 @@ export default function ProductoPage() {
     if (id) fetchProducto();
   }, [id]);
 
+  const calcPrice = (qty: number) => {
+    if (!producto) return 0;
+    let fallback = producto.precio_mayorista;
+    if (producto.lista_activa && producto.lista_activa.tipo === 'escalonada' && producto.lista_activa.escalones) {
+      const validEscalones = producto.lista_activa.escalones
+        .filter(e => qty >= e.cantidad_minima)
+        .sort((a, b) => b.cantidad_minima - a.cantidad_minima);
+      if (validEscalones.length > 0) {
+        return Math.round((producto.precio_costo || 0) * validEscalones[0].multiplicador);
+      }
+    }
+    return fallback;
+  };
+
   const handleAddToCart = () => {
     if (!producto) return;
     addItem({
       producto_id: producto.id,
       nombre: producto.nombre,
-      precio: producto.precio_mayorista,
+      precio: calcPrice(cantidad),
       cantidad,
       imagen: producto.imagenes?.[0],
       stock: producto.stock,
       cantidad_minima: producto.cantidad_minima,
+      venta_costo: producto.precio_costo,
+      venta_lista: producto.lista_activa,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -185,7 +201,7 @@ export default function ProductoPage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                {formatPrice(producto.precio_mayorista)}
+                {formatPrice(calcPrice(cantidad))}
               </span>
               {discount > 0 && (
                 <>
@@ -193,14 +209,57 @@ export default function ProductoPage() {
                     {formatPrice(producto.precio_unitario)}
                   </span>
                   <span className="badge badge-green">
-                    <Tag size={12} style={{ marginRight: 4 }} /> {discount}% OFF mayorista
+                    <Tag size={12} style={{ marginRight: 4 }} /> {discount}% OFF
                   </span>
                 </>
               )}
             </div>
+            
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-              Precio mayorista · IVA incluido
+              Precio mayorista (x1 un.)
             </p>
+
+            {/* Tiers/Escalones info */}
+            {producto.lista_activa?.tipo === 'escalonada' && producto.lista_activa.escalones && producto.lista_activa.escalones.length > 0 && (
+              <div style={{ marginTop: '1rem', background: '#000', borderRadius: 10, padding: '1rem', border: '1px solid #222' }}>
+                <h4 style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'var(--accent-green)' }}>
+                  <Sparkles size={14} /> Mejoramos tu precio por cantidad
+                </h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem' }}>
+                  {/* Default step */}
+                  <li style={{
+                    display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0',
+                    color: cantidad < Math.min(...producto.lista_activa.escalones.map(e=>e.cantidad_minima)) ? 'var(--accent-green)' : 'var(--text-secondary)',
+                    fontWeight: cantidad < Math.min(...producto.lista_activa.escalones.map(e=>e.cantidad_minima)) ? 600 : 400
+                  }}>
+                    <span>Por Menor</span>
+                    <span>{formatPrice(producto.precio_mayorista)} c/u</span>
+                  </li>
+
+                  {/* Tier steps */}
+                  {producto.lista_activa.escalones
+                    .sort((a, b) => a.cantidad_minima - b.cantidad_minima)
+                    .map(e => {
+                      const price = Math.round((producto.precio_costo || 0) * e.multiplicador);
+                      // Check if this tier is the 'active' one (the highest tier met)
+                      const validTiers = producto.lista_activa!.escalones!.filter(t => cantidad >= t.cantidad_minima).sort((a,b)=>b.cantidad_minima - a.cantidad_minima);
+                      const isMet = validTiers.length > 0 && validTiers[0].id === e.id;
+                      
+                      return (
+                        <li key={e.id} style={{
+                          display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0',
+                          borderTop: '1px solid #1a1a1a',
+                          color: isMet ? 'var(--accent-green)' : 'var(--text-secondary)',
+                          fontWeight: isMet ? 600 : 400
+                        }}>
+                          <span>A partir de {e.cantidad_minima} un.</span>
+                          <span>{formatPrice(price)} c/u</span>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Quantity selector */}
@@ -241,7 +300,7 @@ export default function ProductoPage() {
           }}>
             <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Subtotal</span>
             <span style={{ fontSize: '1.375rem', fontWeight: 800 }}>
-              {formatPrice(producto.precio_mayorista * cantidad)}
+              {formatPrice(calcPrice(cantidad) * cantidad)}
             </span>
           </div>
 

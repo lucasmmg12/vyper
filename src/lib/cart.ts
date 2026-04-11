@@ -43,11 +43,22 @@ export function useCart() {
     setItems(prev => {
       const existing = prev.find(i => i.producto_id === item.producto_id);
       if (existing) {
-        return prev.map(i =>
-          i.producto_id === item.producto_id
-            ? { ...i, cantidad: i.cantidad + item.cantidad }
-            : i
-        );
+        return prev.map(i => {
+          if (i.producto_id !== item.producto_id) return i;
+          
+          const newQty = i.cantidad + item.cantidad;
+          let newPrice = i.precio;
+          if (i.venta_lista && i.venta_lista.tipo === 'escalonada' && i.venta_lista.escalones && i.venta_costo) {
+            const validEscalones = i.venta_lista.escalones
+              .filter(e => newQty >= e.cantidad_minima)
+              .sort((a, b) => b.cantidad_minima - a.cantidad_minima);
+            if (validEscalones.length > 0) {
+              newPrice = Math.round(i.venta_costo * validEscalones[0].multiplicador);
+            }
+          }
+          
+          return { ...i, cantidad: newQty, precio: newPrice };
+        });
       }
       return [...prev, item];
     });
@@ -63,9 +74,24 @@ export function useCart() {
       return;
     }
     setItems(prev =>
-      prev.map(i =>
-        i.producto_id === productoId ? { ...i, cantidad } : i
-      )
+      prev.map(i => {
+        if (i.producto_id !== productoId) return i;
+        
+        let newPrice = i.precio;
+        if (i.venta_lista && i.venta_lista.tipo === 'escalonada' && i.venta_lista.escalones && i.venta_costo) {
+          const validEscalones = i.venta_lista.escalones
+            .filter(e => cantidad >= e.cantidad_minima)
+            .sort((a, b) => b.cantidad_minima - a.cantidad_minima);
+          if (validEscalones.length > 0) {
+            newPrice = Math.round(i.venta_costo * validEscalones[0].multiplicador);
+          } else if (i.venta_lista.markup) {
+            // Revert back to default explicit markup if they dropped below all tiers
+            newPrice = Math.round(i.venta_costo * i.venta_lista.markup);
+          }
+        }
+        
+        return { ...i, cantidad, precio: newPrice };
+      })
     );
   }, []);
 
