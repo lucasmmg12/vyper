@@ -442,6 +442,92 @@ export default function TiendaPage() {
       {/* ═══════════════════════ HOME VIEW ═══════════════════════ */}
       {activeSection === 'home' && (
         <>
+          {/* Quick Browse by Rubro & Categoria */}
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-main)' }}>
+              Explorar el catálogo
+            </h3>
+            
+            {/* Rubros Carousel */}
+            {rubros.length > 0 && (
+              <div style={{ marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Rubros</p>
+                <div style={{ 
+                  display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem',
+                  scrollbarWidth: 'none', msOverflowStyle: 'none'
+                }}>
+                  {rubros.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        setSelectedRubro(r.id);
+                        setSelectedCategoria('');
+                        setPage(1);
+                        setActiveSection('catalog');
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        background: '#fff',
+                        border: '1px solid var(--border-color)',
+                        padding: '0.625rem 1rem',
+                        borderRadius: 100,
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        whiteSpace: 'nowrap',
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.borderColor = '#111'; e.currentTarget.style.color = '#111'; }}
+                      onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                    >
+                      {r.nombre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Categorias Carousel */}
+            {categorias.length > 0 && (
+              <div>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Categorías</p>
+                <div style={{ 
+                  display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem',
+                  scrollbarWidth: 'none', msOverflowStyle: 'none'
+                }}>
+                  {categorias.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        setSelectedRubro(c.rubro_id || '');
+                        setSelectedCategoria(c.id);
+                        setPage(1);
+                        setActiveSection('catalog');
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        background: '#f9fafb',
+                        border: '1px solid transparent',
+                        padding: '0.5rem 1rem',
+                        borderRadius: 8,
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        whiteSpace: 'nowrap',
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111'; }}
+                      onMouseOut={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                    >
+                      {c.nombre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           {/* Ofertas */}
           <ProductSection
             title="Ofertas"
