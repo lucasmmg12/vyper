@@ -231,50 +231,42 @@ export default function ProductoPage() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
                   gap: '0.75rem'
                 }}>
-                  {/* Default step (Por menor) */}
+                  {/* Unified Tier list */}
                   {(() => {
-                    const minTier = Math.min(...producto.lista_activa.escalones.map(e => e.cantidad_minima));
-                    const isMet = cantidad < minTier;
-                    return (
-                      <div
-                        onClick={() => setCantidad(producto.cantidad_minima || 1)}
-                        style={{
-                          background: isMet ? '#111' : 'transparent',
-                          border: isMet ? '2px solid var(--accent-green)' : '1px solid var(--border-color)',
-                          borderRadius: 12,
-                          padding: '1rem 0.5rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          textAlign: 'center',
-                          boxShadow: isMet ? '0 8px 24px rgba(0, 255, 136, 0.15)' : 'none',
-                        }}
-                      >
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: isMet ? '#fff' : 'var(--text-secondary)', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Por Menor
-                        </div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: 800, color: isMet ? 'var(--accent-green)' : 'var(--text-main)' }}>
-                          {formatPrice(producto.precio_mayorista)}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                    const baseQty = Math.max(1, producto?.cantidad_minima || 1);
+                    const basePrice = calcPrice(baseQty);
+                    
+                    const tiers = [
+                      {
+                        id: 'base',
+                        label: 'Por Menor',
+                        qty: baseQty,
+                        price: basePrice,
+                        isBase: true
+                      },
+                      ...producto.lista_activa.escalones
+                        .filter(e => e.cantidad_minima > baseQty)
+                        .map(e => ({
+                          id: e.id,
+                          label: `${e.cantidad_minima} un. o más`,
+                          qty: e.cantidad_minima,
+                          price: Math.round((producto.precio_costo || 0) * e.multiplicador),
+                          isBase: false
+                        }))
+                    ].sort((a, b) => a.qty - b.qty);
 
-                  {/* Tier steps */}
-                  {producto.lista_activa.escalones
-                    .sort((a, b) => a.cantidad_minima - b.cantidad_minima)
-                    .map(e => {
-                      const price = Math.round((producto.precio_costo || 0) * e.multiplicador);
-                      const basePrice = producto.precio_mayorista;
-                      const savings = Math.round(100 - (price / basePrice * 100));
-                      
-                      // Check if this tier is the 'active' one (the highest tier met)
-                      const validTiers = producto.lista_activa!.escalones!.filter(t => cantidad >= t.cantidad_minima).sort((a,b)=>b.cantidad_minima - a.cantidad_minima);
-                      const isMet = validTiers.length > 0 && validTiers[0].id === e.id;
-                      
+                    // Determine which is currently selected
+                    const activeTierIndex = [...tiers].reverse().findIndex(t => cantidad >= t.qty);
+                    const activeTierId = activeTierIndex !== -1 ? [...tiers].reverse()[activeTierIndex].id : tiers[0].id;
+
+                    return tiers.map(tier => {
+                      const isMet = tier.id === activeTierId;
+                      const savings = tier.isBase ? 0 : Math.round(100 - (tier.price / basePrice * 100));
+
                       return (
                         <div
-                          key={e.id}
-                          onClick={() => setCantidad(e.cantidad_minima)}
+                          key={tier.id}
+                          onClick={() => setCantidad(tier.qty)}
                           style={{
                             background: isMet ? '#111' : 'transparent',
                             border: isMet ? '2px solid var(--accent-green)' : '1px solid var(--border-color)',
@@ -303,14 +295,15 @@ export default function ProductoPage() {
                             </div>
                           )}
                           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: isMet ? '#fff' : 'var(--text-secondary)', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: savings > 0 ? 4 : 0 }}>
-                            <span style={{ fontSize: '0.9rem' }}>{e.cantidad_minima}</span> un. o más
+                            {tier.isBase ? tier.label : <><span style={{ fontSize: '0.9rem' }}>{tier.qty}</span> un. o más</>}
                           </div>
                           <div style={{ fontSize: '1.125rem', fontWeight: 800, color: isMet ? 'var(--accent-green)' : 'var(--text-main)' }}>
-                            {formatPrice(price)}
+                            {formatPrice(tier.price)}
                           </div>
                         </div>
                       );
-                    })}
+                    });
+                  })()}
                 </div>
               </div>
             )}
