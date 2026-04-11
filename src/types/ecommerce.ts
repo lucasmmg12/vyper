@@ -57,7 +57,9 @@ export interface Producto {
   marca?: Marca;
   promociones?: ProductoPromocion[];
   lista_precio_id?: string;
+  lista_precio_minorista_id?: string;
   lista_precio?: ListaPrecio;
+  lista_precio_minorista?: ListaPrecio;
   lista_activa?: ListaPrecio; // Virtual field injected by API
 }
 
@@ -130,6 +132,7 @@ export interface ListaPrecio {
   markup: number;
   activo: boolean;
   es_default: boolean;
+  es_default_minorista: boolean;
   created_at: string;
   updated_at: string;
   // Joined

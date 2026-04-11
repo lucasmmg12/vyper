@@ -16,6 +16,7 @@ export default function ProductosAdminPage() {
     nombre: '', descripcion: '',
     precio_costo: '',
     lista_precio_id: '',
+    lista_precio_minorista_id: '',
     stock: '', cantidad_minima: '1',
     categoria_id: '', marca_id: '',
     activo: true, destacado: false, en_oferta: false,
@@ -40,6 +41,7 @@ export default function ProductosAdminPage() {
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const [listas, setListas] = useState<ListaPrecio[]>([]);
   const [selectedListaId, setSelectedListaId] = useState<string>('');
+  const [selectedListaMinoristaId, setSelectedListaMinoristaId] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -135,6 +137,7 @@ export default function ProductosAdminPage() {
       categoria_id: form.categoria_id || null,
       marca_id: form.marca_id || null,
       lista_precio_id: selectedListaId || null,
+      lista_precio_minorista_id: selectedListaMinoristaId || null,
       activo: form.activo,
       destacado: form.destacado,
       imagenes: form.imagenes,
@@ -173,6 +176,7 @@ export default function ProductosAdminPage() {
       descripcion: p.descripcion || '',
       precio_costo: p.precio_costo ? String(p.precio_costo) : '',
       lista_precio_id: p.lista_precio_id || '',
+      lista_precio_minorista_id: (p as any).lista_precio_minorista_id || '',
 
       stock: String(p.stock),
       cantidad_minima: String(p.cantidad_minima),
@@ -186,6 +190,7 @@ export default function ProductosAdminPage() {
     });
     setEditingId(p.id);
     setSelectedListaId(p.lista_precio_id || '');
+    setSelectedListaMinoristaId((p as any).lista_precio_minorista_id || '');
     setShowForm(true);
   };
 
@@ -208,7 +213,8 @@ export default function ProductosAdminPage() {
     setForm({
       nombre: '', descripcion: '',
       precio_costo: '',
-    lista_precio_id: '',
+      lista_precio_id: '',
+      lista_precio_minorista_id: '',
       stock: '', cantidad_minima: '1',
       categoria_id: '', marca_id: '',
       activo: true, destacado: false, en_oferta: false,
@@ -216,6 +222,7 @@ export default function ProductosAdminPage() {
       precio_oferta: '',
     });
     setSelectedListaId('');
+    setSelectedListaMinoristaId('');
   };
 
   const formatPrice = (price: number) =>
@@ -270,10 +277,12 @@ export default function ProductosAdminPage() {
                 <label>💰 Precio de Costo *</label>
                 <input type="number" value={form.precio_costo} onChange={e => setForm({ ...form, precio_costo: e.target.value })} placeholder="0" style={{ borderColor: form.precio_costo ? 'var(--accent-green)' : undefined }} />
               </div>
+
+              {/* Mayorista Lista */}
               <div>
-                <label>📊 Lista de Precios</label>
+                <label>🛒 Lista Mayorista</label>
                 <select value={selectedListaId} onChange={e => setSelectedListaId(e.target.value)}>
-                  <option value="">Por defecto (Automático en toda la tienda)</option>
+                  <option value="">Por defecto</option>
                   {listas.filter(l => l.activo).map(l => (
                     <option key={l.id} value={l.id}>
                       {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default ? ' [Default Actual]' : ''}
@@ -288,7 +297,32 @@ export default function ProductosAdminPage() {
                   const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
                   return (
                     <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      💰 Precio Mayorista Calculado: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                      💰 P. Mayorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Minorista Lista */}
+              <div>
+                <label>🛍️ Lista Minorista</label>
+                <select value={selectedListaMinoristaId} onChange={e => setSelectedListaMinoristaId(e.target.value)}>
+                  <option value="">Por defecto (Minorista)</option>
+                  {listas.filter(l => l.activo).map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre} ({Math.round((l.markup - 1) * 100)}%){l.es_default_minorista ? ' [Default Actual]' : ''}
+                    </option>
+                  ))}
+                </select>
+                {form.precio_costo && (() => {
+                  const listaActiva = selectedListaMinoristaId 
+                        ? listas.find(l => l.id === selectedListaMinoristaId) 
+                        : listas.find(l => l.es_default_minorista && l.activo);
+                  const costo = parseFloat(form.precio_costo) || 0;
+                  const calculado = listaActiva ? Math.round(costo * listaActiva.markup) : costo;
+                  return (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-pink)', marginTop: '-0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                      🛍️ P. Minorista: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(calculado)}
                     </div>
                   );
                 })()}
