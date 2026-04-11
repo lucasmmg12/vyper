@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       producto_nombre: item.producto_nombre,
       cantidad: item.cantidad,
       precio_unitario: item.precio_unitario,
+      precio_anterior: (item as any).precio_anterior || null,
       subtotal: item.cantidad * item.precio_unitario,
     }));
 

@@ -123,6 +123,7 @@ export interface CompraItem {
   producto_nombre: string;
   cantidad: number;
   precio_unitario: number;
+  precio_anterior?: number | null;
   subtotal: number;
   created_at: string;
   // Joined

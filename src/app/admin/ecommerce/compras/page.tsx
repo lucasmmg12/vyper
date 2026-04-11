@@ -13,6 +13,7 @@ interface CompraFormItem {
   producto_nombre: string;
   cantidad: string;
   precio_unitario: string;
+  precio_anterior: number;
 }
 
 export default function ComprasAdminPage() {
@@ -27,7 +28,7 @@ export default function ComprasAdminPage() {
   const [proveedor, setProveedor] = useState('');
   const [numeroFactura, setNumeroFactura] = useState('');
   const [notas, setNotas] = useState('');
-  const [items, setItems] = useState<CompraFormItem[]>([{ producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '' }]);
+  const [items, setItems] = useState<CompraFormItem[]>([{ producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '', precio_anterior: 0 }]);
 
   // Product search
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -59,7 +60,7 @@ export default function ComprasAdminPage() {
   }, [productSearch, fetchProductos]);
 
   const addItem = () => {
-    setItems([...items, { producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '' }]);
+    setItems([...items, { producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '', precio_anterior: 0 }]);
   };
 
   const removeItem = (idx: number) => {
@@ -77,6 +78,7 @@ export default function ComprasAdminPage() {
       producto_id: prod.id,
       producto_nombre: prod.nombre,
       precio_unitario: prod.precio_costo ? String(prod.precio_costo) : '',
+      precio_anterior: prod.precio_costo || 0,
     } : item));
     setActiveSearchIdx(null);
     setProductSearch('');
@@ -108,6 +110,7 @@ export default function ComprasAdminPage() {
             producto_nombre: i.producto_nombre,
             cantidad: parseInt(i.cantidad),
             precio_unitario: parseFloat(i.precio_unitario),
+            precio_anterior: i.precio_anterior,
           })),
         }),
       });
@@ -147,7 +150,7 @@ export default function ComprasAdminPage() {
     setProveedor('');
     setNumeroFactura('');
     setNotas('');
-    setItems([{ producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '' }]);
+    setItems([{ producto_id: '', producto_nombre: '', cantidad: '1', precio_unitario: '', precio_anterior: 0 }]);
   };
 
   const formatPrice = (price: number) =>
@@ -283,11 +286,21 @@ export default function ComprasAdminPage() {
 
                   {/* Unit price */}
                   <div>
-                    <label style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Costo Unit.</label>
+                    <label style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                      Costo Unit.
+                      {item.producto_id && item.precio_unitario && parseFloat(item.precio_unitario) !== item.precio_anterior && (
+                        <span style={{ 
+                          color: parseFloat(item.precio_unitario) > item.precio_anterior ? 'var(--accent-red)' : 'var(--accent-green)',
+                          fontWeight: 700 
+                        }}>
+                          {parseFloat(item.precio_unitario) > item.precio_anterior ? '⬆️' : '⬇️'} {Math.abs(100 * (parseFloat(item.precio_unitario) - item.precio_anterior) / (item.precio_anterior || 1)).toFixed(1)}%
+                        </span>
+                      )}
+                    </label>
                     <input
                       type="number" min="0" step="0.01" value={item.precio_unitario}
                       onChange={e => updateItem(idx, 'precio_unitario', e.target.value)}
-                      style={{ marginBottom: 0 }}
+                      style={{ marginBottom: 0, borderColor: item.producto_id && item.precio_unitario && parseFloat(item.precio_unitario) !== item.precio_anterior ? (parseFloat(item.precio_unitario) > item.precio_anterior ? 'var(--accent-red)' : 'var(--accent-green)') : undefined }}
                       placeholder="$0"
                     />
                   </div>
@@ -423,7 +436,14 @@ export default function ComprasAdminPage() {
                           <tr key={item.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
                             <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600, fontSize: '0.875rem' }}>{item.producto_nombre}</td>
                             <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{item.cantidad}</td>
-                            <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{formatPrice(item.precio_unitario)}</td>
+                            <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>
+                              {formatPrice(item.precio_unitario)}
+                              {item.precio_anterior != null && item.precio_unitario !== item.precio_anterior && (
+                                <div style={{ fontSize: '0.6875rem', color: item.precio_unitario > item.precio_anterior ? 'var(--accent-red)' : 'var(--accent-green)' }}>
+                                  {item.precio_unitario > item.precio_anterior ? '⬆️' : '⬇️'} de {formatPrice(item.precio_anterior)}
+                                </div>
+                              )}
+                            </td>
                             <td style={{ padding: '0.5rem 0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{formatPrice(item.subtotal)}</td>
                           </tr>
                         ))}
