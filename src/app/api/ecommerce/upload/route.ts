@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
     const arrayBuffer = await file.arrayBuffer();
-    let buffer = Buffer.from(arrayBuffer);
+    let fileBuffer: any = Buffer.from(arrayBuffer);
 
     try {
-      buffer = await sharp(buffer)
+      fileBuffer = await sharp(fileBuffer)
         .webp({ quality: 80 })
         .toBuffer();
     } catch (conversionError) {
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase.storage
       .from(BUCKET)
-      .upload(fileName, buffer, {
+      .upload(fileName, fileBuffer, {
         contentType: 'image/webp',
         cacheControl: '3600',
         upsert: false,
