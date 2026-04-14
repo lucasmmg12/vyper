@@ -65,9 +65,13 @@ export async function GET(request: NextRequest) {
     ? (data || []).filter((p: Record<string, unknown>) => p.categoria !== null)
     : data;
 
-  // Filter out products without images if querying for the store
+  // Filter out products without valid images if querying for the store
   if (!all) {
-    filtered = (filtered || []).filter((p: any) => p.imagenes && p.imagenes.length > 0);
+    filtered = (filtered || []).filter((p: any) => {
+      // Validate that it's an array and has at least one valid string URL
+      if (!p.imagenes || !Array.isArray(p.imagenes) || p.imagenes.length === 0) return false;
+      return p.imagenes.some((img: string) => typeof img === 'string' && img.trim().length > 5);
+    });
   }
 
   // Fetch default markup if needed
