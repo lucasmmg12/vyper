@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import sharp from 'sharp';
 
 const BUCKET = 'productos';
 
@@ -21,18 +22,25 @@ export async function POST(request: NextRequest) {
   const errors: string[] = [];
 
   for (const file of files) {
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    let buffer = Buffer.from(arrayBuffer);
 
-    console.log(`[Upload] Subiendo ${file.name} (${file.size} bytes, ${file.type}) como ${fileName}...`);
+    try {
+      buffer = await sharp(buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch (conversionError) {
+      console.error(`[Upload] Error convirtiendo a WebP, subiendo original:`, conversionError);
+    }
+
+    console.log(`[Upload] Subiendo ${file.name} (convertido a webp) como ${fileName}...`);
 
     const { data, error } = await supabase.storage
       .from(BUCKET)
       .upload(fileName, buffer, {
-        contentType: file.type || 'image/jpeg',
+        contentType: 'image/webp',
         cacheControl: '3600',
         upsert: false,
       });

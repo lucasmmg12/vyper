@@ -61,9 +61,14 @@ export async function GET(request: NextRequest) {
   }
 
   // If filtering by rubro_id, remove products where categoria is null (join didn't match)
-  const filtered = rubro_id
+  let filtered = rubro_id
     ? (data || []).filter((p: Record<string, unknown>) => p.categoria !== null)
     : data;
+
+  // Filter out products without images if querying for the store
+  if (!all) {
+    filtered = (filtered || []).filter((p: any) => p.imagenes && p.imagenes.length > 0);
+  }
 
   // Fetch default markup if needed
   const { data: defaultList } = await supabase
