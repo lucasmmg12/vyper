@@ -242,11 +242,15 @@ export default function TiendaPage() {
       ]);
 
       const allProducts: Producto[] = allData.productos || [];
-      setOfertas(ofertasData.productos || []);
-      setDestacados(allProducts.filter(p => p.destacado));
+      
+      const filterWithImages = (list: Producto[]) => 
+        (list || []).filter(p => p.imagenes && p.imagenes.length > 0 && typeof p.imagenes[0] === 'string' && p.imagenes[0].length > 5);
+
+      setOfertas(filterWithImages(ofertasData.productos));
+      setDestacados(filterWithImages(allProducts.filter(p => p.destacado)));
 
       // New arrivals: sort by created_at desc, take 6
-      const sorted = [...allProducts].sort((a, b) =>
+      const sorted = [...filterWithImages(allProducts)].sort((a, b) =>
         new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
       );
       setNuevos(sorted.slice(0, 6));
@@ -269,7 +273,11 @@ export default function TiendaPage() {
     try {
       const res = await fetch(`/api/ecommerce/productos?${params}`);
       const data = await res.json();
-      setProductos(data.productos || []);
+      
+      const filterWithImages = (list: Producto[]) => 
+        (list || []).filter(p => p.imagenes && p.imagenes.length > 0 && typeof p.imagenes[0] === 'string' && p.imagenes[0].length > 5);
+        
+      setProductos(filterWithImages(data.productos));
       setTotalPages(data.totalPages || 1);
     } catch {
       console.error('Error fetching productos');
