@@ -186,7 +186,7 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
             📱 +54 264 629 8880 &nbsp;·&nbsp; @vyper_suplementos
           </p>
           <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)', fontSize: '0.75rem', color: 'var(--text-light)' }}>
-            Desarrollado por Grow Labs · {new Date().getFullYear()}
+            Desarrollado por <a href="https://www.growlabs.lat" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Grow Labs</a> · {new Date().getFullYear()}
           </div>
         </div>
       </footer>
