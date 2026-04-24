@@ -68,9 +68,9 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
             <a href="https://api.whatsapp.com/send/?phone=5492646298880&text=Hola%20Vyper!" target="_blank" rel="noopener noreferrer">
               <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Whatsapp</button>
             </a>
-            <Link href="/minorista#sucursal">
-              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Visita Nuestra Sucursal</button>
-            </Link>
+            <a href="https://www.google.com/maps/dir//Dr.+Ortega+192,+J5425+Villa+Krause,+San+Juan/@-31.578636,-68.6178966,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x96813f9a5a4f7b97:0x7159753af0ace75a!2m2!1d-68.5354807!2d-31.5786279?entry=ttu&g_ep=EgoyMDI0MTIwMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: '0.875rem', textDecoration: 'none' }}>
+              Visita Nuestra Sucursal
+            </a>
             <Link href="/minorista/como-comprar">
               <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Como comprar?</button>
             </Link>
