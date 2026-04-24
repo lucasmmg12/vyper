@@ -750,7 +750,7 @@ function TiendaPageContent() {
 
       {/* ═══ Floating WhatsApp Button ═══ */}
       <a
-        href="https://api.whatsapp.com/send/?phone=5492646298880&text=Hola%20Vyper!%20Quiero%20hacer%20un%20pedido%20mayorista%20🛒&type=phone_number&app_absent=0"
+        href="https://api.whatsapp.com/send/?phone=5492644193032&text=Hola%20Vyper!%20Quiero%20hacer%20un%20pedido%20mayorista%20🛒&type=phone_number&app_absent=0"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Contactar por WhatsApp"
