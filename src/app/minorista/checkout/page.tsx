@@ -59,8 +59,7 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Error al procesar el pedido');
       }
 
-      // Generate WhatsApp link
-      const whatsappLink = generateWhatsAppLink(items, form, data.pedido?.numero_pedido);
+      const whatsappLink = generateWhatsAppLink(items, form, data.pedido?.numero_pedido, 'minorista');
 
       // Mark success
       setSuccess(true);
@@ -94,11 +93,34 @@ export default function CheckoutPage() {
         </div>
         <h2 style={{ marginBottom: '0.5rem' }}>¡Pedido enviado! 🎉</h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-          Tu pedido fue registrado exitosamente. Se está abriendo WhatsApp para que puedas confirmar con Fernando.
+          Tu pedido fue registrado exitosamente. Se está abriendo WhatsApp para que puedas confirmar con nosotros.
         </p>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
           Si WhatsApp no se abrió automáticamente, hacé click en el botón de abajo.
         </p>
+
+        <div style={{ 
+          background: 'var(--bg-secondary)', 
+          borderRadius: 12, 
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          textAlign: 'left'
+        }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Resumen del pedido</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {items.map(item => (
+              <div key={item.producto_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '0.875rem' }}>
+                  <strong>{item.cantidad}x</strong> <span style={{ color: 'var(--text-secondary)' }}>{item.nombre}</span>
+                </div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                  {formatPrice(item.precio * item.cantidad)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/minorista">
             <button className="secondary">
@@ -107,13 +129,18 @@ export default function CheckoutPage() {
           </Link>
           <button
             onClick={() => {
-              const link = generateWhatsAppLink(items.length > 0 ? items : [], form);
+              const link = generateWhatsAppLink(items.length > 0 ? items : [], form, undefined, 'minorista');
               window.open(link, '_blank');
             }}
             className="btn-green"
           >
             <Send size={16} /> Abrir WhatsApp
           </button>
+        </div>
+        <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 12 }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-light)' }}>
+            ⚠️ IMPORTANTE: Es obligatorio continuar en WhatsApp y enviar el mensaje para que procesemos tu pedido.
+          </p>
         </div>
       </div>
     );

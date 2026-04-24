@@ -143,7 +143,21 @@ export default function CategoriasAdminPage() {
                     {rubro.descripcion && <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{rubro.descripcion}</p>}
                   </div>
                 </div>
-                <span className="badge badge-blue">{rubro.categorias?.length || 0} categorías</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span className="badge badge-blue">{rubro.categorias?.length || 0} categorías</span>
+                  <button 
+                    className="btn-ghost" 
+                    style={{ padding: '0.25rem', color: 'var(--accent-red)' }}
+                    onClick={async () => {
+                      if (!confirm(`¿Seguro que querés eliminar el rubro "${rubro.nombre}"? Se perderán las categorías asociadas.`)) return;
+                      await fetch(`/api/ecommerce/rubros/${rubro.id}`, { method: 'DELETE' });
+                      fetchRubros();
+                    }}
+                    title="Eliminar Rubro"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
 
               {rubro.categorias && rubro.categorias.length > 0 ? (
@@ -154,7 +168,20 @@ export default function CategoriasAdminPage() {
                       padding: '0.75rem 1rem', borderRadius: 10, background: 'var(--bg-secondary)',
                     }}>
                       <span style={{ fontWeight: 500, fontSize: '0.9375rem' }}>{cat.nombre}</span>
-                      <ChevronRight size={16} color="var(--text-light)" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button 
+                          className="btn-ghost" 
+                          style={{ padding: '0.25rem', color: 'var(--accent-red)' }}
+                          onClick={async () => {
+                            if (!confirm(`¿Seguro que querés eliminar la categoría "${cat.nombre}"?`)) return;
+                            await fetch(`/api/ecommerce/categorias/${cat.id}`, { method: 'DELETE' });
+                            fetchRubros();
+                          }}
+                          title="Eliminar Categoría"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
