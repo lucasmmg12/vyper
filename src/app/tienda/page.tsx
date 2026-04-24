@@ -333,7 +333,7 @@ function TiendaPageContent() {
       producto_id: producto.id,
       nombre: producto.nombre,
       precio: price,
-      cantidad: producto.cantidad_minima || 1,
+      cantidad: 1,
       imagen: producto.imagenes?.[0],
       stock: producto.stock,
       cantidad_minima: producto.cantidad_minima,

@@ -330,15 +330,12 @@ function TiendaPageContent() {
     const price = (producto.en_oferta && producto.precio_oferta && producto.precio_oferta > 0)
       ? producto.precio_oferta
       : producto.precio_mayorista;
-      
-    const existing = items.find(i => i.producto_id === producto.id);
-    const qtyToAdd = existing ? 1 : (producto.cantidad_minima || 1);
 
     addItem({
       producto_id: producto.id,
       nombre: producto.nombre,
       precio: price,
-      cantidad: qtyToAdd,
+      cantidad: 1,
       imagen: producto.imagenes?.[0],
       stock: producto.stock,
       cantidad_minima: producto.cantidad_minima,
