@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, X, ShoppingCart, Plus, Star, ChevronDown, Flame, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { Producto, Rubro, Categoria, Marca } from '@/types/ecommerce';
 import { useCart } from '@/lib/cart';
@@ -208,8 +209,13 @@ function ProductSection({ title, icon, products, formatPrice, onAdd, addedId, ac
   );
 }
 
-// ═════ Main Page ═════
-export default function TiendaPage() {
+// ═════ Main Page Content ═════
+function TiendaPageContent() {
+  const searchParams = useSearchParams();
+  const initRubro = searchParams.get('rubro') || '';
+  const initCategoria = searchParams.get('categoria') || '';
+  const initMarca = searchParams.get('marca') || '';
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [ofertas, setOfertas] = useState<Producto[]>([]);
   const [destacados, setDestacados] = useState<Producto[]>([]);
@@ -219,15 +225,28 @@ export default function TiendaPage() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedRubro, setSelectedRubro] = useState<string>('');
-  const [selectedCategoria, setSelectedCategoria] = useState<string>('');
-  const [selectedMarca, setSelectedMarca] = useState<string>('');
+  const [selectedRubro, setSelectedRubro] = useState<string>(initRubro);
+  const [selectedCategoria, setSelectedCategoria] = useState<string>(initCategoria);
+  const [selectedMarca, setSelectedMarca] = useState<string>(initMarca);
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [addedId, setAddedId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'home' | 'catalog'>('home');
-  const { addItem } = useCart();
+  const [activeSection, setActiveSection] = useState<'home' | 'catalog'>(initRubro || initCategoria || initMarca ? 'catalog' : 'home');
+  const { addItem, items } = useCart();
+
+  useEffect(() => {
+    const r = searchParams.get('rubro') || '';
+    const c = searchParams.get('categoria') || '';
+    const m = searchParams.get('marca') || '';
+    if (r || c || m) {
+      setSelectedRubro(r);
+      setSelectedCategoria(c);
+      setSelectedMarca(m);
+      setActiveSection('catalog');
+      setPage(1);
+    }
+  }, [searchParams]);
 
   // Fetch featured sections (home view)
   const fetchSections = async () => {
@@ -267,7 +286,7 @@ export default function TiendaPage() {
     if (selectedRubro) params.set('rubro_id', selectedRubro);
     if (selectedMarca) params.set('marca_id', selectedMarca);
     params.set('page', String(page));
-    params.set('limit', '20');
+    params.set('limit', '50');
     params.set('tienda', 'minorista');
 
     try {
@@ -311,11 +330,15 @@ export default function TiendaPage() {
     const price = (producto.en_oferta && producto.precio_oferta && producto.precio_oferta > 0)
       ? producto.precio_oferta
       : producto.precio_mayorista;
+      
+    const existing = items.find(i => i.producto_id === producto.id);
+    const qtyToAdd = existing ? 1 : (producto.cantidad_minima || 1);
+
     addItem({
       producto_id: producto.id,
       nombre: producto.nombre,
       precio: price,
-      cantidad: producto.cantidad_minima || 1,
+      cantidad: qtyToAdd,
       imagen: producto.imagenes?.[0],
       stock: producto.stock,
       cantidad_minima: producto.cantidad_minima,
@@ -766,5 +789,13 @@ export default function TiendaPage() {
         </svg>
       </a>
     </div>
+  );
+}
+
+export default function TiendaPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <TiendaPageContent />
+    </Suspense>
   );
 }

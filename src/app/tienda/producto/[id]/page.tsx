@@ -24,7 +24,7 @@ export default function ProductoPage() {
         const res = await fetch(`/api/ecommerce/productos/${id}`);
         const data = await res.json();
         setProducto(data.producto);
-        setCantidad(data.producto?.cantidad_minima || 1);
+        setCantidad(1);
       } catch {
         console.error('Error fetching producto');
       } finally {
@@ -315,7 +315,7 @@ export default function ProductoPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <button
                 className="secondary"
-                onClick={() => setCantidad(prev => Math.max(producto.cantidad_minima, prev - 1))}
+                onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
                 style={{ width: 48, height: 48, padding: 0, borderRadius: 12 }}
               >
                 <Minus size={18} />
@@ -323,9 +323,9 @@ export default function ProductoPage() {
               <input
                 type="number"
                 value={cantidad}
-                onChange={e => setCantidad(Math.max(producto.cantidad_minima, parseInt(e.target.value) || 1))}
+                onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
                 style={{ width: 80, textAlign: 'center', margin: 0, fontSize: '1.125rem', fontWeight: 700 }}
-                min={producto.cantidad_minima}
+                min={1}
               />
               <button
                 className="secondary"
@@ -334,9 +334,6 @@ export default function ProductoPage() {
               >
                 <Plus size={18} />
               </button>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                Min: {producto.cantidad_minima}
-              </span>
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingCart, Search, Menu, X, ChevronRight, Package, HelpCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import MarqueeBar from '@/components/tienda/MarqueeBar';
+import MegaMenu from '@/components/tienda/MegaMenu';
 
 export default function TiendaLayout({ children }: { children: React.ReactNode }) {
   const { getItemCount, isLoaded } = useCart();
@@ -59,15 +60,19 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
           </Link>
 
           {/* Center: Desktop Nav */}
-          <nav style={{ display: 'none', gap: '0.25rem' }} className="desktop-nav">
+          <nav style={{ display: 'none', gap: '0.25rem', alignItems: 'center' }} className="desktop-nav">
             <Link href="/minorista">
-              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Catálogo</button>
+              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Inicio</button>
             </Link>
-            <Link href="/minorista/carrito">
-              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Mi Pedido</button>
+            <MegaMenu baseUrl="/minorista" />
+            <a href="https://api.whatsapp.com/send/?phone=5492646298880&text=Hola%20Vyper!" target="_blank" rel="noopener noreferrer">
+              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Whatsapp</button>
+            </a>
+            <Link href="/minorista#sucursal">
+              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Visita Nuestra Sucursal</button>
             </Link>
             <Link href="/minorista/como-comprar">
-              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>¿Cómo comprar?</button>
+              <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Como comprar?</button>
             </Link>
           </nav>
 
