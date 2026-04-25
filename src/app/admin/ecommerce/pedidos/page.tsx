@@ -93,10 +93,12 @@ export default function PedidosAdminPage() {
 
   return (
     <div className="page-container">
-      <Link href="/admin/ecommerce">
-        <button className="btn-ghost" style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
-          <ArrowLeft size={16} /> Ecommerce
-        </button>
+      <Link 
+        href="/admin/ecommerce" 
+        className="btn-ghost" 
+        style={{ display: 'inline-flex', marginBottom: '1rem', fontSize: '0.875rem', alignItems: 'center', gap: '0.5rem' }}
+      >
+        <ArrowLeft size={16} /> Ecommerce
       </Link>
 
       <h1 style={{ marginBottom: '1.5rem' }}>Pedidos</h1>
