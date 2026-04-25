@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('pedidos')
-    .select('*, items:pedido_items(*)')
+    .select('*, items:pedido_items(*, producto:productos(imagenes, id))')
     .order('created_at', { ascending: false });
 
   if (estado) {

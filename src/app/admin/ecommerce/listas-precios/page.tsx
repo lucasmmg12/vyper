@@ -14,11 +14,16 @@ interface EscalonForm {
   porcentaje: string;
 }
 
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+
 export default function ListasPreciosAdminPage() {
   const [listas, setListas] = useState<ListaPrecio[]>([]);
   const [promociones, setPromociones] = useState<ProductoPromocion[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'listas' | 'promociones'>('listas');
+  
+  // Modals state
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'lista' | 'promocion'; id: string } | null>(null);
 
   // List form
   const [showListForm, setShowListForm] = useState(false);
@@ -73,6 +78,19 @@ export default function ListasPreciosAdminPage() {
       setProdResults([]);
     }
   }, [prodSearch]);
+
+  // ═══════ DELETE CONFIRM HANDLER ═══════
+  const confirmDelete = async () => {
+    if (!deleteModal) return;
+    if (deleteModal.type === 'lista') {
+      await fetch(`/api/ecommerce/listas-precios/${deleteModal.id}`, { method: 'DELETE' });
+      fetchListas();
+    } else {
+      await fetch(`/api/ecommerce/promociones/${deleteModal.id}`, { method: 'DELETE' });
+      fetchPromociones();
+    }
+    setDeleteModal(null);
+  };
 
   // ═══════ LIST HANDLERS ═══════
   const resetListForm = () => {
@@ -143,10 +161,8 @@ export default function ListasPreciosAdminPage() {
     }
   };
 
-  const handleDeleteList = async (id: string) => {
-    if (!confirm('¿Eliminar esta lista de precios?')) return;
-    await fetch(`/api/ecommerce/listas-precios/${id}`, { method: 'DELETE' });
-    fetchListas();
+  const handleDeleteList = (id: string) => {
+    setDeleteModal({ isOpen: true, type: 'lista', id });
   };
 
   const handleToggleList = async (lista: ListaPrecio) => {
@@ -202,10 +218,8 @@ export default function ListasPreciosAdminPage() {
     fetchPromociones();
   };
 
-  const handleDeletePromo = async (id: string) => {
-    if (!confirm('¿Eliminar esta promoción?')) return;
-    await fetch(`/api/ecommerce/promociones/${id}`, { method: 'DELETE' });
-    fetchPromociones();
+  const handleDeletePromo = (id: string) => {
+    setDeleteModal({ isOpen: true, type: 'promocion', id });
   };
 
   const formatPrice = (price: number) =>
@@ -218,6 +232,15 @@ export default function ListasPreciosAdminPage() {
 
   return (
     <div className="page-container">
+      {deleteModal && (
+        <ConfirmDeleteModal
+          title={`Eliminar ${deleteModal.type === 'lista' ? 'Lista de Precios' : 'Promoción'}`}
+          message={deleteModal.type === 'lista' ? `¿Seguro que querés eliminar esta lista de precios?` : `¿Seguro que querés eliminar esta promoción?`}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteModal(null)}
+        />
+      )}
+
       <Link href="/admin/ecommerce">
         <button className="btn-ghost" style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
           <ArrowLeft size={16} /> Ecommerce

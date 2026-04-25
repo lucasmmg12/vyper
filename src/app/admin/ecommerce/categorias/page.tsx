@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Edit, Trash2, ChevronRight, Layers } from 'lucide-react';
-import { Rubro, Categoria } from '@/types/ecommerce';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 
 export default function CategoriasAdminPage() {
   const [rubros, setRubros] = useState<(Rubro & { categorias?: Categoria[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRubroForm, setShowRubroForm] = useState(false);
   const [showCatForm, setShowCatForm] = useState(false);
-  const [selectedRubro, setSelectedRubro] = useState<string>('');
-  const [rubroForm, setRubroForm] = useState({ nombre: '', descripcion: '', icono: '' });
-  const [catForm, setCatForm] = useState({ nombre: '', descripcion: '', rubro_id: '' });
+  const [rubroForm, setRubroForm] = useState({ id: '', nombre: '', descripcion: '', icono: '' });
+  const [catForm, setCatForm] = useState({ id: '', nombre: '', descripcion: '', rubro_id: '' });
+  
+  // Modals state
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'rubro' | 'categoria'; id: string; name: string } | null>(null);
 
   const fetchRubros = async () => {
     const res = await fetch('/api/ecommerce/rubros');
@@ -23,32 +25,70 @@ export default function CategoriasAdminPage() {
 
   useEffect(() => { fetchRubros(); }, []);
 
-  const handleCreateRubro = async () => {
+  const handleSaveRubro = async () => {
     if (!rubroForm.nombre) return;
-    await fetch('/api/ecommerce/rubros', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rubroForm),
-    });
-    setRubroForm({ nombre: '', descripcion: '', icono: '' });
+    
+    if (rubroForm.id) {
+      await fetch(`/api/ecommerce/rubros/${rubroForm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: rubroForm.nombre, descripcion: rubroForm.descripcion, icono: rubroForm.icono }),
+      });
+    } else {
+      await fetch('/api/ecommerce/rubros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: rubroForm.nombre, descripcion: rubroForm.descripcion, icono: rubroForm.icono }),
+      });
+    }
+    setRubroForm({ id: '', nombre: '', descripcion: '', icono: '' });
     setShowRubroForm(false);
     fetchRubros();
   };
 
-  const handleCreateCat = async () => {
+  const handleSaveCat = async () => {
     if (!catForm.nombre || !catForm.rubro_id) return;
-    await fetch('/api/ecommerce/categorias', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(catForm),
-    });
-    setCatForm({ nombre: '', descripcion: '', rubro_id: '' });
+    
+    if (catForm.id) {
+      await fetch(`/api/ecommerce/categorias/${catForm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: catForm.nombre, descripcion: catForm.descripcion, rubro_id: catForm.rubro_id }),
+      });
+    } else {
+      await fetch('/api/ecommerce/categorias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: catForm.nombre, descripcion: catForm.descripcion, rubro_id: catForm.rubro_id }),
+      });
+    }
+    setCatForm({ id: '', nombre: '', descripcion: '', rubro_id: '' });
     setShowCatForm(false);
+    fetchRubros();
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal) return;
+    if (deleteModal.type === 'rubro') {
+      await fetch(`/api/ecommerce/rubros/${deleteModal.id}`, { method: 'DELETE' });
+    } else {
+      await fetch(`/api/ecommerce/categorias/${deleteModal.id}`, { method: 'DELETE' });
+    }
+    setDeleteModal(null);
     fetchRubros();
   };
 
   return (
     <div className="page-container">
+      {deleteModal && (
+        <ConfirmDeleteModal
+          title={`Eliminar ${deleteModal.type === 'rubro' ? 'Rubro' : 'Categoría'}`}
+          message={deleteModal.type === 'rubro' ? `¿Seguro que querés eliminar el rubro "${deleteModal.name}"? Se perderán todas sus categorías asociadas.` : `¿Seguro que querés eliminar la categoría "${deleteModal.name}"?`}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteModal(null)}
+        />
+      )}
+
       <Link href="/admin/ecommerce">
         <button className="btn-ghost" style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
           <ArrowLeft size={16} /> Ecommerce
@@ -58,19 +98,19 @@ export default function CategoriasAdminPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1>Rubros y Categorías</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="secondary" onClick={() => setShowRubroForm(true)}>
+          <button className="secondary" onClick={() => { setRubroForm({ id: '', nombre: '', descripcion: '', icono: '' }); setShowRubroForm(true); }}>
             <Plus size={16} /> Rubro
           </button>
-          <button onClick={() => { setShowCatForm(true); setCatForm({ ...catForm, rubro_id: rubros[0]?.id || '' }); }}>
+          <button onClick={() => { setCatForm({ id: '', nombre: '', descripcion: '', rubro_id: rubros[0]?.id || '' }); setShowCatForm(true); }}>
             <Plus size={16} /> Categoría
           </button>
         </div>
       </div>
 
-      {/* Create Rubro Form */}
+      {/* Rubro Form */}
       {showRubroForm && (
         <div className="glass-card animate-slideUp" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Nuevo Rubro</h3>
+          <h3 style={{ marginBottom: '1rem' }}>{rubroForm.id ? 'Editar Rubro' : 'Nuevo Rubro'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 1rem' }}>
             <div>
               <label>Nombre</label>
@@ -86,16 +126,16 @@ export default function CategoriasAdminPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={handleCreateRubro} disabled={!rubroForm.nombre}>Crear Rubro</button>
+            <button onClick={handleSaveRubro} disabled={!rubroForm.nombre}>{rubroForm.id ? 'Guardar Cambios' : 'Crear Rubro'}</button>
             <button className="secondary" onClick={() => setShowRubroForm(false)}>Cancelar</button>
           </div>
         </div>
       )}
 
-      {/* Create Categoria Form */}
+      {/* Categoria Form */}
       {showCatForm && (
         <div className="glass-card animate-slideUp" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Nueva Categoría</h3>
+          <h3 style={{ marginBottom: '1rem' }}>{catForm.id ? 'Editar Categoría' : 'Nueva Categoría'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 1rem' }}>
             <div>
               <label>Nombre</label>
@@ -114,7 +154,7 @@ export default function CategoriasAdminPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={handleCreateCat} disabled={!catForm.nombre || !catForm.rubro_id}>Crear Categoría</button>
+            <button onClick={handleSaveCat} disabled={!catForm.nombre || !catForm.rubro_id}>{catForm.id ? 'Guardar Cambios' : 'Crear Categoría'}</button>
             <button className="secondary" onClick={() => setShowCatForm(false)}>Cancelar</button>
           </div>
         </div>
@@ -143,16 +183,23 @@ export default function CategoriasAdminPage() {
                     {rubro.descripcion && <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{rubro.descripcion}</p>}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span className="badge badge-blue">{rubro.categorias?.length || 0} categorías</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span className="badge badge-blue" style={{ marginRight: '0.75rem' }}>{rubro.categorias?.length || 0} categorías</span>
                   <button 
                     className="btn-ghost" 
-                    style={{ padding: '0.25rem', color: 'var(--accent-red)' }}
-                    onClick={async () => {
-                      if (!confirm(`¿Seguro que querés eliminar el rubro "${rubro.nombre}"? Se perderán las categorías asociadas.`)) return;
-                      await fetch(`/api/ecommerce/rubros/${rubro.id}`, { method: 'DELETE' });
-                      fetchRubros();
+                    style={{ padding: '0.375rem', color: 'var(--text-muted)' }}
+                    onClick={() => {
+                      setRubroForm({ id: rubro.id, nombre: rubro.nombre, descripcion: rubro.descripcion || '', icono: rubro.icono || '' });
+                      setShowRubroForm(true);
                     }}
+                    title="Editar Rubro"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button 
+                    className="btn-ghost" 
+                    style={{ padding: '0.375rem', color: 'var(--accent-red)' }}
+                    onClick={() => setDeleteModal({ type: 'rubro', id: rubro.id, name: rubro.nombre })}
                     title="Eliminar Rubro"
                   >
                     <Trash2 size={16} />
@@ -168,15 +215,22 @@ export default function CategoriasAdminPage() {
                       padding: '0.75rem 1rem', borderRadius: 10, background: 'var(--bg-secondary)',
                     }}>
                       <span style={{ fontWeight: 500, fontSize: '0.9375rem' }}>{cat.nombre}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <button 
+                          className="btn-ghost" 
+                          style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                          onClick={() => {
+                            setCatForm({ id: cat.id, nombre: cat.nombre, descripcion: cat.descripcion || '', rubro_id: rubro.id });
+                            setShowCatForm(true);
+                          }}
+                          title="Editar Categoría"
+                        >
+                          <Edit size={14} />
+                        </button>
                         <button 
                           className="btn-ghost" 
                           style={{ padding: '0.25rem', color: 'var(--accent-red)' }}
-                          onClick={async () => {
-                            if (!confirm(`¿Seguro que querés eliminar la categoría "${cat.nombre}"?`)) return;
-                            await fetch(`/api/ecommerce/categorias/${cat.id}`, { method: 'DELETE' });
-                            fetchRubros();
-                          }}
+                          onClick={() => setDeleteModal({ type: 'categoria', id: cat.id, name: cat.nombre })}
                           title="Eliminar Categoría"
                         >
                           <Trash2 size={14} />
