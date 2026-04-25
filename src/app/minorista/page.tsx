@@ -402,10 +402,10 @@ function TiendaPageContent() {
         minHeight: '200px',
       }}>
         <Image
-          src="/gym.png"
+          src="/bg-hero.webp"
           alt="Gym background"
           fill
-          style={{ objectFit: 'cover', objectPosition: 'center' }}
+          style={{ objectFit: 'cover', objectPosition: 'center', filter: 'grayscale(100%)' }}
           priority
         />
         <div style={{
