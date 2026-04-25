@@ -509,7 +509,7 @@ button:disabled {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -568,14 +568,14 @@ button:disabled {
 }
 
 .sidebar-nav-item.active {
-  background: #00FF88;
+  background: #FFFFFF;
   color: #000000;
   font-weight: 600;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-nav-item.active:hover {
-  background: #00e67a;
+  background: #f3f4f6;
 }
 
 .sidebar-exit {
