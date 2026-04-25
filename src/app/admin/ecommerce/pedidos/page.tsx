@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, ChevronDown, ChevronUp, Phone, Mail, User, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChevronDown, ChevronUp, Phone, Mail, User, Edit2, Check, X, Trash2, Printer } from 'lucide-react';
 import { Pedido, PedidoItem } from '@/types/ecommerce';
 
 export default function PedidosAdminPage() {
@@ -290,9 +290,18 @@ export default function PedidosAdminPage() {
                             </button>
                           ))}
                         </div>
-                        <button className="secondary" onClick={(e) => { e.stopPropagation(); startEditing(pedido); }}>
-                          <Edit2 size={16} /> Editar Pedido
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button 
+                            className="secondary" 
+                            onClick={(e) => { e.stopPropagation(); window.open(`/admin/ecommerce/pedidos/${pedido.id}/print`, '_blank'); }}
+                            title="Imprimir Factura"
+                          >
+                            <Printer size={16} /> Imprimir
+                          </button>
+                          <button className="secondary" onClick={(e) => { e.stopPropagation(); startEditing(pedido); }}>
+                            <Edit2 size={16} /> Editar Pedido
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
