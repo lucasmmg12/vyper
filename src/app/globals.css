@@ -490,7 +490,7 @@ button:disabled {
     linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.95)),
     url('/bg-hero.webp');
   background-size: cover;
-  background-position: center;
+  background-position: 30% center;
   background-repeat: no-repeat;
   background-blend-mode: normal, luminosity;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
