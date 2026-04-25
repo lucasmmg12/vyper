@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Edit, Trash2, ChevronRight, Layers } from 'lucide-react';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { Rubro, Categoria } from '@/types/ecommerce';
 
 export default function CategoriasAdminPage() {
   const [rubros, setRubros] = useState<(Rubro & { categorias?: Categoria[] })[]>([]);
@@ -199,7 +200,7 @@ export default function CategoriasAdminPage() {
                   <button 
                     className="btn-ghost" 
                     style={{ padding: '0.375rem', color: 'var(--accent-red)' }}
-                    onClick={() => setDeleteModal({ type: 'rubro', id: rubro.id, name: rubro.nombre })}
+                    onClick={() => setDeleteModal({ isOpen: true, type: 'rubro', id: rubro.id, name: rubro.nombre })}
                     title="Eliminar Rubro"
                   >
                     <Trash2 size={16} />
@@ -230,7 +231,7 @@ export default function CategoriasAdminPage() {
                         <button 
                           className="btn-ghost" 
                           style={{ padding: '0.25rem', color: 'var(--accent-red)' }}
-                          onClick={() => setDeleteModal({ type: 'categoria', id: cat.id, name: cat.nombre })}
+                          onClick={() => setDeleteModal({ isOpen: true, type: 'categoria', id: cat.id, name: cat.nombre })}
                           title="Eliminar Categoría"
                         >
                           <Trash2 size={14} />
