@@ -55,7 +55,7 @@ export default function VyperCoinsPage() {
 
     const fetchTransactions = async () => {
         try {
-            const res = await fetch('/api/coin-transactions?limit=100');
+            const res = await fetch('/api/coin-transactions?limit=10000');
             const data = await res.json();
             setTransactions(data.transactions || []);
         } catch (err) {
