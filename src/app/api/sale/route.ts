@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import axios from 'axios';
+
 
 export async function POST(request: Request) {
     try {
@@ -96,31 +96,7 @@ export async function POST(request: Request) {
 
         if (txnError) console.error('Transaction log error:', txnError);
 
-        // 6. Trigger Webhook
-        try {
-            const message = `*VYPER LABS NOTIFICATION*\n------------------\n¡Compra registrada!\nMonto: $${amountNum}\nGanaste: ${earnedCoins} Coins\nTotal Coins: ${newCoins}\n${isCredit ? `Deuda Actual: $${newDebt}` : ''}`;
-
-            await axios.post(
-                'https://app.builderbot.cloud/api/v2/1a3be0ed-27c1-4b67-a2f0-d0a2ac8fe949/messages',
-                {
-                    messages: {
-                        content: message,
-                        mediaUrl: "https://www.builderbot.app/assets/brand/logo-alone.png"
-                    },
-                    number: formattedWhatsapp.replace(/\D/g, ''),
-                    checkIfExists: false
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-builderbot': 'bb-0921a9b4-81a2-4fd2-b45d-680480138bdc'
-                    }
-                }
-            );
-            console.log('Webhook sent successfully');
-        } catch (webhookError) {
-            console.error('Webhook failed:', webhookError);
-        }
+        // WhatsApp notification disabled — se envía desde Vyper Coins
 
         return NextResponse.json({
             success: true,

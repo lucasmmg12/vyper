@@ -1,7 +1,6 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { sendDebtNotification } from '@/lib/builderbot';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -125,18 +124,7 @@ export async function POST(request: Request) {
         }
         // ---------------------------------------------------
 
-        // Send WhatsApp notification
-        if (clientData.phone) {
-            sendDebtNotification(
-                client_name,
-                transactionAmount,
-                newBalance,
-                transaction_type,
-                clientData.phone
-            ).catch(err => {
-                console.error('Failed to send debt notification:', err);
-            });
-        }
+        // WhatsApp notification disabled — se envía desde Vyper Coins
 
         return NextResponse.json({ success: true, data: transactionData, newBalance });
     } catch (error: any) {
