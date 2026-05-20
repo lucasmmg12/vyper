@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Coins, Search, TrendingUp, Edit2, Trash2, History } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Coins, Search, TrendingUp, Edit2, Trash2, History, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import Link from 'next/link';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { TierBadge, TierProgressBar } from '@/utils/tiers';
@@ -37,6 +37,9 @@ export default function VyperCoinsPage() {
     const [error, setError] = useState('');
     const [editingTransaction, setEditingTransaction] = useState<CoinTransaction | null>(null);
     const [transactionToDelete, setTransactionToDelete] = useState<CoinTransaction | null>(null);
+    const [txnSearch, setTxnSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 50;
 
     useEffect(() => {
         fetchClients();
@@ -58,10 +61,28 @@ export default function VyperCoinsPage() {
             const res = await fetch('/api/coin-transactions?limit=10000');
             const data = await res.json();
             setTransactions(data.transactions || []);
+            setCurrentPage(1);
         } catch (err) {
             console.error('Error fetching transactions:', err);
         }
     };
+
+    // Filtered & paginated transactions
+    const filteredTransactions = useMemo(() => {
+        if (!txnSearch.trim()) return transactions;
+        const term = txnSearch.toLowerCase();
+        return transactions.filter(t =>
+            t.client_name?.toLowerCase().includes(term) ||
+            new Date(t.date || t.created_at).toLocaleDateString('es-AR').includes(term) ||
+            t.amount.toString().includes(term)
+        );
+    }, [transactions, txnSearch]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+    const paginatedTransactions = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return filteredTransactions.slice(start, start + PAGE_SIZE);
+    }, [filteredTransactions, currentPage]);
 
     const filteredClients = clients.filter(c => {
         const term = searchTerm.toLowerCase();
@@ -412,10 +433,22 @@ export default function VyperCoinsPage() {
 
                 {/* Transactions History */}
                 <div className="glass-card">
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <History size={24} color="#a5b4fc" />
-                        Historial de Transacciones ({transactions.length})
-                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                            <History size={24} color="#a5b4fc" />
+                            Historial de Transacciones ({filteredTransactions.length})
+                        </h2>
+                        <div style={{ position: 'relative', minWidth: '250px' }}>
+                            <Filter size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                            <input
+                                type="text"
+                                placeholder="Filtrar por cliente, fecha, importe..."
+                                value={txnSearch}
+                                onChange={(e) => { setTxnSearch(e.target.value); setCurrentPage(1); }}
+                                style={{ width: '100%', paddingLeft: '2.2rem', fontSize: '0.85rem', padding: '0.5rem 0.75rem 0.5rem 2.2rem' }}
+                            />
+                        </div>
+                    </div>
 
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -430,7 +463,7 @@ export default function VyperCoinsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {transactions.map(t => (
+                                {paginatedTransactions.map(t => (
                                     <tr
                                         key={t.id}
                                         style={{
@@ -479,12 +512,45 @@ export default function VyperCoinsPage() {
                             </tbody>
                         </table>
 
-                        {transactions.length === 0 && (
+                        {filteredTransactions.length === 0 && (
                             <div style={{ padding: '3rem', textAlign: 'center', color: '#666' }}>
-                                No hay transacciones registradas
+                                {txnSearch ? 'No se encontraron transacciones con ese filtro' : 'No hay transacciones registradas'}
                             </div>
                         )}
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '1rem 0.5rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '0.5rem'
+                        }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                Mostrando {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredTransactions.length)} de {filteredTransactions.length}
+                            </span>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="secondary"
+                                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', opacity: currentPage === 1 ? 0.4 : 1 }}
+                                >
+                                    <ChevronLeft size={14} />
+                                </button>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', minWidth: '80px', textAlign: 'center' }}>
+                                    Pág {currentPage} / {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="secondary"
+                                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', opacity: currentPage === totalPages ? 0.4 : 1 }}
+                                >
+                                    <ChevronRight size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
