@@ -258,8 +258,7 @@ ${alerts.join('\n')}`;
             },
             body: JSON.stringify({
                 messages: {
-                    content: message,
-                    mediaUrl: "https://i.imgur.com/DcYHicK.png"
+                    content: message
                 },
                 number: ownerPhone,
                 checkIfExists: false

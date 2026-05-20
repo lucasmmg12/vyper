@@ -52,8 +52,7 @@ Has realizado una compra por *${formattedAmount}* 💸
 
         const payload: BuilderBotMessage = {
             messages: {
-                content: messageContent,
-                mediaUrl: "https://i.imgur.com/DcYHicK.png"
+                content: messageContent
             },
             number: cleanPhone,
             checkIfExists: false
@@ -136,8 +135,7 @@ ${newBalance === 0 ? '🎉 ¡Felicitaciones! Tu cuenta está al día ✨' : '�
 
         const payload: BuilderBotMessage = {
             messages: {
-                content: messageContent,
-                mediaUrl: "https://i.imgur.com/DcYHicK.png"
+                content: messageContent
             },
             number: cleanPhone,
             checkIfExists: false
