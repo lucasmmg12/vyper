@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { sendDebtNotification } from '@/lib/builderbot';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -124,7 +125,46 @@ export async function POST(request: Request) {
         }
         // ---------------------------------------------------
 
-        // WhatsApp notification disabled — se envía desde Vyper Coins
+        // Send WhatsApp notification (same pattern as coin-transactions)
+        if (clientData.phone) {
+            try {
+                const success = await sendDebtNotification(
+                    client_name,
+                    transactionAmount,
+                    newBalance,
+                    transaction_type,
+                    clientData.phone
+                );
+
+                // Update the transaction with the notification result
+                await supabase
+                    .from('debt_transactions')
+                    .update({
+                        notification_status: success ? 'sent' : 'error',
+                        notification_error: success ? null : 'Failed to send message via BuilderBot'
+                    })
+                    .eq('id', transactionData[0].id);
+
+            } catch (err: any) {
+                console.error('Failed to send debt notification:', err);
+                await supabase
+                    .from('debt_transactions')
+                    .update({
+                        notification_status: 'error',
+                        notification_error: err.message || 'Unknown error'
+                    })
+                    .eq('id', transactionData[0].id);
+            }
+        } else {
+            console.warn('Could not send debt notification: client phone not found');
+            await supabase
+                .from('debt_transactions')
+                .update({
+                    notification_status: 'error',
+                    notification_error: 'Client phone not found'
+                })
+                .eq('id', transactionData[0].id);
+        }
 
         return NextResponse.json({ success: true, data: transactionData, newBalance });
     } catch (error: any) {
