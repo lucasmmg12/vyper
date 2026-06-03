@@ -646,8 +646,8 @@ export default function PersonalizacionPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 8 }}>
-        <Loader2 size={24} className="animate-spin" style={{ color: '#6b7280' }} />
-        <span className="text-gray-500">Cargando configuraciones...</span>
+        <Loader2 size={24} style={{ color: 'var(--text-light)', animation: 'spin 1s linear infinite' }} />
+        <span style={{ color: 'var(--text-muted)' }}>Cargando configuraciones...</span>
       </div>
     );
   }
@@ -660,9 +660,9 @@ export default function PersonalizacionPage() {
       <TextField label="Subtítulo Minorista" value={currentConfig.subtitulo_minorista || ''} onChange={v => updateField('subtitulo_minorista', v)} placeholder="Tienda Oficial" />
       <TextField label="URL del Logo" value={currentConfig.logo_url || ''} onChange={v => updateField('logo_url', v)} placeholder="/logovyper.png" />
       {currentConfig.logo_url && (
-        <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: 12, border: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-color)', textAlign: 'center' }}>
           <img src={currentConfig.logo_url} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'contain', margin: '0 auto' }} />
-          <p className="text-xs text-gray-400 mt-2">Vista previa del logo</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>Vista previa del logo</p>
         </div>
       )}
     </>
@@ -698,8 +698,8 @@ export default function PersonalizacionPage() {
 
   const renderWhatsapp = () => (
     <>
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-        <p className="text-sm text-green-700 font-medium">💬 Estos números y mensajes se usan en toda la tienda: header, botón flotante, checkout y como-comprar.</p>
+      <div style={{ background: 'var(--accent-green-light)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '1rem', marginBottom: '1rem' }}>
+        <p style={{ fontSize: '0.875rem', color: 'var(--accent-green)', fontWeight: 600 }}>💬 Estos números y mensajes se usan en toda la tienda: header, botón flotante, checkout y como-comprar.</p>
       </div>
       <TextField label="Número Mayorista" value={currentConfig.numero_mayorista || ''} onChange={v => updateField('numero_mayorista', v)} placeholder="5492644193032" />
       <TextField label="Número Minorista" value={currentConfig.numero_minorista || ''} onChange={v => updateField('numero_minorista', v)} placeholder="5492646298880" />
@@ -720,14 +720,14 @@ export default function PersonalizacionPage() {
     };
     return (
       <>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-          <p className="text-sm text-blue-700 font-medium">❓ Estas preguntas se muestran en la página "¿Cómo comprar?"</p>
+        <div style={{ background: 'var(--accent-blue-light)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '1rem', marginBottom: '1rem' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--accent-blue)', fontWeight: 600 }}>❓ Estas preguntas se muestran en la página "¿Cómo comprar?"</p>
         </div>
         {preguntas.map((faq: any, i: number) => (
-          <div key={i} style={{ background: '#f9fafb', borderRadius: 12, padding: '1rem', marginBottom: '0.75rem', border: '1px solid #e5e7eb' }}>
+          <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span className="text-xs font-bold text-gray-400">PREGUNTA {i + 1}</span>
-              <button onClick={() => { const n = [...preguntas]; n.splice(i, 1); update(n); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4 }}>
+              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>PREGUNTA {i + 1}</span>
+              <button onClick={() => { const n = [...preguntas]; n.splice(i, 1); update(n); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-red)', padding: 4, minHeight: 'auto', boxShadow: 'none' }}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -762,84 +762,70 @@ export default function PersonalizacionPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
+    <div className="page-container" style={{ maxWidth: 1100 }}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-800 to-violet-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-6 opacity-10"><Store size={120} /></div>
-        <div className="relative z-10">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div>
-              <h2 className="font-bold text-2xl flex items-center gap-2"><Store size={24} /> Editor de Tienda</h2>
-              <p className="text-violet-100 text-sm mt-1">Personalizá la apariencia de tu tienda mayorista y minorista</p>
-            </div>
-            <button
-              onClick={startTutorial}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '0.5rem 1rem', borderRadius: 10,
-                background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-                color: '#fff', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 600,
-                backdropFilter: 'blur(4px)', transition: 'all 0.2s',
-                minHeight: 'auto', boxShadow: 'none', letterSpacing: 'normal', textTransform: 'none' as const,
-              }}
-              onMouseEnter={e => { (e.currentTarget).style.background = 'rgba(255,255,255,0.25)'; }}
-              onMouseLeave={e => { (e.currentTarget).style.background = 'rgba(255,255,255,0.15)'; }}
-            >
-              <BookOpen size={16} /> Modo Tutorial
-            </button>
+      <header style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ marginBottom: '0.25rem', fontSize: '1.75rem' }}>
+              Editor de Tienda
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
+              Personalizá la apariencia de tu ecommerce mayorista y minorista
+            </p>
           </div>
+          <button
+            onClick={startTutorial}
+            className="secondary"
+            style={{ fontSize: '0.8125rem' }}
+          >
+            <BookOpen size={16} /> Modo Tutorial
+          </button>
         </div>
+      </header>
+
+      {/* Tab pills */}
+      <div className="nav-pill-container" style={{ marginBottom: '1.5rem' }}>
+        {TABS.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => { setActiveTab(tab.key); setMobileTabOpen(false); }}
+            className={`nav-pill-button ${activeTab === tab.key ? 'active' : ''}`}
+          >
+            {tab.icon} {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="editor-grid">
-        {/* Tabs sidebar */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          {/* Mobile dropdown */}
-          <div className="md:hidden">
-            <button onClick={() => setMobileTabOpen(!mobileTabOpen)} className="w-full flex items-center justify-between p-4 font-semibold text-sm">
-              <span className="flex items-center gap-2">{currentTab.icon} {currentTab.label}</span>
-              <ChevronDown size={16} style={{ transform: mobileTabOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+      {/* Content card */}
+      <div className="glass-card" style={{ padding: 0 }}>
+        {/* Card header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-light)',
+          flexWrap: 'wrap', gap: '0.5rem',
+        }}>
+          <h3 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {currentTab.icon} {currentTab.label}
+          </h3>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={handleReset} className="btn-ghost" style={{ fontSize: '0.8125rem', padding: '0.5rem 0.75rem' }}>
+              <RotateCcw size={14} /> Predeterminado
             </button>
-          </div>
-          {/* Desktop & expanded mobile tabs */}
-          <div className={`${mobileTabOpen ? 'block' : 'hidden'} md:block`}>
-            {TABS.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => { setActiveTab(tab.key); setMobileTabOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all text-left ${activeTab === tab.key ? 'bg-violet-50 text-violet-700 border-l-[3px] border-violet-600' : 'text-gray-600 hover:bg-gray-50 border-l-[3px] border-transparent'}`}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
+            <button onClick={handleSave} disabled={saving} className="btn-blue" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+              {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={14} /> : <Save size={14} />}
+              {saving ? 'Guardando...' : saved ? '¡Guardado!' : 'Guardar'}
+            </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 8 }}>
-            <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">{currentTab.icon} {currentTab.label}</h3>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleReset} className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 border hover:bg-gray-200 transition-all">
-                <RotateCcw size={13} /> Predeterminado
-              </button>
-              <button onClick={handleSave} disabled={saving} className="bg-[#115C9C] text-white px-4 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-[#0B477D] hover:shadow-lg transition-all disabled:opacity-50">
-                {saving ? <Loader2 size={13} className="animate-spin" /> : saved ? <Check size={13} /> : <Save size={13} />}
-                {saving ? 'Guardando...' : saved ? '¡Guardado!' : 'Guardar'}
-              </button>
-            </div>
-          </div>
+        {/* Card body */}
+        <div style={{ padding: '1.5rem' }}>
           {renderContent()}
         </div>
       </div>
 
       <style jsx>{`
-        @media (min-width: 768px) {
-          .editor-grid {
-            grid-template-columns: 220px 1fr !important;
-          }
-        }
-        .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
 
