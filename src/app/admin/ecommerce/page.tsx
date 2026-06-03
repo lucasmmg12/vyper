@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Package, ShoppingCart, Tag, Layers, ArrowLeft, Plus, TrendingUp,
   Clock, Users, BarChart3, DollarSign, Eye, AlertCircle, CheckCircle2,
-  ArrowUpRight, ArrowDownRight, ExternalLink, Zap, PackagePlus, List, Percent
+  ArrowUpRight, ArrowDownRight, ExternalLink, Zap, PackagePlus, List, Percent, Paintbrush
 } from 'lucide-react';
 import { Pedido } from '@/types/ecommerce';
 
@@ -100,6 +100,7 @@ export default function EcommerceAdminPage() {
     { href: '/admin/ecommerce/categorias', icon: <Layers size={22} />, title: 'Categorías', desc: 'Rubros y categorías', color: '#10b981', count: null },
     { href: '/admin/ecommerce/marcas', icon: <Tag size={22} />, title: 'Marcas', desc: 'Gestionar marcas', color: '#f59e0b', count: null },
     { href: '/admin/ecommerce/pedidos', icon: <ShoppingCart size={22} />, title: 'Pedidos', desc: 'Gestionar pedidos', color: '#ef4444', count: stats.totalPedidos },
+    { href: '/admin/ecommerce/personalizacion', icon: <Paintbrush size={22} />, title: 'Personalización', desc: 'Apariencia de la tienda', color: '#a855f7', count: null },
   ];
 
   const ld = loading;
