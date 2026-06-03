@@ -509,11 +509,122 @@ function TextField({ label, value, onChange, placeholder, multiline }: {
 }) {
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider" style={{ display: 'block', marginBottom: 4 }}>{label}</label>
+      <label style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
       {multiline ? (
-        <textarea className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all" rows={3} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+        <textarea rows={3} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
       ) : (
-        <input className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+        <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+      )}
+    </div>
+  );
+}
+
+function ImageField({ label, value, onChange, hint }: {
+  label: string; value: string; onChange: (v: string) => void; hint?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('files', file);
+      const res = await fetch('/api/ecommerce/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.urls?.[0]) onChange(data.urls[0]);
+      else alert('Error al subir la imagen');
+    } catch { alert('Error de conexión'); }
+    finally { setUploading(false); }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  };
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <label style={{ display: 'block', marginBottom: 6, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
+      {hint && <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: 8 }}>{hint}</p>}
+
+      {/* Preview + Upload zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        style={{
+          border: `2px dashed ${dragOver ? 'var(--accent-blue)' : 'var(--border-color)'}`,
+          borderRadius: 12, padding: '1.25rem', cursor: 'pointer',
+          background: dragOver ? 'var(--accent-blue-light)' : 'var(--bg-secondary)',
+          transition: 'all 0.2s', textAlign: 'center',
+        }}
+      >
+        {value ? (
+          <div>
+            <img
+              src={value} alt="Preview"
+              style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 8, objectFit: 'contain', margin: '0 auto', display: 'block' }}
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+              Hacé clic o arrastrá una imagen para reemplazar
+            </p>
+          </div>
+        ) : (
+          <div>
+            <ImageIcon size={32} style={{ color: 'var(--text-light)', margin: '0 auto 0.5rem' }} />
+            <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              {uploading ? 'Subiendo...' : 'Arrastrá una imagen acá o hacé clic'}
+            </p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 4 }}>
+              PNG, JPG o WebP · Se convierte automáticamente a WebP
+            </p>
+          </div>
+        )}
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); }} />
+      </div>
+
+      {/* Manual URL fallback */}
+      <div style={{ marginTop: 8 }}>
+        <details>
+          <summary style={{ fontSize: '0.75rem', color: 'var(--text-light)', cursor: 'pointer' }}>O ingresá una URL manualmente</summary>
+          <input value={value} onChange={e => onChange(e.target.value)} placeholder="/bg-hero.webp" style={{ marginTop: 6 }} />
+        </details>
+      </div>
+    </div>
+  );
+}
+
+function VideoField({ label, value, onChange }: {
+  label: string; value: string; onChange: (v: string) => void;
+}) {
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <label style={{ display: 'block', marginBottom: 6, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
+
+      {/* Instructions */}
+      <div style={{ background: 'var(--accent-amber-light)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: 10 }}>
+        <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: 4 }}>📺 ¿Cómo obtener la URL de embed?</p>
+        <ol style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', margin: 0, lineHeight: 1.8 }}>
+          <li>Abrí tu video en <strong>YouTube</strong></li>
+          <li>Hacé clic en <strong>Compartir → Insertar</strong></li>
+          <li>Copiá solo la URL del <code style={{ background: 'var(--bg-tertiary)', padding: '1px 4px', borderRadius: 4, fontSize: '0.7rem' }}>src="..."</code></li>
+          <li>Ejemplo: <code style={{ background: 'var(--bg-tertiary)', padding: '1px 4px', borderRadius: 4, fontSize: '0.7rem' }}>https://www.youtube.com/embed/XXXXXXXXXXX</code></li>
+        </ol>
+      </div>
+
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder="https://www.youtube.com/embed/tu-video-id" />
+
+      {/* Live preview */}
+      {value && value.includes('youtube.com/embed') && (
+        <div style={{ marginTop: 8, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border-color)', aspectRatio: '16/9', maxHeight: 220 }}>
+          <iframe src={value} style={{ width: '100%', height: '100%', border: 'none' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" allowFullScreen title="Preview" />
+        </div>
       )}
     </div>
   );
@@ -523,10 +634,10 @@ function ToggleField({ label, value, onChange, description }: {
   label: string; value: boolean; onChange: (v: boolean) => void; description?: string;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-light)' }}>
       <div>
-        <div className="text-sm font-semibold text-gray-700">{label}</div>
-        {description && <div className="text-xs text-gray-400">{description}</div>}
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</div>
+        {description && <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>{description}</div>}
       </div>
       <button
         onClick={() => onChange(!value)}
@@ -658,13 +769,7 @@ export default function PersonalizacionPage() {
       <TextField label="Nombre completo (footer)" value={currentConfig.nombre_completo || ''} onChange={v => updateField('nombre_completo', v)} placeholder="VYPER SUPLEMENTOS" />
       <TextField label="Subtítulo Mayorista" value={currentConfig.subtitulo_mayorista || ''} onChange={v => updateField('subtitulo_mayorista', v)} placeholder="Mayorista" />
       <TextField label="Subtítulo Minorista" value={currentConfig.subtitulo_minorista || ''} onChange={v => updateField('subtitulo_minorista', v)} placeholder="Tienda Oficial" />
-      <TextField label="URL del Logo" value={currentConfig.logo_url || ''} onChange={v => updateField('logo_url', v)} placeholder="/logovyper.png" />
-      {currentConfig.logo_url && (
-        <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <img src={currentConfig.logo_url} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'contain', margin: '0 auto' }} />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>Vista previa del logo</p>
-        </div>
-      )}
+      <ImageField label="Logo de la tienda" value={currentConfig.logo_url || ''} onChange={v => updateField('logo_url', v)} hint="Recomendado: formato cuadrado (200×200px)" />
     </>
   );
 
@@ -679,8 +784,8 @@ export default function PersonalizacionPage() {
         <TextField label="Título del Hero" value={c.titulo || ''} onChange={v => update('titulo', v)} placeholder="Catálogo Mayorista 🛒" />
         <TextField label="Descripción" value={c.descripcion || ''} onChange={v => update('descripcion', v)} placeholder="Armá tu pedido..." multiline />
         <TextField label="Subtexto" value={c.subtexto || ''} onChange={v => update('subtexto', v)} placeholder="📦 Solo se muestran..." />
-        <TextField label="URL imagen de fondo" value={c.imagen_fondo_url || ''} onChange={v => update('imagen_fondo_url', v)} placeholder="/bg-hero.webp" />
-        <TextField label="URL del video (YouTube embed)" value={c.video_url || ''} onChange={v => update('video_url', v)} placeholder="https://www.youtube.com/embed/..." />
+        <ImageField label="Imagen de fondo" value={c.imagen_fondo_url || ''} onChange={v => update('imagen_fondo_url', v)} hint="Se usa como fondo del banner principal. Recomendado: 1920×800px" />
+        <VideoField label="Video de portada (YouTube)" value={c.video_url || ''} onChange={v => update('video_url', v)} />
         <ToggleField label="Video activo" value={c.video_activo ?? true} onChange={v => update('video_activo', v)} description="Mostrar/ocultar el video de portada" />
       </>
     );
