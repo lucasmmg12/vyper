@@ -2,6 +2,7 @@
 
 import { ShoppingCart, Search, Plus, CreditCard, Send, MessageCircle, Package, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 
 const steps = [
   {
@@ -48,34 +49,13 @@ const steps = [
   },
 ];
 
-const faqs = [
-  {
-    q: '¿Cuál es el pedido mínimo?',
-    a: 'Cada producto tiene su cantidad mínima mayorista indicada en la ficha. No hay un monto mínimo total para hacer el pedido.',
-  },
-  {
-    q: '¿Los precios incluyen IVA?',
-    a: 'Los precios mostrados son finales. Podemos facturar A o B según lo que necesites.',
-  },
-  {
-    q: '¿Hacen envíos?',
-    a: 'Sí, hacemos envíos dentro de San Juan. Para el interior consultanos las opciones de transporte.',
-  },
-  {
-    q: '¿Puedo retirar en el local?',
-    a: 'Sí, podés retirar tu pedido en Dr. Ortega 192, Villa Krause. Te avisamos cuando está listo.',
-  },
-  {
-    q: '¿Qué formas de pago aceptan?',
-    a: 'Efectivo, transferencia bancaria y tarjetas (débito y crédito). Para pagos en cuotas consultanos.',
-  },
-  {
-    q: '¿Cuánto tarda el pedido?',
-    a: 'Si el pedido tiene stock disponible, lo preparamos en el día. Te confirmamos el plazo exacto por WhatsApp.',
-  },
-];
-
 export default function ComoComprarPage() {
+  const { config: faqsConfig } = useStoreConfig('tienda_faqs_mayorista');
+  const { config: whatsapp } = useStoreConfig('tienda_whatsapp');
+  const { config: identidad } = useStoreConfig('tienda_identidad');
+
+  const waConsultaLink = `https://api.whatsapp.com/send/?phone=${whatsapp.numero_mayorista}&text=${encodeURIComponent(whatsapp.mensaje_consulta)}&type=phone_number&app_absent=0`;
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
       {/* Header */}
@@ -92,7 +72,7 @@ export default function ComoComprarPage() {
           ¿Cómo comprar?
         </h1>
         <p style={{ color: '#6b7280', fontSize: '1rem', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-          Comprar en Vyper es fácil y rápido. Seguí estos pasos y armá tu pedido mayorista en minutos.
+          Comprar en {identidad.nombre_marca} es fácil y rápido. Seguí estos pasos y armá tu pedido mayorista en minutos.
         </p>
       </div>
 
@@ -163,48 +143,50 @@ export default function ComoComprarPage() {
         ))}
       </div>
 
-      {/* FAQ */}
-      <div style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', color: '#111', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <MessageCircle size={20} /> Preguntas frecuentes
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {faqs.map((faq, i) => (
-            <details
-              key={i}
-              style={{
-                background: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 10,
-                overflow: 'hidden',
-              }}
-            >
-              <summary style={{
-                padding: '1rem 1.25rem',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.9375rem',
-                color: '#111',
-                listStyle: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                {faq.q}
-                <ArrowRight size={16} style={{ color: '#9ca3af', transition: '0.2s', flexShrink: 0 }} />
-              </summary>
-              <div style={{
-                padding: '0 1.25rem 1rem',
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                lineHeight: 1.6,
-              }}>
-                {faq.a}
-              </div>
-            </details>
-          ))}
+      {/* FAQ — Dinámico desde configuraciones */}
+      {faqsConfig.preguntas && faqsConfig.preguntas.length > 0 && (
+        <div style={{ marginBottom: '3rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', color: '#111', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MessageCircle size={20} /> Preguntas frecuentes
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {faqsConfig.preguntas.map((faq: { pregunta: string; respuesta: string }, i: number) => (
+              <details
+                key={i}
+                style={{
+                  background: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                }}
+              >
+                <summary style={{
+                  padding: '1rem 1.25rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.9375rem',
+                  color: '#111',
+                  listStyle: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  {faq.pregunta}
+                  <ArrowRight size={16} style={{ color: '#9ca3af', transition: '0.2s', flexShrink: 0 }} />
+                </summary>
+                <div style={{
+                  padding: '0 1.25rem 1rem',
+                  fontSize: '0.875rem',
+                  color: '#6b7280',
+                  lineHeight: 1.6,
+                }}>
+                  {faq.respuesta}
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CTA */}
       <div style={{
@@ -232,7 +214,7 @@ export default function ComoComprarPage() {
             </button>
           </Link>
           <a
-            href="https://api.whatsapp.com/send/?phone=5492644193032&text=Hola%20Vyper!%20Tengo%20una%20consulta&type=phone_number&app_absent=0"
+            href={waConsultaLink}
             target="_blank"
             rel="noopener noreferrer"
           >

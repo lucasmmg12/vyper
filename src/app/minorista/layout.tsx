@@ -7,11 +7,17 @@ import { ShoppingCart, Search, Menu, X, ChevronRight, Package, HelpCircle } from
 import { useCart } from '@/lib/cart';
 import MarqueeBar from '@/components/tienda/MarqueeBar';
 import MegaMenu from '@/components/tienda/MegaMenu';
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 
 export default function TiendaLayout({ children }: { children: React.ReactNode }) {
   const { getItemCount, isLoaded } = useCart();
   const [cartCount, setCartCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // ═══ Configuraciones dinámicas con fallback a defaults ═══
+  const { config: identidad } = useStoreConfig('tienda_identidad');
+  const { config: footer } = useStoreConfig('tienda_footer');
+  const { config: whatsapp } = useStoreConfig('tienda_whatsapp');
 
   useEffect(() => {
     if (isLoaded) setCartCount(getItemCount());
@@ -26,6 +32,8 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
     window.addEventListener('cart-updated', handler);
     return () => window.removeEventListener('cart-updated', handler);
   }, [isLoaded, getItemCount]);
+
+  const waLink = `https://api.whatsapp.com/send/?phone=${whatsapp.numero_minorista}&text=${encodeURIComponent(whatsapp.mensaje_minorista)}`;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
@@ -52,10 +60,10 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
         }}>
           {/* Left: Logo */}
           <Link href="/minorista" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            <Image src="/logovyper.png" alt="Vyper" width={40} height={40} style={{ borderRadius: 8 }} />
+            <Image src={identidad.logo_url} alt={identidad.nombre_marca} width={40} height={40} style={{ borderRadius: 8 }} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1.125rem', lineHeight: 1.2, letterSpacing: '-0.02em' }}>VYPER</div>
-              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 500 }}>Tienda Oficial</div>
+              <div style={{ fontWeight: 800, fontSize: '1.125rem', lineHeight: 1.2, letterSpacing: '-0.02em' }}>{identidad.nombre_marca}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 500 }}>{identidad.subtitulo_minorista}</div>
             </div>
           </Link>
 
@@ -65,10 +73,10 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
               <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Inicio</button>
             </Link>
             <MegaMenu baseUrl="/minorista" />
-            <a href="https://api.whatsapp.com/send/?phone=5492646298880&text=Hola%20Vyper!" target="_blank" rel="noopener noreferrer">
+            <a href={waLink} target="_blank" rel="noopener noreferrer">
               <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Whatsapp</button>
             </a>
-            <a href="https://www.google.com/maps/dir//Dr.+Ortega+192,+J5425+Villa+Krause,+San+Juan/@-31.578636,-68.6178966,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x96813f9a5a4f7b97:0x7159753af0ace75a!2m2!1d-68.5354807!2d-31.5786279?entry=ttu&g_ep=EgoyMDI0MTIwMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: '0.875rem', textDecoration: 'none' }}>
+            <a href={whatsapp.url_sucursal} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: '0.875rem', textDecoration: 'none' }}>
               Visita Nuestra Sucursal
             </a>
             <Link href="/minorista/como-comprar">
@@ -181,17 +189,23 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <Image src="/logovyper.png" alt="Vyper" width={32} height={32} style={{ borderRadius: 6 }} />
-            <span style={{ fontWeight: 700, fontSize: '1rem' }}>VYPER SUPLEMENTOS</span>
+            <Image src={identidad.logo_url} alt={identidad.nombre_marca} width={32} height={32} style={{ borderRadius: 6 }} />
+            <span style={{ fontWeight: 700, fontSize: '1rem' }}>{identidad.nombre_completo}</span>
           </div>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-            📍 Dr. Ortega 192, Villa Krause, San Juan
+            {footer.direccion}
           </p>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-            📱 +54 264 629 8880 &nbsp;·&nbsp; @vyper_suplementos
+            {footer.telefono} &nbsp;·&nbsp; {footer.instagram}
           </p>
           <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)', fontSize: '0.75rem', color: 'var(--text-light)' }}>
-            Desarrollado por <a href="https://www.growlabs.lat" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Grow Labs</a> · {new Date().getFullYear()}
+            {footer.texto_creditos ? (
+              <>
+                <a href={footer.url_creditos} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{footer.texto_creditos}</a> · {new Date().getFullYear()}
+              </>
+            ) : (
+              <>Desarrollado por <a href="https://www.growlabs.lat" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Grow Labs</a> · {new Date().getFullYear()}</>
+            )}
           </div>
         </div>
       </footer>

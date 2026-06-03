@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Search, Filter, X, ShoppingCart, Plus, Star, ChevronDown, Flame, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { Producto, Rubro, Categoria, Marca } from '@/types/ecommerce';
 import { useCart } from '@/lib/cart';
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 
 // ═════ Product Card Component ═════
 function ProductCard({ producto, formatPrice, onAdd, addedId }: {
@@ -234,6 +235,8 @@ function TiendaPageContent() {
   const [addedId, setAddedId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'home' | 'catalog'>(initRubro || initCategoria || initMarca ? 'catalog' : 'home');
   const { addItem, items } = useCart();
+  const { config: heroConfig } = useStoreConfig('tienda_hero_mayorista');
+  const { config: whatsapp } = useStoreConfig('tienda_whatsapp');
 
   useEffect(() => {
     const r = searchParams.get('rubro') || '';
@@ -368,26 +371,28 @@ function TiendaPageContent() {
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '1rem 1.5rem 3rem' }}>
 
       {/* ===== VIDEO DE PORTADA ===== */}
-      <div style={{
-        width: '100%',
-        aspectRatio: '16/9',
-        marginBottom: '1.5rem',
-        borderRadius: 16,
-        overflow: 'hidden',
-        background: '#000',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
-      }}>
-        <iframe 
-          width="100%" 
-          height="100%" 
-          src="https://www.youtube.com/embed/XBfY8ZtRqQk?autoplay=1&mute=1&loop=1&playlist=XBfY8ZtRqQk&controls=0&rel=0&showinfo=0" 
-          title="Vyper Suplementos" 
-          frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowFullScreen
-          style={{ display: 'block', border: 'none', pointerEvents: 'none' }}
-        />
-      </div>
+      {heroConfig.video_activo && heroConfig.video_url && (
+        <div style={{
+          width: '100%',
+          aspectRatio: '16/9',
+          marginBottom: '1.5rem',
+          borderRadius: 16,
+          overflow: 'hidden',
+          background: '#000',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
+        }}>
+          <iframe 
+            width="100%" 
+            height="100%" 
+            src={heroConfig.video_url} 
+            title="Vyper Suplementos" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+            style={{ display: 'block', border: 'none', pointerEvents: 'none' }}
+          />
+        </div>
+      )}
 
       {/* ===== HERO ===== */}
       <div style={{
@@ -400,7 +405,7 @@ function TiendaPageContent() {
         minHeight: '200px',
       }}>
         <Image
-          src="/bg-hero.webp"
+          src={heroConfig.imagen_fondo_url}
           alt="Gym background"
           fill
           style={{ objectFit: 'cover', objectPosition: 'center', filter: 'grayscale(100%)' }}
@@ -414,13 +419,13 @@ function TiendaPageContent() {
         }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
           <h1 style={{ color: 'white', fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 900, letterSpacing: '-0.01em' }}>
-            Catálogo Mayorista 🛒
+            {heroConfig.titulo}
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9375rem', marginBottom: '0.5rem', maxWidth: '480px', lineHeight: 1.5 }}>
-            Armá tu pedido con precios exclusivos. Suplementos, indumentaria y accesorios deportivos.
+            {heroConfig.descripcion}
           </p>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', marginBottom: '1.25rem' }}>
-            📦 Solo se muestran productos con stock disponible
+            {heroConfig.subtexto}
           </p>
           <div style={{ position: 'relative', maxWidth: '480px' }}>
             <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
@@ -750,7 +755,7 @@ function TiendaPageContent() {
 
       {/* ═══ Floating WhatsApp Button ═══ */}
       <a
-        href="https://api.whatsapp.com/send/?phone=5492644193032&text=Hola%20Vyper!%20Quiero%20hacer%20un%20pedido%20mayorista%20🛒&type=phone_number&app_absent=0"
+        href={`https://api.whatsapp.com/send/?phone=${whatsapp.numero_mayorista}&text=${encodeURIComponent(whatsapp.mensaje_mayorista)}&type=phone_number&app_absent=0`}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Contactar por WhatsApp"

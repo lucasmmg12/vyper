@@ -298,6 +298,46 @@ export default function TutorialPage() {
         }
       ]
     },
+    'personalizacion-tienda': {
+      title: 'Personalización de Tienda',
+      description: 'Cómo modificar la apariencia de tu ecommerce mayorista y minorista',
+      icon: <Store size={22} />,
+      color: '#a855f7',
+      steps: [
+        {
+          title: 'Acceder al editor',
+          content: 'Desde el sidebar, andá a <strong>"Tienda" > "Personalización"</strong>. Vas a ver el Editor de Tienda con 7 secciones configurables en el menú lateral izquierdo.'
+        },
+        {
+          title: 'Modo Tutorial dentro del editor',
+          content: 'En el Editor de Tienda hay un botón <strong>"Modo Tutorial"</strong> que te guía paso a paso por cada sección. También podés activarlo con el botón violeta flotante en la esquina inferior.'
+        },
+        {
+          title: 'Identidad de Marca',
+          content: 'Editá el nombre que aparece en el header, el subtítulo que diferencia mayorista de minorista, y la URL del logo. El <strong>"Nombre completo"</strong> se muestra en el pie de página.'
+        },
+        {
+          title: 'Hero (Banner principal)',
+          content: 'Cada tienda (mayorista y minorista) tiene su propio banner. Podés cambiar el título, descripción, imagen de fondo y activar/desactivar el video de portada de YouTube.'
+        },
+        {
+          title: 'Footer',
+          content: 'Modificá la dirección, teléfono, Instagram y los créditos que aparecen al final de ambas tiendas. Es compartido entre mayorista y minorista.'
+        },
+        {
+          title: 'WhatsApp',
+          content: 'Configurá los números de contacto para cada tienda y los mensajes pre-cargados. Los clientes ven estos mensajes al tocar el botón de WhatsApp o enviar un pedido. Formato: 5492644193032 (sin guiones ni espacios).'
+        },
+        {
+          title: 'FAQs (Preguntas frecuentes)',
+          content: 'Las FAQs aparecen en la página "¿Cómo comprar?". Podés agregar, editar o eliminar preguntas para cada tienda. Son acordeones expandibles que resuelven las dudas más comunes.'
+        },
+        {
+          title: 'Guardar y restaurar',
+          content: 'Cada sección se guarda de forma independiente con el botón azul <strong>"Guardar"</strong>. Si necesitás volver a los valores originales, usá <strong>"Predeterminado"</strong>. Los cambios se aplican inmediatamente en la tienda pública.'
+        }
+      ]
+    },
   };
 
   const openTutorial = (id: string) => {
