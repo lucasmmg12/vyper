@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+
 import { ShoppingCart, Search, Menu, X, ChevronRight, Package, HelpCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import MarqueeBar from '@/components/tienda/MarqueeBar';
@@ -60,7 +60,7 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
         }}>
           {/* Left: Logo */}
           <Link href="/minorista" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            <Image src={identidad.logo_url} alt={identidad.nombre_marca} width={40} height={40} style={{ borderRadius: 8 }} />
+            <img src={identidad.logo_url} alt={identidad.nombre_marca} width={40} height={40} style={{ borderRadius: 8, objectFit: 'contain' }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.125rem', lineHeight: 1.2, letterSpacing: '-0.02em' }}>{identidad.nombre_marca}</div>
               <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 500 }}>{identidad.subtitulo_minorista}</div>
@@ -189,7 +189,7 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <Image src={identidad.logo_url} alt={identidad.nombre_marca} width={32} height={32} style={{ borderRadius: 6 }} />
+            <img src={identidad.logo_url} alt={identidad.nombre_marca} width={32} height={32} style={{ borderRadius: 6, objectFit: 'contain' }} />
             <span style={{ fontWeight: 700, fontSize: '1rem' }}>{identidad.nombre_completo}</span>
           </div>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
