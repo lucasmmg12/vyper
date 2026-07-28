@@ -34,8 +34,7 @@ export async function PUT(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('configuraciones')
-      .update({ valor, updated_at: new Date().toISOString() })
-      .eq('clave', clave)
+      .upsert({ clave, valor, updated_at: new Date().toISOString() }, { onConflict: 'clave' })
       .select()
       .single();
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Store, Type, MessageCircle, MapPin, HelpCircle, Image as ImageIcon, Video, Save, RotateCcw, Check, Loader2, ChevronDown, Plus, Trash2, GripVertical, BookOpen, ChevronLeft, ChevronRight, X, Lightbulb, ExternalLink, Sparkles, Send } from 'lucide-react';
+import { Store, Type, MessageCircle, MapPin, HelpCircle, Image as ImageIcon, Video, Save, RotateCcw, Check, Loader2, ChevronDown, Plus, Trash2, GripVertical, BookOpen, ChevronLeft, ChevronRight, X, Lightbulb, ExternalLink, Sparkles, Send, AlertTriangle } from 'lucide-react';
 import { STORE_DEFAULTS, StoreConfigKey } from '@/hooks/useStoreConfig';
 
 type TabKey = 'identidad' | 'hero_mayorista' | 'hero_minorista' | 'footer' | 'whatsapp' | 'faqs_mayorista' | 'faqs_minorista';
@@ -519,8 +519,8 @@ function TextField({ label, value, onChange, placeholder, multiline }: {
   );
 }
 
-function ImageField({ label, value, onChange, hint }: {
-  label: string; value: string; onChange: (v: string) => void; hint?: string;
+function ImageField({ label, value, onChange, hint, onError }: {
+  label: string; value: string; onChange: (v: string) => void; hint?: string; onError?: (msg: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -535,8 +535,8 @@ function ImageField({ label, value, onChange, hint }: {
       const res = await fetch('/api/ecommerce/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.urls?.[0]) onChange(data.urls[0]);
-      else alert('Error al subir la imagen');
-    } catch { alert('Error de conexión'); }
+      else if (onError) onError('Error al subir la imagen'); else alert('Error al subir la imagen');
+    } catch { if (onError) onError('Error de conexión'); else alert('Error de conexión'); }
     finally { setUploading(false); }
   };
 
@@ -662,6 +662,7 @@ export default function PersonalizacionPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [mobileTabOpen, setMobileTabOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // ═══ Asesor virtual state ═══
   const [asesorOpen, setAsesorOpen] = useState(false);
@@ -742,7 +743,7 @@ export default function PersonalizacionPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      alert('Error al guardar la configuración');
+      setErrorMessage('Error al guardar la configuración');
     } finally {
       setSaving(false);
     }
@@ -769,7 +770,7 @@ export default function PersonalizacionPage() {
       <TextField label="Nombre completo (footer)" value={currentConfig.nombre_completo || ''} onChange={v => updateField('nombre_completo', v)} placeholder="VYPER SUPLEMENTOS" />
       <TextField label="Subtítulo Mayorista" value={currentConfig.subtitulo_mayorista || ''} onChange={v => updateField('subtitulo_mayorista', v)} placeholder="Mayorista" />
       <TextField label="Subtítulo Minorista" value={currentConfig.subtitulo_minorista || ''} onChange={v => updateField('subtitulo_minorista', v)} placeholder="Tienda Oficial" />
-      <ImageField label="Logo de la tienda" value={currentConfig.logo_url || ''} onChange={v => updateField('logo_url', v)} hint="Recomendado: formato cuadrado (200×200px)" />
+      <ImageField label="Logo de la tienda" value={currentConfig.logo_url || ''} onChange={v => updateField('logo_url', v)} hint="Recomendado: formato cuadrado (200×200px)" onError={setErrorMessage} />
     </>
   );
 
@@ -784,7 +785,7 @@ export default function PersonalizacionPage() {
         <TextField label="Título del Hero" value={c.titulo || ''} onChange={v => update('titulo', v)} placeholder="Catálogo Mayorista 🛒" />
         <TextField label="Descripción" value={c.descripcion || ''} onChange={v => update('descripcion', v)} placeholder="Armá tu pedido..." multiline />
         <TextField label="Subtexto" value={c.subtexto || ''} onChange={v => update('subtexto', v)} placeholder="📦 Solo se muestran..." />
-        <ImageField label="Imagen de fondo" value={c.imagen_fondo_url || ''} onChange={v => update('imagen_fondo_url', v)} hint="Se usa como fondo del banner principal. Recomendado: 1920×800px" />
+        <ImageField label="Imagen de fondo" value={c.imagen_fondo_url || ''} onChange={v => update('imagen_fondo_url', v)} hint="Se usa como fondo del banner principal. Recomendado: 1920×800px" onError={setErrorMessage} />
         <VideoField label="Video de portada (YouTube)" value={c.video_url || ''} onChange={v => update('video_url', v)} />
         <ToggleField label="Video activo" value={c.video_activo ?? true} onChange={v => update('video_activo', v)} description="Mostrar/ocultar el video de portada" />
       </>
@@ -999,6 +1000,36 @@ export default function PersonalizacionPage() {
           onPrev={prevTutorialStep}
           onClose={closeTutorial}
         />
+      )}
+
+      {/* ═══ Error Modal ═══ */}
+      {errorMessage && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(2px)'
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '2rem', width: 'min(400px, 90vw)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', textAlign: 'center',
+            border: '2px solid #ef4444'
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%', background: '#fee2e2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem'
+            }}>
+              <AlertTriangle size={32} color="#ef4444" />
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>Error</h3>
+            <p style={{ color: '#4b5563', fontSize: '0.9375rem', marginBottom: '2rem' }}>{errorMessage}</p>
+            <button onClick={() => setErrorMessage(null)} style={{
+              width: '100%', padding: '0.75rem', background: '#ef4444', color: '#fff',
+              borderRadius: 8, fontWeight: 600, border: 'none', cursor: 'pointer',
+              fontSize: '0.9375rem'
+            }}>
+              Aceptar
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ═══ Asesor Virtual Chat ═══ */}
