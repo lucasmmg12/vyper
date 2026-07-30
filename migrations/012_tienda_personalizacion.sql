@@ -52,8 +52,8 @@ INSERT INTO public.configuraciones (clave, valor, descripcion)
 VALUES (
     'tienda_footer',
     '{
-      "direccion": "📍 Dr. Ortega 192, Villa Krause, San Juan",
-      "telefono": "📱 +54 264 629 8880",
+      "direccion": "📍 Av. Libertador 4858 Oeste, Rivadavia, San Juan",
+      "telefono": "📱 +54 9 264 679-6509",
       "instagram": "@vyper_suplementos",
       "texto_creditos": "Desarrollado por Grow Labs",
       "url_creditos": "https://www.growlabs.lat"
@@ -66,13 +66,13 @@ INSERT INTO public.configuraciones (clave, valor, descripcion)
 VALUES (
     'tienda_whatsapp',
     '{
-      "numero_mayorista": "5492644193032",
-      "numero_minorista": "5492646298880",
+      "numero_mayorista": "5492646796509",
+      "numero_minorista": "5492646796509",
       "mensaje_mayorista": "Hola Vyper! Quiero hacer un pedido mayorista 🛒",
       "mensaje_minorista": "Hola Vyper!",
       "mensaje_consulta": "Hola Vyper! Tengo una consulta",
       "boton_flotante_activo": true,
-      "url_sucursal": "https://www.google.com/maps/dir//Dr.+Ortega+192,+J5425+Villa+Krause,+San+Juan/@-31.578636,-68.6178966,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x96813f9a5a4f7b97:0x7159753af0ace75a!2m2!1d-68.5354807!2d-31.5786279?entry=ttu&g_ep=EgoyMDI0MTIwMi4wIKXMDSoASAFQAw%3D%3D"
+      "url_sucursal": "https://www.google.com/maps/search/?api=1&query=Av.+Libertador+4858+Oeste,+Rivadavia,+San+Juan"
     }'::jsonb,
     'Números de WhatsApp y mensajes predeterminados'
 ) ON CONFLICT (clave) DO NOTHING;
@@ -86,7 +86,7 @@ VALUES (
         {"pregunta": "¿Cuál es el pedido mínimo?", "respuesta": "Cada producto tiene su cantidad mínima mayorista indicada en la ficha. No hay un monto mínimo total para hacer el pedido."},
         {"pregunta": "¿Los precios incluyen IVA?", "respuesta": "Los precios mostrados son finales. Podemos facturar A o B según lo que necesites."},
         {"pregunta": "¿Hacen envíos?", "respuesta": "Sí, hacemos envíos dentro de San Juan. Para el interior consultanos las opciones de transporte."},
-        {"pregunta": "¿Puedo retirar en el local?", "respuesta": "Sí, podés retirar tu pedido en Dr. Ortega 192, Villa Krause. Te avisamos cuando está listo."},
+        {"pregunta": "¿Puedo retirar en el local?", "respuesta": "Sí, podés retirar tu pedido en Av. Libertador 4858 Oeste, Rivadavia. Te avisamos cuando está listo."},
         {"pregunta": "¿Qué formas de pago aceptan?", "respuesta": "Efectivo, transferencia bancaria y tarjetas (débito y crédito). Para pagos en cuotas consultanos."},
         {"pregunta": "¿Cuánto tarda el pedido?", "respuesta": "Si el pedido tiene stock disponible, lo preparamos en el día. Te confirmamos el plazo exacto por WhatsApp."}
       ]
@@ -103,7 +103,7 @@ VALUES (
         {"pregunta": "¿Cuál es el pedido mínimo?", "respuesta": "Cada producto tiene su cantidad mínima mayorista indicada en la ficha. No hay un monto mínimo total para hacer el pedido."},
         {"pregunta": "¿Los precios incluyen IVA?", "respuesta": "Los precios mostrados son finales. Podemos facturar A o B según lo que necesites."},
         {"pregunta": "¿Hacen envíos?", "respuesta": "Sí, hacemos envíos dentro de San Juan. Para el interior consultanos las opciones de transporte."},
-        {"pregunta": "¿Puedo retirar en el local?", "respuesta": "Sí, podés retirar tu pedido en Dr. Ortega 192, Villa Krause. Te avisamos cuando está listo."},
+        {"pregunta": "¿Puedo retirar en el local?", "respuesta": "Sí, podés retirar tu pedido en Av. Libertador 4858 Oeste, Rivadavia. Te avisamos cuando está listo."},
         {"pregunta": "¿Qué formas de pago aceptan?", "respuesta": "Efectivo, transferencia bancaria y tarjetas (débito y crédito). Para pagos en cuotas consultanos."},
         {"pregunta": "¿Cuánto tarda el pedido?", "respuesta": "Si el pedido tiene stock disponible, lo preparamos en el día. Te confirmamos el plazo exacto por WhatsApp."}
       ]

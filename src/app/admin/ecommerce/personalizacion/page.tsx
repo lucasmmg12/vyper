@@ -794,8 +794,8 @@ export default function PersonalizacionPage() {
 
   const renderFooter = () => (
     <>
-      <TextField label="Dirección" value={currentConfig.direccion || ''} onChange={v => updateField('direccion', v)} placeholder="📍 Dr. Ortega 192..." />
-      <TextField label="Teléfono" value={currentConfig.telefono || ''} onChange={v => updateField('telefono', v)} placeholder="📱 +54 264..." />
+      <TextField label="Dirección" value={currentConfig.direccion || ''} onChange={v => updateField('direccion', v)} placeholder="📍 Av. Libertador 4858 Oeste..." />
+      <TextField label="Teléfono" value={currentConfig.telefono || ''} onChange={v => updateField('telefono', v)} placeholder="📱 +54 9 264..." />
       <TextField label="Instagram" value={currentConfig.instagram || ''} onChange={v => updateField('instagram', v)} placeholder="@vyper_suplementos" />
       <TextField label="Texto de créditos" value={currentConfig.texto_creditos || ''} onChange={v => updateField('texto_creditos', v)} placeholder="Desarrollado por Grow Labs" />
       <TextField label="URL de créditos" value={currentConfig.url_creditos || ''} onChange={v => updateField('url_creditos', v)} placeholder="https://www.growlabs.lat" />
