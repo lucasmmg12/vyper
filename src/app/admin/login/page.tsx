@@ -47,7 +47,7 @@ function LoginForm() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#ffffff',
+      background: 'transparent',
     }}>
       {/* Login Card */}
       <div style={{
