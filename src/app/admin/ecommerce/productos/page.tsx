@@ -24,6 +24,7 @@ export default function ProductosAdminPage() {
     activo: true, destacado: false, en_oferta: false,
     imagenes: [] as string[],
     precio_oferta: '',
+    variantes: [] as { nombre: string }[],
   });
   const [rubros, setRubros] = useState<{ id: string; nombre: string }[]>([]);
   const [categorias, setCategorias] = useState<{ id: string; nombre: string; rubro_id?: string }[]>([]);
@@ -149,6 +150,7 @@ export default function ProductosAdminPage() {
       imagenes: form.imagenes,
       en_oferta: form.en_oferta,
       precio_oferta: parseFloat(form.precio_oferta) || 0,
+      variantes: form.variantes,
     };
 
     try {
@@ -195,6 +197,7 @@ export default function ProductosAdminPage() {
       en_oferta: p.en_oferta || false,
       imagenes: p.imagenes || [],
       precio_oferta: p.precio_oferta ? String(p.precio_oferta) : '',
+      variantes: p.variantes || [],
     });
     setEditingId(p.id);
     setSelectedListaId(p.lista_precio_id || '');
@@ -232,6 +235,7 @@ export default function ProductosAdminPage() {
       activo: true, destacado: false, en_oferta: false,
       imagenes: [],
       precio_oferta: '',
+      variantes: [],
     });
     setSelectedListaId('');
     setSelectedListaMinoristaId('');
@@ -574,6 +578,61 @@ export default function ProductosAdminPage() {
                   <input type="number" value={form.precio_oferta} onChange={e => setForm({ ...form, precio_oferta: e.target.value })} placeholder="Precio con descuento" />
                 </div>
               )}
+
+              {/* VARIANTES */}
+              <div style={{ gridColumn: 'span 2', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
+                    <span>🎨</span> Variantes (Opcional)
+                  </label>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => setForm({ ...form, variantes: [...form.variantes, { nombre: '' }] })}
+                    style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--accent-blue)' }}
+                  >
+                    <Plus size={12} /> Agregar variante
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.3 }}>
+                  Agrega variantes de este producto, como diferentes sabores, talles o colores. Ejemplo: "Rojo", "Talle L", "Sabor Chocolate".
+                </p>
+                {form.variantes.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {form.variantes.map((variante, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input
+                          autoFocus={idx === form.variantes.length - 1}
+                          value={variante.nombre}
+                          onChange={e => {
+                            const newVariantes = [...form.variantes];
+                            newVariantes[idx].nombre = e.target.value;
+                            setForm({ ...form, variantes: newVariantes });
+                          }}
+                          placeholder={`Ej. Variante ${idx + 1}`}
+                          style={{ margin: 0, flex: 1 }}
+                        />
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          onClick={() => {
+                            const newVariantes = form.variantes.filter((_, i) => i !== idx);
+                            setForm({ ...form, variantes: newVariantes });
+                          }}
+                          style={{ padding: '0.5rem', color: 'var(--accent-pink)' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem 0' }}>
+                    No hay variantes configuradas.
+                  </div>
+                )}
+              </div>
+
               <div style={{ gridColumn: 'span 2' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
                   <label style={{ margin: 0 }}>Descripción</label>

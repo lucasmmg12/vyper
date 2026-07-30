@@ -137,6 +137,7 @@ export async function POST(request: NextRequest) {
       lista_precio_minorista_id: body.lista_precio_minorista_id || null,
       lista_escalonada_id: body.lista_escalonada_id || null,
       lista_escalonada_minorista_id: body.lista_escalonada_minorista_id || null,
+      variantes: body.variantes || [],
     }])
     .select()
     .single();
