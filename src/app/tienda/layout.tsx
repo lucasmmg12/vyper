@@ -36,7 +36,7 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
   const waLink = `https://api.whatsapp.com/send/?phone=${whatsapp.numero_mayorista}&text=${encodeURIComponent(whatsapp.mensaje_mayorista)}`;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       {/* ===== MARQUEE ===== */}
       <MarqueeBar storeType="mayorista" />
 

@@ -481,7 +481,7 @@ button:disabled {
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .admin-sidebar {
