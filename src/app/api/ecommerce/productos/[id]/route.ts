@@ -43,11 +43,49 @@ export async function GET(
   
   const escalonadaToUse = tienda === 'minorista' ? data.lista_escalonada_minorista : data.lista_escalonada;
 
+  // Fetch variants (either explicitly defined in JSON or sibling products sharing same base name/brand)
+  let variantes = data.variantes || [];
+
+  if ((!variantes || variantes.length === 0) && data.nombre) {
+    const baseTitle = data.nombre.split(' - ')[0].split(' (')[0].trim();
+    if (baseTitle && baseTitle.length > 3) {
+      const { data: siblings } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('activo', true)
+        .ilike('nombre', `%${baseTitle}%`)
+        .order('nombre', { ascending: true })
+        .limit(25);
+
+      if (siblings && siblings.length > 1) {
+        variantes = siblings.map(s => {
+          let flavorName = s.nombre.replace(baseTitle, '').replace(/^[\s\-–—:]+/, '').trim();
+          if ((!flavorName || flavorName === s.nombre) && s.descripcion && s.descripcion.includes('Opción:')) {
+            const optMatch = s.descripcion.match(/Opción:\s*([^;.\n]+)/i);
+            if (optMatch) flavorName = optMatch[1].trim();
+          }
+          if (!flavorName) flavorName = s.nombre;
+          const vPrice = s.precio_costo ? Math.round(s.precio_costo * appliedMarkup) : (tienda === 'minorista' ? s.precio_unitario : s.precio_mayorista);
+          return {
+            id: s.id,
+            sku: s.sku,
+            nombre: flavorName,
+            precio: vPrice,
+            stock: s.stock,
+            imagen: s.imagenes?.[0],
+            activo: s.activo,
+          };
+        });
+      }
+    }
+  }
+
   const mappedData = {
     ...data,
     precio_mayorista: computedPrice,
     lista_activa: listToUse,
     lista_escalonada_activa: escalonadaToUse,
+    variantes: variantes.length > 0 ? variantes : undefined,
   };
 
   return NextResponse.json({ producto: mappedData });

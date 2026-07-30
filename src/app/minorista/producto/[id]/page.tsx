@@ -48,6 +48,72 @@ export default function ProductoPage() {
     return fallback;
   };
 
+  const [variantQuantities, setVariantQuantities] = useState<Record<string, number>>({});
+
+  const updateVariantQty = (variantId: string, delta: number) => {
+    setVariantQuantities(prev => {
+      const current = prev[variantId] || 0;
+      const next = Math.max(0, current + delta);
+      const updated = { ...prev };
+      if (next > 0) updated[variantId] = next;
+      else delete updated[variantId];
+      return updated;
+    });
+  };
+
+  const setVariantQtyDirect = (variantId: string, val: number) => {
+    setVariantQuantities(prev => {
+      const next = Math.max(0, val);
+      const updated = { ...prev };
+      if (next > 0) updated[variantId] = next;
+      else delete updated[variantId];
+      return updated;
+    });
+  };
+
+  const totalVariantQty = Object.values(variantQuantities).reduce((a, b) => a + b, 0);
+
+  const totalVariantSubtotal = producto?.variantes
+    ? producto.variantes.reduce((sum, v) => {
+        const q = variantQuantities[v.id] || 0;
+        const p = v.precio || calcPrice(totalVariantQty || 1);
+        return sum + q * p;
+      }, 0)
+    : 0;
+
+  const handleAddVariantsToCart = () => {
+    if (!producto || !producto.variantes) return;
+    let addedAny = false;
+
+    producto.variantes.forEach(variant => {
+      const qty = variantQuantities[variant.id] || 0;
+      if (qty > 0) {
+        const itemPrice = variant.precio || calcPrice(totalVariantQty || qty);
+        const displayName = variant.nombre && variant.nombre !== producto.nombre
+          ? `${producto.nombre} (${variant.nombre})`
+          : producto.nombre;
+
+        addItem({
+          producto_id: variant.id || producto.id,
+          nombre: displayName,
+          precio: itemPrice,
+          cantidad: qty,
+          imagen: variant.imagen || producto.imagenes?.[0],
+          stock: variant.stock ?? producto.stock,
+          cantidad_minima: 1,
+          venta_costo: producto.precio_costo,
+          venta_lista: producto.lista_activa,
+        });
+        addedAny = true;
+      }
+    });
+
+    if (addedAny) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!producto) return;
     addItem({
@@ -309,63 +375,197 @@ export default function ProductoPage() {
             )}
           </div>
 
-          {/* Quantity selector */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ marginBottom: '0.5rem', display: 'block' }}>Cantidad</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Variantes / Sabores (Image 2 style) or Single Quantity Selector */}
+          {producto.variantes && producto.variantes.length > 0 ? (
+            <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)'
+              }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Variantes / Sabores</h3>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+                    Elegí las cantidades de cada opción para armar tu pedido
+                  </p>
+                </div>
+                <span className="badge badge-blue">{producto.variantes.length} opciones</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                {producto.variantes.map(variant => {
+                  const qty = variantQuantities[variant.id] || 0;
+                  const vPrice = variant.precio || calcPrice(totalVariantQty || 1);
+
+                  return (
+                    <div
+                      key={variant.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1rem',
+                        background: qty > 0 ? 'var(--bg-tertiary)' : 'rgba(0,0,0,0.02)',
+                        border: qty > 0 ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                        borderRadius: 12,
+                        gap: '1rem',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {/* Image + SKU + Name + Price */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          width: 44, height: 44, borderRadius: 8, background: 'var(--bg-tertiary)',
+                          position: 'relative', overflow: 'hidden', flexShrink: 0
+                        }}>
+                          <Image
+                            src={variant.imagen || producto.imagenes?.[0] || '/logovyper.png'}
+                            alt={variant.nombre}
+                            fill
+                            style={{ objectFit: 'contain' }}
+                            sizes="44px"
+                          />
+                        </div>
+                        <div style={{ overflow: 'hidden' }}>
+                          {variant.sku && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontFamily: 'var(--font-mono)' }}>
+                              {variant.sku.replace('VYP-', '')}
+                            </div>
+                          )}
+                          <div style={{ fontWeight: 700, fontSize: '0.9375rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {variant.nombre}
+                          </div>
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            {formatPrice(vPrice)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quantity Selector */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                        <button
+                          className="secondary"
+                          onClick={() => updateVariantQty(variant.id, -1)}
+                          style={{ width: 36, height: 36, padding: 0, borderRadius: 8 }}
+                          disabled={qty === 0}
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <input
+                          type="number"
+                          value={qty}
+                          onChange={e => setVariantQtyDirect(variant.id, parseInt(e.target.value) || 0)}
+                          style={{ width: 44, textAlign: 'center', margin: 0, padding: '0.25rem', fontSize: '0.9375rem', fontWeight: 700 }}
+                          min={0}
+                        />
+                        <button
+                          className="secondary"
+                          onClick={() => updateVariantQty(variant.id, 1)}
+                          style={{ width: 36, height: 36, padding: 0, borderRadius: 8 }}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Subtotal Selection */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 12, marginBottom: '1rem',
+              }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)', display: 'block', fontSize: '0.875rem' }}>Subtotal Selección</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{totalVariantQty} unidades seleccionadas</span>
+                </div>
+                <span style={{ fontSize: '1.375rem', fontWeight: 800 }}>
+                  {formatPrice(totalVariantSubtotal)}
+                </span>
+              </div>
+
               <button
-                className="secondary"
-                onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
-                style={{ width: 48, height: 48, padding: 0, borderRadius: 12 }}
+                onClick={handleAddVariantsToCart}
+                disabled={totalVariantQty === 0}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  borderRadius: 14,
+                  background: added ? 'var(--accent-green)' : (totalVariantQty > 0 ? 'var(--accent)' : 'var(--bg-tertiary)'),
+                  color: totalVariantQty > 0 || added ? '#fff' : 'var(--text-light)',
+                  cursor: totalVariantQty > 0 ? 'pointer' : 'not-allowed',
+                }}
               >
-                <Minus size={18} />
-              </button>
-              <input
-                type="number"
-                value={cantidad}
-                onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
-                style={{ width: 80, textAlign: 'center', margin: 0, fontSize: '1.125rem', fontWeight: 700 }}
-                min={1}
-              />
-              <button
-                className="secondary"
-                onClick={() => setCantidad(prev => prev + 1)}
-                style={{ width: 48, height: 48, padding: 0, borderRadius: 12 }}
-              >
-                <Plus size={18} />
+                {added ? '✓ Agregado al pedido' : (
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    <ShoppingCart size={20} /> Agregar al pedido ({totalVariantQty} un.)
+                  </span>
+                )}
               </button>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Quantity selector */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ marginBottom: '0.5rem', display: 'block' }}>Cantidad</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <button
+                    className="secondary"
+                    onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
+                    style={{ width: 48, height: 48, padding: 0, borderRadius: 12 }}
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <input
+                    type="number"
+                    value={cantidad}
+                    onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: 80, textAlign: 'center', margin: 0, fontSize: '1.125rem', fontWeight: 700 }}
+                    min={1}
+                  />
+                  <button
+                    className="secondary"
+                    onClick={() => setCantidad(prev => prev + 1)}
+                    style={{ width: 48, height: 48, padding: 0, borderRadius: 12 }}
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </div>
 
-          {/* Subtotal */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 12, marginBottom: '1rem',
-          }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Subtotal</span>
-            <span style={{ fontSize: '1.375rem', fontWeight: 800 }}>
-              {formatPrice(calcPrice(cantidad) * cantidad)}
-            </span>
-          </div>
+              {/* Subtotal */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 12, marginBottom: '1rem',
+              }}>
+                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Subtotal</span>
+                <span style={{ fontSize: '1.375rem', fontWeight: 800 }}>
+                  {formatPrice(calcPrice(cantidad) * cantidad)}
+                </span>
+              </div>
 
-          {/* Add to cart button */}
-          <button
-            onClick={handleAddToCart}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              fontSize: '1rem',
-              fontWeight: 700,
-              borderRadius: 14,
-              background: added ? 'var(--accent-green)' : 'var(--accent)',
-            }}
-          >
-            {added ? '✓ Agregado al pedido' : (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                <ShoppingCart size={20} /> Agregar al pedido
-              </span>
-            )}
-          </button>
+              {/* Add to cart button */}
+              <button
+                onClick={handleAddToCart}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  borderRadius: 14,
+                  background: added ? 'var(--accent-green)' : 'var(--accent)',
+                }}
+              >
+                {added ? '✓ Agregado al pedido' : (
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    <ShoppingCart size={20} /> Agregar al pedido
+                  </span>
+                )}
+              </button>
+            </>
+          )}
 
           {/* Description */}
           {producto.descripcion && (

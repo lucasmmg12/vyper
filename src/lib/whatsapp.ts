@@ -1,7 +1,7 @@
 import { CartItem, CheckoutData } from '@/types/ecommerce';
 
-const FERNANDO_PHONE_MINORISTA = '5492646298880';
-const FERNANDO_PHONE_MAYORISTA = '5492644193032';
+const FERNANDO_PHONE_MINORISTA = '5492646796509';
+const FERNANDO_PHONE_MAYORISTA = '5492646796509';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-AR', {

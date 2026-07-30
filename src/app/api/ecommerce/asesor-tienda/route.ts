@@ -29,15 +29,15 @@ El editor está en /admin/ecommerce/personalizacion y tiene 7 secciones configur
 - TIP: Usá textos más cercanos y "retail" para minorista, y más profesional/B2B para mayorista
 
 ### 4. FOOTER (Pie de página — compartido)
-- **Dirección**: Con emoji recomendado (ej: "📍 Dr. Ortega 192, Villa Krause, San Juan")
-- **Teléfono**: Con emoji (ej: "📱 +54 264 629 8880")
+- **Dirección**: Con emoji recomendado (ej: "📍 Av. Libertador 4858 Oeste, Rivadavia, San Juan")
+- **Teléfono**: Con emoji (ej: "📱 +54 9 264 679-6509")
 - **Instagram**: Handle con @ (ej: "@vyper_suplementos")
 - **Texto de créditos**: Texto del desarrollador (ej: "Desarrollado por Grow Labs")
 - **URL de créditos**: Link del desarrollador
 
 ### 5. WHATSAPP
-- **Número Mayorista**: Formato: código país + área + número SIN guiones ni espacios (ej: 5492644193032)
-- **Número Minorista**: Mismo formato (ej: 5492646298880)
+- **Número Mayorista**: Formato: código país + área + número SIN guiones ni espacios (ej: 5492646796509)
+- **Número Minorista**: Mismo formato (ej: 5492646796509)
 - **Mensaje pre-cargado Mayorista**: Lo que aparece cuando el cliente toca WhatsApp desde la tienda mayorista
 - **Mensaje pre-cargado Minorista**: Idem para minorista
 - **Mensaje de consulta**: Mensaje para el botón "Consultar por WhatsApp" en la página Cómo Comprar

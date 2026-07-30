@@ -33,6 +33,16 @@ export interface Marca {
   created_at: string;
 }
 
+export interface ProductoVariante {
+  id: string;
+  sku?: string;
+  nombre: string; // e.g. "Kiwi", "Mango c/cafeína", "Vainilla"
+  precio?: number;
+  stock?: number;
+  imagen?: string;
+  activo?: boolean;
+}
+
 export interface Producto {
   id: string;
   nombre: string;
@@ -52,6 +62,7 @@ export interface Producto {
   precio_oferta: number;
   created_at: string;
   updated_at: string;
+  variantes?: ProductoVariante[];
   // Joined
   categoria?: Categoria;
   marca?: Marca;
