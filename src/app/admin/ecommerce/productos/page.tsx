@@ -154,18 +154,24 @@ export default function ProductosAdminPage() {
     };
 
     try {
+      let res: Response;
       if (editingId) {
-        await fetch(`/api/ecommerce/productos/${editingId}`, {
+        res = await fetch(`/api/ecommerce/productos/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else {
-        await fetch('/api/ecommerce/productos', {
+        res = await fetch('/api/ecommerce/productos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+      }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(`Error al guardar: ${errData.error || res.statusText}`);
+        return;
       }
       setShowForm(false);
       setEditingId(null);
@@ -173,6 +179,7 @@ export default function ProductosAdminPage() {
       fetchProductos();
     } catch (error) {
       console.error('Error:', error);
+      alert('Error de conexión al guardar el producto');
     } finally {
       setSaving(false);
     }
