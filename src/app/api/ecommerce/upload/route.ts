@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const BUCKET = 'productos';
 
@@ -37,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Upload] Subiendo ${file.name} (convertido a webp) como ${fileName}...`);
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(fileName, fileBuffer, {
         contentType: 'image/webp',
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Upload] ✅ Subido: ${data?.path}`);
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseAdmin.storage
       .from(BUCKET)
       .getPublicUrl(fileName);
 
