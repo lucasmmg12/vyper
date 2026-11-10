@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, Plus, Minus, ArrowLeft, ChevronLeft, ChevronRight, Tag, Sparkles } from 'lucide-react';
 import { Producto } from '@/types/ecommerce';
-import { useCart } from '@/lib/cart';
+import { useCart, getItemKey } from '@/lib/cart';
 
 export default function ProductoPage() {
   const params = useParams();
@@ -94,8 +94,10 @@ export default function ProductoPage() {
           : producto.nombre;
 
         addItem({
-          producto_id: variant.id || producto.id,
+          producto_id: producto.id,
           nombre: displayName,
+          variante: variant.nombre,
+          cart_key: getItemKey(producto.id, variant.nombre),
           precio: itemPrice,
           cantidad: qty,
           imagen: variant.imagen || producto.imagenes?.[0],
@@ -565,6 +567,29 @@ export default function ProductoPage() {
                 )}
               </button>
             </>
+          )}
+
+          {/* Combo Contents if es_combo */}
+          {producto.es_combo && producto.combo_items && producto.combo_items.length > 0 && (
+            <div style={{
+              marginTop: '1rem',
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              borderRadius: 12,
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+            }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1e40af', marginBottom: '0.5rem' }}>
+                📦 Este Combo / Pack incluye:
+              </h4>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: '#1e3a8a' }}>
+                {producto.combo_items.map((ci, idx) => (
+                  <li key={idx} style={{ marginBottom: '0.25rem' }}>
+                    <strong>{ci.cantidad}x</strong> {ci.nombre}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {/* Description */}

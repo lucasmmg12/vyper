@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Plus, Search, Edit, Trash2, Eye, EyeOff, Star, Package, Upload, X, Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Edit, Trash2, Eye, EyeOff, Star, Package, Upload, X, Loader2, Sparkles, ChevronLeft, ChevronRight, TrendingUp, Layers } from 'lucide-react';
 import { Producto, ListaPrecio } from '@/types/ecommerce';
 
 export default function ProductosAdminPage() {
@@ -12,6 +12,22 @@ export default function ProductosAdminPage() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Bulk AI Descriptions state
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkProgressText, setBulkProgressText] = useState('');
+
+  // Mass Price Update modal state
+  const [showMassPriceModal, setShowMassPriceModal] = useState(false);
+  const [massFilterType, setMassFilterType] = useState<'todos' | 'marca' | 'categoria'>('todos');
+  const [massFilterMarcaId, setMassFilterMarcaId] = useState('');
+  const [massFilterCategoriaId, setMassFilterCategoriaId] = useState('');
+  const [massTargetField, setMassTargetField] = useState<'costo' | 'mayorista' | 'minorista' | 'todos'>('todos');
+  const [massPercent, setMassPercent] = useState<string>('10');
+  const [massRounding, setMassRounding] = useState<number>(100);
+  const [massUpdating, setMassUpdating] = useState(false);
+  const [allCatalogForMass, setAllCatalogForMass] = useState<Producto[]>([]);
+  const [loadingMassCatalog, setLoadingMassCatalog] = useState(false);
   const [form, setForm] = useState({
     nombre: '', descripcion: '',
     precio_costo: '',
@@ -253,6 +269,140 @@ export default function ProductosAdminPage() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
 
+  const handleBulkGenerateDescriptions = async () => {
+    const withoutDesc = productos.filter(p => !p.descripcion || p.descripcion.trim().length < 5);
+    if (withoutDesc.length === 0) {
+      alert('Todos los productos de esta página ya tienen descripción.');
+      return;
+    }
+
+    const toProcess = withoutDesc.slice(0, 15);
+    if (!confirm(`Se generarán descripciones con IA para ${toProcess.length} productos sin descripción en esta vista. ¿Continuar?`)) {
+      return;
+    }
+
+    setBulkGenerating(true);
+    setBulkProgressText(`Generando ${toProcess.length} descripciones con IA...`);
+
+    try {
+      const payload = {
+        bulk: true,
+        productos: toProcess.map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          categoria: p.categoria?.nombre || '',
+          marca: p.marca?.nombre || '',
+        })),
+      };
+
+      const res = await fetch('/api/ecommerce/generar-descripcion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error en generación masiva');
+      }
+
+      await fetchProductos(currentPage);
+      alert(`✨ ¡Listo! Se completaron ${data.updatedCount || 0} descripciones con IA.`);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error generando descripciones con IA');
+    } finally {
+      setBulkGenerating(false);
+      setBulkProgressText('');
+    }
+  };
+
+  const openMassPriceUpdater = async () => {
+    setShowMassPriceModal(true);
+    setLoadingMassCatalog(true);
+    try {
+      const res = await fetch('/api/ecommerce/productos?all=true&limit=1000');
+      const data = await res.json();
+      setAllCatalogForMass(data.productos || productos);
+    } catch {
+      setAllCatalogForMass(productos);
+    } finally {
+      setLoadingMassCatalog(false);
+    }
+  };
+
+  const roundValue = (val: number, step: number) => {
+    if (!step || step <= 1) return Math.round(val);
+    return Math.round(val / step) * step;
+  };
+
+  const getFilteredMassProducts = () => {
+    const source = allCatalogForMass.length > 0 ? allCatalogForMass : productos;
+    return source.filter(p => {
+      if (massFilterType === 'marca' && massFilterMarcaId) {
+        return p.marca_id === massFilterMarcaId;
+      }
+      if (massFilterType === 'categoria' && massFilterCategoriaId) {
+        return p.categoria_id === massFilterCategoriaId;
+      }
+      return true;
+    });
+  };
+
+  const handleApplyMassPriceUpdate = async () => {
+    const pct = parseFloat(massPercent);
+    if (isNaN(pct) || pct === 0) {
+      alert('Ingresá un porcentaje válido distinto de 0.');
+      return;
+    }
+
+    const targets = getFilteredMassProducts();
+    if (targets.length === 0) {
+      alert('No hay productos que coincidan con el filtro seleccionado.');
+      return;
+    }
+
+    const mult = 1 + pct / 100;
+    if (!confirm(`¿Aplicar un ${pct > 0 ? `+${pct}%` : `${pct}%`} a ${targets.length} productos?`)) {
+      return;
+    }
+
+    setMassUpdating(true);
+    try {
+      const updates = targets.map(p => {
+        const u: Record<string, any> = { id: p.id };
+        if (massTargetField === 'costo' || massTargetField === 'todos') {
+          u.precio_costo = Math.max(0, roundValue((p.precio_costo || 0) * mult, massRounding));
+        }
+        if (massTargetField === 'mayorista' || massTargetField === 'todos') {
+          u.precio_mayorista = Math.max(0, roundValue((p.precio_mayorista || 0) * mult, massRounding));
+        }
+        if (massTargetField === 'minorista' || massTargetField === 'todos') {
+          u.precio_unitario = Math.max(0, roundValue((p.precio_unitario || p.precio_mayorista || 0) * mult, massRounding));
+        }
+        return u;
+      });
+
+      const res = await fetch('/api/ecommerce/generar-descripcion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'mass-price-update', updates }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error actualizando precios');
+
+      setShowMassPriceModal(false);
+      await fetchProductos(currentPage);
+      alert(`📈 Se actualizaron los precios de ${data.updatedCount || targets.length} productos correctamente.`);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error al aplicar actualización masiva de precios');
+    } finally {
+      setMassUpdating(false);
+    }
+  };
+
   return (
     <div className="page-container">
       <Link href="/admin/ecommerce">
@@ -261,12 +411,223 @@ export default function ProductosAdminPage() {
         </button>
       </Link>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <h1>Productos</h1>
-        <button onClick={() => { resetForm(); setEditingId(null); setShowForm(true); }}>
-          <Plus size={18} /> Nuevo Producto
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            className="secondary"
+            onClick={handleBulkGenerateDescriptions}
+            disabled={bulkGenerating}
+            style={{ fontSize: '0.8125rem' }}
+          >
+            {bulkGenerating ? (
+              <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {bulkProgressText || 'Generando IA...'}</>
+            ) : (
+              <><Sparkles size={16} color="var(--accent-blue)" /> ✨ Completar Descripciones con IA</>
+            )}
+          </button>
+
+          <button
+            className="secondary"
+            onClick={openMassPriceUpdater}
+            style={{ fontSize: '0.8125rem' }}
+          >
+            <TrendingUp size={16} color="var(--accent-green)" /> 📈 Actualizar Precios Masivo
+          </button>
+
+          <button
+            className="secondary"
+            onClick={() => {
+              resetForm();
+              setEditingId(null);
+              const comboCat = categorias.find(c => c.nombre.toLowerCase().includes('combo') || c.nombre.toLowerCase().includes('pack'));
+              setForm(f => ({
+                ...f,
+                nombre: 'COMBO ',
+                descripcion: 'Pack promocional armado especialmente para maximizar resultados y margen.',
+                destacado: true,
+                en_oferta: true,
+                categoria_id: comboCat?.id || '',
+              }));
+              setShowForm(true);
+            }}
+            style={{ fontSize: '0.8125rem' }}
+          >
+            <Layers size={16} /> 📦 Nuevo Combo / Pack
+          </button>
+
+          <button onClick={() => { resetForm(); setEditingId(null); setShowForm(true); }}>
+            <Plus size={18} /> Nuevo Producto
+          </button>
+        </div>
       </div>
+
+      {/* Mass Price Updater Modal */}
+      {showMassPriceModal && (() => {
+        const matchingProducts = getFilteredMassProducts();
+        const sampleProducts = matchingProducts.slice(0, 5);
+        const pct = parseFloat(massPercent) || 0;
+        const mult = 1 + pct / 100;
+
+        return (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.55)', zIndex: 120,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}>
+            <div className="glass-card animate-scaleIn" style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <TrendingUp size={20} color="var(--accent-green)" />
+                  Actualizador Masivo de Precios
+                </h3>
+                <button className="btn-ghost" onClick={() => setShowMassPriceModal(false)} style={{ padding: 4, minHeight: 'auto' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label>Filtrar productos por</label>
+                  <select value={massFilterType} onChange={e => setMassFilterType(e.target.value as any)}>
+                    <option value="todos">Todos los productos</option>
+                    <option value="marca">Por Marca</option>
+                    <option value="categoria">Por Categoría</option>
+                  </select>
+                </div>
+
+                {massFilterType === 'marca' && (
+                  <div>
+                    <label>Seleccionar Marca</label>
+                    <select value={massFilterMarcaId} onChange={e => setMassFilterMarcaId(e.target.value)}>
+                      <option value="">Elegir marca...</option>
+                      {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {massFilterType === 'categoria' && (
+                  <div>
+                    <label>Seleccionar Categoría</label>
+                    <select value={massFilterCategoriaId} onChange={e => setMassFilterCategoriaId(e.target.value)}>
+                      <option value="">Elegir categoría...</option>
+                      {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label>Qué precios actualizar</label>
+                  <select value={massTargetField} onChange={e => setMassTargetField(e.target.value as any)}>
+                    <option value="todos">Todos (Costo, Mayorista y Minorista)</option>
+                    <option value="costo">Solo Precio Costo</option>
+                    <option value="mayorista">Solo Precio Mayorista</option>
+                    <option value="minorista">Solo Precio Minorista</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label>Porcentaje de Ajuste (%)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={massPercent}
+                    onChange={e => setMassPercent(e.target.value)}
+                    placeholder="Ej: 10 o -5"
+                  />
+                </div>
+
+                <div>
+                  <label>Redondeo automático</label>
+                  <select value={massRounding} onChange={e => setMassRounding(Number(e.target.value))}>
+                    <option value={100}>Múltiplos de $100</option>
+                    <option value={50}>Múltiplos de $50</option>
+                    <option value={10}>Múltiplos de $10</option>
+                    <option value={1}>Sin redondeo (exacto)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'var(--bg-secondary)',
+                borderRadius: 12,
+                padding: '1rem',
+                border: '1px solid var(--border-color)',
+                marginBottom: '1.25rem',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>
+                    Vista Previa ({matchingProducts.length} productos alcanzados)
+                  </span>
+                  <span className={`badge ${pct >= 0 ? 'badge-green' : 'badge-amber'}`}>
+                    {pct >= 0 ? `+${pct}%` : `${pct}%`}
+                  </span>
+                </div>
+
+                {loadingMassCatalog ? (
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
+                    Cargando catálogo para vista previa...
+                  </p>
+                ) : sampleProducts.length === 0 ? (
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem' }}>
+                    Ningún producto coincide con este filtro.
+                  </p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-light)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                        <th style={{ padding: '0.4rem' }}>Producto</th>
+                        <th style={{ padding: '0.4rem', textAlign: 'right' }}>Actual</th>
+                        <th style={{ padding: '0.4rem', textAlign: 'right' }}>Nuevo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sampleProducts.map(sp => {
+                        const baseVal =
+                          massTargetField === 'costo'
+                            ? (sp.precio_costo || 0)
+                            : massTargetField === 'minorista'
+                            ? (sp.precio_unitario || sp.precio_mayorista || 0)
+                            : (sp.precio_mayorista || sp.precio_costo || 0);
+                        const nextVal = Math.max(0, roundValue(baseVal * mult, massRounding));
+                        return (
+                          <tr key={sp.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                            <td style={{ padding: '0.45rem 0.4rem', fontWeight: 600 }}>{sp.nombre}</td>
+                            <td style={{ padding: '0.45rem 0.4rem', textAlign: 'right', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                              {formatPrice(baseVal)}
+                            </td>
+                            <td style={{ padding: '0.45rem 0.4rem', textAlign: 'right', fontWeight: 700, color: 'var(--accent-green)', fontFamily: 'var(--font-mono)' }}>
+                              {formatPrice(nextVal)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  onClick={handleApplyMassPriceUpdate}
+                  disabled={massUpdating || matchingProducts.length === 0}
+                  style={{ flex: 1 }}
+                >
+                  {massUpdating ? (
+                    <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Aplicando cambios...</>
+                  ) : (
+                    <>Aplicar aumento/descuento a {matchingProducts.length} productos</>
+                  )}
+                </button>
+                <button className="secondary" onClick={() => setShowMassPriceModal(false)} disabled={massUpdating}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Search */}
       <div style={{ position: 'relative', marginBottom: '1.5rem', maxWidth: '400px' }}>

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial Interactivo - Vyper Labs</title>
+    <title>Tutorial Interactivo Oficial v3.0 — Vyper Labs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,137 +14,194 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-main: #FFFFFF;
+            --bg-secondary: #F8F9FA;
+            --bg-tertiary: #F1F3F5;
+            --text-primary: #111111;
+            --text-secondary: #374151;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            color: #ffffff;
-            overflow-x: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-main);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50,40 L35,75 L55,70 L40,110 L75,60 L55,65 L65,40 Z' stroke-width='2' stroke-opacity='0.04' transform='rotate(-15 50 75)'/%3E%3Cpath d='M150,150 L200,150 M140,130 L140,170 M150,135 L150,165 M200,135 L200,165 M210,130 L210,170' stroke-width='2.5' stroke-opacity='0.04' transform='rotate(30 175 150)'/%3E%3C/g%3E%3C/svg%3E");
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
         .tutorial-container {
-            max-width: 1400px;
+            max-width: 1180px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2.5rem 1.5rem 4rem;
         }
 
         .header {
+            background: #111111;
+            color: #FFFFFF;
             text-align: center;
-            padding: 3rem 0;
-            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(165, 180, 252, 0.1));
-            border-radius: 20px;
-            margin-bottom: 3rem;
-            border: 2px solid rgba(74, 222, 128, 0.3);
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2.25rem;
+            border: 2px solid #111111;
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 0.3rem 0.9rem;
+            background: #FFFFFF;
+            color: #111111;
+            font-size: 0.725rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            margin-bottom: 0.85rem;
         }
 
         .header h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #4ade80, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
         }
 
         .header p {
-            font-size: 1.2rem;
-            color: #a0a0a0;
+            font-size: 1rem;
+            color: #D1D5DB;
+            max-width: 680px;
+            margin: 0 auto;
         }
 
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            padding: 0.55rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid #111111;
+            background: #FFFFFF;
+            color: #111111;
+            font-family: inherit;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #111111;
+            color: #FFFFFF;
+        }
+
+        /* Grid */
         .tutorial-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
         }
 
         .tutorial-card {
-            background: rgba(26, 26, 26, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 2rem;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tutorial-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #4ade80, #a5b4fc);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .tutorial-card:hover::before {
-            transform: scaleX(1);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .tutorial-card:hover {
-            transform: translateY(-10px);
-            border-color: #4ade80;
-            box-shadow: 0 10px 40px rgba(74, 222, 128, 0.3);
+            transform: translateY(-4px);
+            border-color: #111111;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
         }
 
         .tutorial-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #111111;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
+        .category-pill {
+            font-size: 0.6875rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.65rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #111111;
         }
 
         .tutorial-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #4ade80;
-        }
-
-        .tutorial-card .duration {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: rgba(74, 222, 128, 0.2);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: #4ade80;
-            margin-bottom: 1rem;
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+            color: #111111;
         }
 
         .tutorial-card p {
-            color: #a0a0a0;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+            flex: 1;
         }
 
-        .tutorial-card .steps-count {
-            font-size: 0.9rem;
-            color: #a5b4fc;
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.775rem;
+            font-weight: 700;
         }
 
+        .steps-badge {
+            background: #111111;
+            color: #FFFFFF;
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
             z-index: 1000;
+            padding: 1.5rem;
             overflow-y: auto;
         }
 
@@ -150,724 +209,464 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
         }
 
         .modal-content {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 90%;
+            background: #FFFFFF;
+            border: 2px solid #111111;
+            border-radius: 16px;
+            max-width: 760px;
+            width: 100%;
+            padding: 2rem;
             position: relative;
-            border: 2px solid rgba(74, 222, 128, 0.3);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
         }
 
         .close-btn {
             position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid #ef4444;
-            color: #ef4444;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: #FFFFFF;
+            border: 1px solid #111111;
+            color: #111111;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 800;
+            transition: all 0.15s ease;
         }
 
         .close-btn:hover {
-            background: #ef4444;
-            color: #fff;
-            transform: rotate(90deg);
-        }
-
-        .step-container {
-            margin-top: 2rem;
-        }
-
-        .step {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.3;
-            transition: all 0.3s ease;
-            position: relative;
-            padding-left: 4rem;
-        }
-
-        .step.active {
-            opacity: 1;
-            border-color: #4ade80;
-            background: rgba(74, 222, 128, 0.05);
-            transform: scale(1.02);
-        }
-
-        .step.completed {
-            opacity: 0.7;
-            border-color: #a5b4fc;
-        }
-
-        .step-number {
-            position: absolute;
-            left: 1.5rem;
-            top: 1.5rem;
-            width: 2rem;
-            height: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .step.active .step-number {
-            background: linear-gradient(135deg, #4ade80, #a5b4fc);
-            color: #000;
-            transform: scale(1.2);
-        }
-
-        .step.completed .step-number {
-            background: #a5b4fc;
-            color: #000;
-        }
-
-        .step h4 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: #fff;
-        }
-
-        .step p {
-            color: #a0a0a0;
-            line-height: 1.6;
-        }
-
-        .step-image {
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .navigation-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            justify-content: space-between;
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            border: none;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-            color: #000;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
+            background: #111111;
+            color: #FFFFFF;
         }
 
         .progress-bar {
             width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50px;
+            height: 6px;
+            background: #E5E7EB;
+            border-radius: 999px;
             overflow: hidden;
-            margin-bottom: 2rem;
+            margin: 1rem 0 0.5rem;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4ade80, #a5b4fc);
+            background: #111111;
             transition: width 0.3s ease;
-            border-radius: 50px;
         }
 
-        .completion-message {
-            text-align: center;
-            padding: 3rem;
-            display: none;
+        .step-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid #111111;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.25rem 0;
         }
 
-        .completion-message.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
         }
 
-        .completion-icon {
-            font-size: 5rem;
-            margin-bottom: 1rem;
-            animation: bounce 1s ease infinite;
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #111111;
+            color: #FFFFFF;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            flex-shrink: 0;
         }
 
-        @keyframes bounce {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
+        .step-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #111111;
         }
 
-        .quick-links {
-            background: rgba(26, 26, 26, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-top: 3rem;
+        .step-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
         }
 
-        .quick-links h3 {
-            color: #4ade80;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-        }
-
-        .links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .link-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .tip-box {
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            background: #FFFFFF;
+            border: 1px solid #111111;
             border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
+            font-size: 0.85rem;
+            color: #111111;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.65rem 1.35rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.875rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: #fff;
-            display: block;
+            transition: all 0.15s ease;
         }
 
-        .link-item:hover {
-            border-color: #4ade80;
-            background: rgba(74, 222, 128, 0.1);
-            transform: translateY(-3px);
+        .btn-prev {
+            background: #FFFFFF;
+            border: 1px solid #111111;
+            color: #111111;
         }
 
-        .link-item .icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+        .btn-prev:disabled {
+            border-color: #E5E7EB;
+            color: #9CA3AF;
+            cursor: not-allowed;
         }
 
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
+        .btn-next {
+            background: #111111;
+            border: 1px solid #111111;
+            color: #FFFFFF;
+        }
 
-            .tutorial-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                padding: 2rem;
-            }
+        .btn-next:hover {
+            background: #333333;
         }
     </style>
 </head>
-
 <body>
 
     <div class="tutorial-container">
-        <div class="header">
-            <h1>🎓 Tutorial Interactivo Vyper Labs</h1>
-            <p>Aprende a usar el sistema paso a paso con guías visuales</p>
+        <header class="header">
+            <div class="header-badge">TUTORIALES PASO A PASO · VYPER LABS 3.0</div>
+            <h1>Centro de Entrenamiento Interactivo</h1>
+            <p>Seleccioná cualquier módulo para recorrer su guía interactiva. Usá las flechas del teclado (← →) o los botones en pantalla.</p>
+        </header>
+
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" onclick="filterTutorials('Todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filterTutorials('General', this)">General</button>
+            <button class="filter-btn" onclick="filterTutorials('Ecommerce', this)">Ecommerce</button>
+            <button class="filter-btn" onclick="filterTutorials('IA', this)">Inteligencia Artificial</button>
+            <button class="filter-btn" onclick="filterTutorials('ERP', this)">ERP &amp; Finanzas</button>
         </div>
 
-        <div class="tutorial-grid">
-            <!-- Tutorial 1: Primeros Pasos -->
-            <div class="tutorial-card" onclick="openTutorial('primeros-pasos')">
-                <div class="tutorial-icon">🚀</div>
-                <h3>Primeros Pasos</h3>
-                <span class="duration">⏱️ 5 minutos</span>
-                <p>Aprende a navegar por el sistema y conoce las funcionalidades básicas del dashboard principal.</p>
-                <div class="steps-count">📋 6 pasos</div>
-            </div>
-
-            <!-- Tutorial 2: Registrar Ventas -->
-            <div class="tutorial-card" onclick="openTutorial('registrar-ventas')">
-                <div class="tutorial-icon">💰</div>
-                <h3>Registrar Ventas</h3>
-                <span class="duration">⏱️ 7 minutos</span>
-                <p>Guía completa para registrar ventas, seleccionar clientes y métodos de pago correctamente.</p>
-                <div class="steps-count">📋 8 pasos</div>
-            </div>
-
-            <!-- Tutorial 3: Gestión de Clientes -->
-            <div class="tutorial-card" onclick="openTutorial('gestion-clientes')">
-                <div class="tutorial-icon">👥</div>
-                <h3>Gestión de Clientes</h3>
-                <span class="duration">⏱️ 6 minutos</span>
-                <p>Cómo crear, editar y administrar la base de datos de clientes de forma eficiente.</p>
-                <div class="steps-count">📋 7 pasos</div>
-            </div>
-
-            <!-- Tutorial 4: Cuenta Corriente -->
-            <div class="tutorial-card" onclick="openTutorial('cuenta-corriente')">
-                <div class="tutorial-icon">💳</div>
-                <h3>Cuenta Corriente</h3>
-                <span class="duration">⏱️ 8 minutos</span>
-                <p>Maneja créditos y pagos de clientes con el sistema de cuenta corriente y notificaciones.</p>
-                <div class="steps-count">📋 9 pasos</div>
-            </div>
-
-            <!-- Tutorial 5: Vyper Coins -->
-            <div class="tutorial-card" onclick="openTutorial('vyper-coins')">
-                <div class="tutorial-icon">🪙</div>
-                <h3>Programa Vyper Coins</h3>
-                <span class="duration">⏱️ 5 minutos</span>
-                <p>Aprende a usar el sistema de fidelización para premiar a tus mejores clientes.</p>
-                <div class="steps-count">📋 6 pasos</div>
-            </div>
-
-            <!-- Tutorial 6: Analytics -->
-            <div class="tutorial-card" onclick="openTutorial('analytics')">
-                <div class="tutorial-icon">📊</div>
-                <h3>Business Intelligence</h3>
-                <span class="duration">⏱️ 10 minutos</span>
-                <p>Descubre cómo analizar tus datos, generar reportes y tomar decisiones informadas.</p>
-                <div class="steps-count">📋 10 pasos</div>
-            </div>
-        </div>
-
-        <div class="quick-links">
-            <h3>🔗 Enlaces Rápidos</h3>
-            <div class="links-grid">
-                <a href="MANUAL_DE_USUARIO.html" class="link-item" target="_blank">
-                    <div class="icon">📖</div>
-                    <div>Manual Completo</div>
-                </a>
-                <a href="#" class="link-item" onclick="alert('Próximamente: Videos tutoriales')">
-                    <div class="icon">🎥</div>
-                    <div>Video Tutoriales</div>
-                </a>
-                <a href="#" class="link-item" onclick="alert('Próximamente: Preguntas frecuentes')">
-                    <div class="icon">❓</div>
-                    <div>FAQ</div>
-                </a>
-                <a href="#" class="link-item" onclick="alert('Soporte: soporte@vyperlabs.com')">
-                    <div class="icon">💬</div>
-                    <div>Soporte</div>
-                </a>
-            </div>
-        </div>
+        <div class="tutorial-grid" id="tutorialGrid"></div>
     </div>
 
-    <!-- Modal Template -->
-    <div id="tutorial-modal" class="modal">
+    <!-- Modal -->
+    <div id="tutorialModal" class="modal" onclick="if(event.target === this) closeTutorial()">
         <div class="modal-content">
             <button class="close-btn" onclick="closeTutorial()">✕</button>
-            <h2 id="tutorial-title" style="color: #4ade80; margin-bottom: 0.5rem;"></h2>
-            <p id="tutorial-description" style="color: #a0a0a0; margin-bottom: 1rem;"></p>
-
+            <div style="font-size: 0.725rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #6B7280;" id="modalCategory"></div>
+            <h2 id="modalTitle" style="font-size: 1.5rem; font-weight: 900; margin-top: 0.2rem;"></h2>
             <div class="progress-bar">
-                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                <div class="progress-fill" id="progressBar"></div>
             </div>
+            <div id="stepCounter" style="font-size: 0.75rem; font-weight: 800; color: #4B5563;"></div>
 
-            <div id="steps-container" class="step-container"></div>
+            <div id="stepContent"></div>
 
-            <div id="completion-message" class="completion-message">
-                <div class="completion-icon">🎉</div>
-                <h2 style="color: #4ade80; margin-bottom: 1rem;">¡Tutorial Completado!</h2>
-                <p style="color: #a0a0a0; margin-bottom: 2rem;">Has completado exitosamente este tutorial. ¡Ahora estás
-                    listo para usar esta funcionalidad!</p>
-                <button class="btn btn-primary" onclick="closeTutorial()">Finalizar</button>
-            </div>
-
-            <div id="navigation-buttons" class="navigation-buttons">
-                <button id="prev-btn" class="btn btn-secondary" onclick="previousStep()" disabled>← Anterior</button>
-                <button id="next-btn" class="btn btn-primary" onclick="nextStep()">Siguiente →</button>
+            <div class="nav-buttons">
+                <button class="btn btn-prev" id="prevBtn" onclick="previousStep()">← Anterior</button>
+                <span style="font-size: 0.75rem; color: #6B7280; font-weight: 600;">Teclas: ← → o ESC</span>
+                <button class="btn btn-next" id="nextBtn" onclick="nextStep()">Siguiente →</button>
             </div>
         </div>
     </div>
 
     <script>
-        const tutorials = {
-            'primeros-pasos': {
-                title: '🚀 Primeros Pasos en Vyper Labs',
-                description: 'Aprende a navegar por el sistema y conoce las funcionalidades básicas',
+        const tutorials = [
+            {
+                id: 'primeros-pasos',
+                title: '1. Primeros Pasos y Arquitectura',
+                category: 'General',
+                icon: '🚀',
+                description: 'Recorrido por el ecosistema completo: Panel Admin, Tienda Mayorista, Tienda Minorista y Portal Cliente.',
                 steps: [
                     {
-                        title: 'Bienvenido a Vyper Labs',
-                        content: 'Vyper Labs es tu sistema integral de gestión empresarial. En este tutorial aprenderás a navegar por la interfaz principal y acceder a todas las funcionalidades.'
+                        title: 'Ecosistema Unificado Vyper Labs',
+                        content: 'Vyper Labs integra tu operación física en mostrador (<strong>/admin</strong>) con tus dos canales online: <strong>Tienda Mayorista (/tienda)</strong> y <strong>Tienda Minorista (/minorista)</strong>.',
+                        tip: 'Todos los módulos comparten la misma base de datos de clientes, productos, pedidos y puntos.'
                     },
                     {
-                        title: 'Pantalla de Inicio',
-                        content: 'Al abrir la aplicación, verás dos opciones principales: <strong>Panel Operativo</strong> para operaciones diarias y <strong>Business Intelligence</strong> para análisis avanzado. Haz clic en "INGRESAR" bajo Panel Operativo.'
+                        title: 'Política de Stock Flexible',
+                        content: 'El sistema trabaja con una gestión de stock relajada: <strong>nunca bloquea una venta ni un pedido online si el stock figura en 0</strong>, para que tus clientes siempre puedan pedir sin trabas.',
+                        tip: 'Cuando cargás compras o completás pedidos de productos con stock positivo, el inventario se ajusta automáticamente.'
                     },
                     {
-                        title: 'Dashboard Principal',
-                        content: 'El dashboard es el centro de operaciones. Aquí encontrarás pestañas para <strong>VENTAS</strong> y <strong>EGRESOS</strong>, un formulario de registro a la izquierda y el historial de transacciones a la derecha.'
-                    },
-                    {
-                        title: 'Barra de Navegación',
-                        content: 'En la parte superior verás botones para acceder a: 🪙 Vyper Coins, 💳 Cuenta Corriente, 👥 Clientes, y 📊 Analytics. Puedes navegar entre módulos en cualquier momento.'
-                    },
-                    {
-                        title: 'Pestañas Ventas/Egresos',
-                        content: 'Usa las pestañas para alternar entre registro de ventas y egresos. El formulario cambiará automáticamente según la pestaña seleccionada.'
-                    },
-                    {
-                        title: '¡Listo para Empezar!',
-                        content: 'Ya conoces la estructura básica del sistema. En los siguientes tutoriales aprenderás a usar cada funcionalidad en detalle. ¡Comencemos!'
+                        title: 'Roles de Usuario (/admin/usuarios)',
+                        content: 'Contás con tres niveles de seguridad: <strong>Super Admin</strong> (acceso total + gestión de usuarios), <strong>Administrador</strong> (lectura y escritura en todos los módulos) y <strong>Vendedor</strong>.',
+                        tip: 'Podés acceder siempre a estas guías desde el botón "Ayuda" del menú lateral en /tutorial.'
                     }
                 ]
             },
-            'registrar-ventas': {
-                title: '💰 Cómo Registrar Ventas',
-                description: 'Guía paso a paso para registrar ventas correctamente',
+            {
+                id: 'pos-ventas',
+                title: '2. POS: Ventas, Egresos y Escáner SKU',
+                category: 'ERP',
+                icon: '💰',
+                description: 'Cómo cobrar rápido en mostrador usando el lector de código/SKU o selector de catálogo.',
                 steps: [
                     {
-                        title: 'Acceder al Formulario de Ventas',
-                        content: 'En el dashboard principal, asegúrate de estar en la pestaña <strong>VENTAS</strong> (debe estar resaltada en verde).'
+                        title: 'Escáner Rápido de SKU y Selector de Catálogo',
+                        content: 'En <strong>/admin</strong> (pestaña Ventas), utilizá el bloque <strong>"Escáner SKU / Sumar Productos del Catálogo"</strong>. Escaneá el código o escribí el SKU/nombre y presioná <strong>Enter</strong>.',
+                        tip: 'El sistema suma automáticamente los subtotales al campo Importe ($) y arma el listado de productos vendidos.'
                     },
                     {
-                        title: 'Verificar la Fecha',
-                        content: 'El campo de fecha se completa automáticamente con la fecha actual. Si necesitas registrar una venta de otro día, puedes modificarla haciendo clic en el campo.'
+                        title: 'Vincular Cliente y Método de Pago',
+                        content: 'Buscá al cliente por nombre o teléfono y elegí el medio de pago: <strong>Efectivo</strong>, <strong>Transferencia</strong>, <strong>Tarjeta</strong> o <strong>Cuenta Corriente</strong>.',
+                        tip: 'Al registrar la venta, se acreditan Vyper Coins automáticamente y se envía el comprobante por WhatsApp.'
                     },
                     {
-                        title: 'Seleccionar Cliente',
-                        content: 'Haz clic en el campo "CLIENTE" y comienza a escribir el nombre o teléfono. El sistema mostrará sugerencias automáticamente. Selecciona el cliente correcto de la lista desplegable.'
-                    },
-                    {
-                        title: 'Ingresar el Importe',
-                        content: 'En el campo "IMPORTE ($)", escribe el monto total de la venta. Puedes usar decimales (ej: 1500.50). El sistema formateará el número automáticamente.'
-                    },
-                    {
-                        title: 'Seleccionar Método de Pago',
-                        content: 'Elige el método de pago: 💵 Efectivo, 🏦 Transferencia, 💳 Tarjeta Débito/Crédito, o 📝 Cuenta Corriente. Si eliges Cuenta Corriente, la deuda del cliente se actualizará automáticamente.'
-                    },
-                    {
-                        title: 'Agregar Conceptos (Opcional)',
-                        content: 'En el campo "CONCEPTOS", puedes detallar los productos o servicios vendidos. Por ejemplo: "2x Proteína Whey, 1x Creatina". Este campo es opcional pero recomendado para mejor control.'
-                    },
-                    {
-                        title: 'Guardar la Venta',
-                        content: 'Revisa que todos los datos sean correctos y haz clic en el botón verde "💰 REGISTRAR VENTA". Verás un mensaje de confirmación.'
-                    },
-                    {
-                        title: 'Verificar en el Historial',
-                        content: '¡Listo! La venta aparecerá inmediatamente en el panel de historial a la derecha. Puedes editarla o eliminarla si cometiste un error.'
+                        title: 'Control de Egresos y Resumen Diario',
+                        content: 'En la pestaña <strong>Egresos</strong> asentá pagos a proveedores, alquiler o servicios. Al final de la jornada, usá el botón <strong>Resumen Diario</strong> para recibir el balance por WhatsApp.',
+                        tip: 'También podés importar planillas históricas desde la pestaña Importar Excel.'
                     }
                 ]
             },
-            'gestion-clientes': {
-                title: '👥 Gestión de Clientes',
-                description: 'Aprende a administrar tu base de datos de clientes',
+            {
+                id: 'tienda-b2b-b2c',
+                title: '3. Tienda Mayorista, Modo Planilla y PDF',
+                category: 'Ecommerce',
+                icon: '🛒',
+                description: 'Modo Planilla Rápida B2B, variantes por sabor, catálogo PDF descargable y barra de incentivos.',
                 steps: [
                     {
-                        title: 'Acceder al Módulo de Clientes',
-                        content: 'Haz clic en el botón "👥 CLIENTES" en la barra de navegación superior del dashboard.'
+                        title: 'Modo Planilla Rápida B2B (/tienda)',
+                        content: 'En la tienda mayorista el comprador puede cambiar entre <strong>"🔲 Vista Cuadrícula"</strong> y <strong>"📋 Modo Planilla Rápida"</strong> para cargar decenas de productos y sabores desde una única tabla.',
+                        tip: 'Ideal para gimnasios, dietéticas y distribuidores que reponen stock mensualmente.'
                     },
                     {
-                        title: 'Vista General de Clientes',
-                        content: 'Verás una cuadrícula con todos tus clientes. Cada tarjeta muestra: nombre, teléfono, deuda actual (en rojo si tiene deuda) y saldo de Vyper Coins.'
+                        title: 'Selector de Sabores / Variantes y Combos',
+                        content: 'Los productos con variantes muestran un selector directo de sabor/talle en la tarjeta. El carrito separa cada variante en su propio renglón.',
+                        tip: 'En el mensaje de WhatsApp cada producto detalla su sabor exacto entre paréntesis.'
                     },
                     {
-                        title: 'Buscar un Cliente',
-                        content: 'Usa la barra de búsqueda en la parte superior. Puedes buscar por nombre o por número de teléfono. Los resultados se filtran automáticamente mientras escribes.'
+                        title: 'Descargar Lista de Precios en PDF',
+                        content: 'El botón <strong>"📄 Lista de Precios PDF"</strong> genera al instante un catálogo imprimible/descargable en blanco y negro con los precios actualizados al minuto.',
+                        tip: 'Podés descargarlo y enviarlo por WhatsApp a tus clientes mayoristas cuando te pidan lista de precios.'
                     },
                     {
-                        title: 'Crear Nuevo Cliente',
-                        content: 'Haz clic en el botón "NUEVO CLIENTE". Se abrirá un formulario modal donde debes completar: Nombre completo, Teléfono (con código de área, ej: 5491112345678), y Email (opcional).'
-                    },
-                    {
-                        title: 'Guardar el Nuevo Cliente',
-                        content: 'Después de completar los datos, haz clic en "GUARDAR CLIENTE". El nuevo cliente aparecerá inmediatamente en la lista con deuda $0 y 0 Vyper Coins.'
-                    },
-                    {
-                        title: 'Editar un Cliente Existente',
-                        content: 'En la tarjeta del cliente, haz clic en el botón "EDITAR". Se abrirá el mismo formulario con los datos actuales. Modifica lo que necesites y guarda los cambios.'
-                    },
-                    {
-                        title: 'Información Importante',
-                        content: 'No puedes eliminar clientes que tengan transacciones registradas. El número de teléfono es crucial para las notificaciones de WhatsApp, asegúrate de ingresarlo correctamente con el código de país (54 para Argentina).'
+                        title: 'Incentivos en Carrito, Autocompletado y Cupones',
+                        content: 'El carrito muestra barras de progreso hacia <strong>Envío Gratis</strong> y <strong>Descuento por Volumen</strong>. En el Checkout, el cliente ingresa su teléfono para autocompletar sus datos, repetir su último pedido o canjear cupones y Vyper Coins.',
+                        tip: 'Al confirmar el pedido se genera un link único de seguimiento en vivo: /pedido/[id].'
                     }
                 ]
             },
-            'cuenta-corriente': {
-                title: '💳 Sistema de Cuenta Corriente',
-                description: 'Gestiona créditos y pagos de clientes',
+            {
+                id: 'personalizacion-cms',
+                title: '4. Editor de Tienda, Vista Previa e Historial',
+                category: 'Ecommerce',
+                icon: '🎨',
+                description: 'Cómo personalizar banners, marquesinas, colores, incentivos y usar la Vista Previa y el Asesor IA.',
                 steps: [
                     {
-                        title: 'Acceder a Cuenta Corriente',
-                        content: 'Haz clic en "💳 CTA CTE" en la barra de navegación superior.'
+                        title: 'Subida Drag & Drop y 12 Secciones',
+                        content: 'En <strong>/admin/ecommerce/personalizacion</strong> podés arrastrar y soltar imágenes para el Logo, los Hero Banners y los Carruseles Promocionales tanto Mayorista como Minorista.',
+                        tip: 'Configurá también los mensajes de la Marquesina superior y los montos de Envío Gratis.'
                     },
                     {
-                        title: 'Vista del Módulo',
-                        content: 'Verás un formulario para registrar transacciones en la parte superior y el historial de movimientos del mes actual en la parte inferior.'
+                        title: 'Vista Previa en Vivo (Desktop y Móvil)',
+                        content: 'Activá el botón superior <strong>"👁️ Vista Previa"</strong> para ver en pantalla dividida cómo queda tu tienda en computadora o celular en tiempo real antes de guardar.',
+                        tip: 'Podés alternar en un clic entre la vista previa Mayorista y Minorista.'
                     },
                     {
-                        title: 'Buscar Cliente',
-                        content: 'En el campo "CLIENTE", comienza a escribir el nombre o teléfono. Selecciona el cliente de la lista. Verás su deuda actual destacada en rojo.'
-                    },
-                    {
-                        title: 'Registrar una Compra a Crédito',
-                        content: 'Ingresa el monto de la compra en "IMPORTE ($)". Haz clic en el botón rojo "COMPRA EN CUENTA CORRIENTE". Verás una vista previa del balance actual y el nuevo balance después de la compra.'
-                    },
-                    {
-                        title: 'Confirmar la Compra',
-                        content: 'Verifica que los montos sean correctos y haz clic en "📝 REGISTRAR COMPRA". El sistema actualizará la deuda del cliente automáticamente.'
-                    },
-                    {
-                        title: 'Notificación Automática',
-                        content: 'El cliente recibirá un mensaje de WhatsApp con el detalle: monto de la compra, nuevo saldo total, y un recordatorio de pago. Esto sucede automáticamente si el cliente tiene un teléfono válido registrado.'
-                    },
-                    {
-                        title: 'Registrar un Pago',
-                        content: 'Para registrar un pago, selecciona el cliente, ingresa el monto que está pagando, y haz clic en el botón verde "PAGO". El sistema restará el monto de su deuda.'
-                    },
-                    {
-                        title: 'Pagos Parciales',
-                        content: 'Puedes registrar pagos parciales. Por ejemplo, si un cliente debe $5000 y paga $2000, su nueva deuda será $3000. El sistema calcula todo automáticamente.'
-                    },
-                    {
-                        title: 'Historial de Movimientos',
-                        content: 'En la tabla inferior verás todos los movimientos del mes: fecha, cliente, tipo (COMPRA en rojo o PAGO en verde), importe y balance resultante. Esto te permite hacer seguimiento detallado de cada cuenta.'
+                        title: 'Historial de Versiones y Asesor IA',
+                        content: 'Con el botón <strong>"🕒 Historial"</strong> podés restaurar cualquiera de las últimas 10 versiones guardadas. Además, el <strong>Asesor IA</strong> redacta textos o FAQs y te permite volcarlos al formulario con el botón <strong>"✨ Aplicar cambios sugeridos"</strong>.',
+                        tip: 'Cada sección se guarda de forma independiente.'
                     }
                 ]
             },
-            'vyper-coins': {
-                title: '🪙 Programa Vyper Coins',
-                description: 'Sistema de fidelización y recompensas',
+            {
+                id: 'productos-precios-ia',
+                title: '5. Precios Masivos, Descripciones IA y Combos',
+                category: 'Ecommerce',
+                icon: '📈',
+                description: 'Actualización porcentual de precios por marca/categoría y redacción masiva con IA.',
                 steps: [
                     {
-                        title: '¿Qué son los Vyper Coins?',
-                        content: 'Vyper Coins es un programa de fidelización que te permite premiar a tus clientes frecuentes con puntos canjeables por descuentos o productos.'
+                        title: 'Actualizador Masivo de Precios (/admin/ecommerce/productos)',
+                        content: 'Hacé clic en <strong>"📈 Actualizar Precios Masivo"</strong>: filtrá por Marca, Categoría o Todo el catálogo, elegí el porcentaje de ajuste (ej. +10%) y el redondeo automático ($100, $50 o $10).',
+                        tip: 'El modal muestra una tabla de vista previa con el precio actual y el precio nuevo antes de aplicar.'
                     },
                     {
-                        title: 'Acceder al Módulo',
-                        content: 'Haz clic en "🪙 VYPER COINS" en la barra de navegación superior.'
-                    },
-                    {
-                        title: 'Seleccionar Cliente',
-                        content: 'Usa el buscador para encontrar al cliente. Al seleccionarlo, verás su saldo actual de Vyper Coins destacado.'
-                    },
-                    {
-                        title: 'Agregar Coins',
-                        content: 'Ingresa la cantidad de coins a agregar en el campo "CANTIDAD DE COINS". Haz clic en el botón verde "AGREGAR COINS". Esto suma puntos al cliente (por ejemplo, por una compra o promoción).'
-                    },
-                    {
-                        title: 'Descontar Coins (Canje)',
-                        content: 'Para cuando un cliente canjea sus puntos, ingresa la cantidad y haz clic en el botón rojo "DESCONTAR COINS". El sistema verificará que el cliente tenga suficientes coins antes de permitir el canje.'
-                    },
-                    {
-                        title: 'Notificaciones y Registro',
-                        content: 'Cada movimiento de coins genera una notificación de WhatsApp al cliente y queda registrado en el historial. Así tanto tú como el cliente pueden hacer seguimiento de los puntos acumulados y canjeados.'
+                        title: 'Completar Descripciones con IA en Lote',
+                        content: 'El botón <strong>"✨ Completar Descripciones con IA"</strong> detecta los productos sin descripción y genera textos comerciales persuasivos en lote usando OpenAI.',
+                        tip: 'También podés crear paquetes promocionales con el botón "📦 Nuevo Combo / Pack".'
                     }
                 ]
             },
-            'analytics': {
-                title: '📊 Business Intelligence',
-                description: 'Análisis avanzado de datos y reportes',
+            {
+                id: 'pedidos-erp-sync',
+                title: '6. Pedidos Web Unificados con ERP y WhatsApp',
+                category: 'Ecommerce',
+                icon: '📦',
+                description: 'Avisos automáticos por WhatsApp, acreditación de ventas/coins y pase a Cuenta Corriente.',
                 steps: [
                     {
-                        title: 'Acceder a Analytics',
-                        content: 'Haz clic en "📊 ANALYTICS" en la barra de navegación superior para acceder al módulo de Business Intelligence.'
+                        title: 'Notificación Automática al Cambiar Estado',
+                        content: 'En <strong>/admin/ecommerce/pedidos</strong>, al pasar un pedido a <em>Procesando</em> o <em>Completado</em>, el sistema envía automáticamente un WhatsApp al cliente con el estado y el link de seguimiento.',
+                        tip: 'Podés activar o desactivar este envío automático desde el switch superior.'
                     },
                     {
-                        title: 'Vista General del Dashboard',
-                        content: 'Verás múltiples secciones: KPIs principales en la parte superior (Ingresos, Egresos, Utilidad), gráficos de tendencias, y tablas de datos detallados.'
+                        title: 'Sincronización con Ventas, Coins y Cuenta Corriente',
+                        content: 'Al marcar un pedido como <strong>Completado</strong>, se registra automáticamente la venta en el ERP y se suman <strong>Vyper Coins</strong> al cliente. Si fue a crédito, usá el botón <strong>"💳 Pasar a Cta. Corriente"</strong>.',
+                        tip: 'Si el cliente del pedido web es nuevo, el sistema lo da de alta automáticamente en tu base de clientes.'
+                    }
+                ]
+            },
+            {
+                id: 'ia-copiloto-retencion',
+                title: '7. Copiloto BI, Retención IA y Personal Shopper',
+                category: 'IA',
+                icon: '🧠',
+                description: 'Diagnóstico financiero con IA en Analytics, mensajes de recompra IA y asistente en tienda.',
+                steps: [
+                    {
+                        title: 'Copiloto Financiero en Analytics (/admin/bi)',
+                        content: 'Presioná <strong>"🧠 ANALIZAR FINANZAS CON COPILOTO IA"</strong> para obtener un diagnóstico ejecutivo de tus ingresos, egresos, margen y deudas, junto con 4 acciones recomendadas para la semana.',
+                        tip: 'Combiná este análisis con la descarga del reporte financiero en PDF o Excel.'
                     },
                     {
-                        title: 'Métricas Principales (KPIs)',
-                        content: 'Las tarjetas superiores muestran: 💰 Ingresos Totales, 💸 Egresos Totales, 📊 Utilidad Neta, y 📈 Margen de Ganancia. Estos números se actualizan según el período seleccionado.'
-                    },
+                        title: 'Motor de Retención con IA (/admin/retention)',
+                        content: 'Filtrá clientes según los días desde su última compra (15-25d, 25-35d ideal, +35d) y presioná <strong>"✨ Redactar con IA"</strong> para generar un mensaje personalizado de recompra y enviarlo por Bot o WhatsApp.',
+                        tip: 'En la tienda pública (/tienda y /minorista), tus clientes también cuentan con el Personal Shopper IA flotante.'
+                    }
+                ]
+            },
+            {
+                id: 'ctacte-recordatorios',
+                title: '8. Cuenta Corriente y Recordatorios Masivos',
+                category: 'ERP',
+                icon: '💳',
+                description: 'Gestión de deudores activos, cobros parciales y envío de recordatorios masivos por WhatsApp.',
+                steps: [
                     {
-                        title: 'Gráfico de Tendencias',
-                        content: 'El gráfico de líneas muestra la evolución de ingresos y egresos en el tiempo. Puedes identificar picos de ventas, tendencias alcistas o bajistas, y patrones estacionales.'
-                    },
-                    {
-                        title: 'Distribución de Egresos',
-                        content: 'El gráfico de torta muestra cómo se distribuyen tus gastos por categoría (Salarios, Alquiler, Servicios, etc.). Esto te ayuda a identificar dónde se va la mayor parte del dinero.'
-                    },
-                    {
-                        title: 'Filtros de Período',
-                        content: 'Usa los filtros superiores para cambiar el período de análisis: Hoy, Esta Semana, Este Mes, Este Año, o un Rango Personalizado. Los gráficos se actualizan automáticamente.'
-                    },
-                    {
-                        title: 'Análisis por Método de Pago',
-                        content: 'Puedes ver la distribución de ventas por método de pago. Esto te ayuda a entender las preferencias de tus clientes y optimizar tus opciones de pago.'
-                    },
-                    {
-                        title: 'Top Clientes',
-                        content: 'La tabla de mejores clientes muestra quiénes son tus clientes más valiosos por volumen de compras. Úsala para identificar a quién ofrecer promociones especiales o más Vyper Coins.'
-                    },
-                    {
-                        title: 'Exportar Reportes',
-                        content: 'Haz clic en los botones de exportación para descargar los datos en PDF (con gráficos), Excel (para análisis adicional), o CSV (compatible con otras herramientas).'
-                    },
-                    {
-                        title: 'Tomar Decisiones Informadas',
-                        content: '¡Felicidades! Ahora sabes usar Analytics. Revisa este dashboard semanalmente para identificar oportunidades de mejora, controlar gastos y maximizar ganancias.'
+                        title: 'Tabla de Deudores Activos (/admin/debt)',
+                        content: 'Visualizá de un vistazo todos los clientes con saldo pendiente. Usá <strong>"💰 Registrar Pago"</strong> para cargar una entrega rápida.',
+                        tip: 'Seleccioná múltiples deudores y tocá "📢 Recordatorio Masivo a Deudores" para notificar saldos por WhatsApp en 1 clic.'
                     }
                 ]
             }
-        };
+        ];
 
-        let currentTutorial = null;
-        let currentStep = 0;
+        let currentCategory = 'Todos';
+        let activeTutorial = null;
+        let currentStepIndex = 0;
 
-        function openTutorial(tutorialId) {
-            currentTutorial = tutorials[tutorialId];
-            currentStep = 0;
+        function renderGrid() {
+            const grid = document.getElementById('tutorialGrid');
+            const list = currentCategory === 'Todos'
+                ? tutorials
+                : tutorials.filter(t => t.category === currentCategory);
 
-            document.getElementById('tutorial-title').textContent = currentTutorial.title;
-            document.getElementById('tutorial-description').textContent = currentTutorial.description;
+            grid.innerHTML = list.map(t => `
+                <div class="tutorial-card" onclick="openTutorial('${t.id}')">
+                    <div class="card-top">
+                        <div class="tutorial-icon">${t.icon}</div>
+                        <span class="category-pill">${t.category}</span>
+                    </div>
+                    <h3>${t.title}</h3>
+                    <p>${t.description}</p>
+                    <div class="card-footer">
+                        <span class="steps-badge">${t.steps.length} pasos</span>
+                        <span>Abrir guía →</span>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            renderSteps();
-            updateProgress();
-            updateButtons();
+        function filterTutorials(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGrid();
+        }
 
-            document.getElementById('tutorial-modal').classList.add('active');
-            document.getElementById('completion-message').classList.remove('active');
-            document.getElementById('navigation-buttons').style.display = 'flex';
+        function openTutorial(id) {
+            activeTutorial = tutorials.find(t => t.id === id);
+            if (!activeTutorial) return;
+            currentStepIndex = 0;
+            document.getElementById('modalCategory').textContent = activeTutorial.category;
+            document.getElementById('modalTitle').textContent = activeTutorial.title;
+            document.getElementById('tutorialModal').classList.add('active');
+            updateStepView();
         }
 
         function closeTutorial() {
-            document.getElementById('tutorial-modal').classList.remove('active');
-            currentTutorial = null;
-            currentStep = 0;
+            document.getElementById('tutorialModal').classList.remove('active');
+            activeTutorial = null;
         }
 
-        function renderSteps() {
-            const container = document.getElementById('steps-container');
-            container.innerHTML = '';
+        function updateStepView() {
+            if (!activeTutorial) return;
+            const step = activeTutorial.steps[currentStepIndex];
+            const total = activeTutorial.steps.length;
+            const pct = ((currentStepIndex + 1) / total) * 100;
 
-            currentTutorial.steps.forEach((step, index) => {
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'step';
-                if (index === currentStep) stepDiv.classList.add('active');
-                if (index < currentStep) stepDiv.classList.add('completed');
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('stepCounter').textContent = `PASO ${currentStepIndex + 1} DE ${total}`;
 
-                stepDiv.innerHTML = `
-                    <div class="step-number">${index + 1}</div>
-                    <h4>${step.title}</h4>
-                    <p>${step.content}</p>
-                `;
+            document.getElementById('stepContent').innerHTML = `
+                <div class="step-box">
+                    <div class="step-header">
+                        <span class="step-num">${currentStepIndex + 1}</span>
+                        <div class="step-title">${step.title}</div>
+                    </div>
+                    <div class="step-text">${step.content}</div>
+                    ${step.tip ? `<div class="tip-box"><strong>💡 Tip clave:</strong> ${step.tip}</div>` : ''}
+                </div>
+            `;
 
-                container.appendChild(stepDiv);
-            });
+            document.getElementById('prevBtn').disabled = currentStepIndex === 0;
+            document.getElementById('nextBtn').textContent = currentStepIndex === total - 1 ? 'Finalizar ✓' : 'Siguiente →';
         }
 
         function nextStep() {
-            if (currentStep < currentTutorial.steps.length - 1) {
-                currentStep++;
-                renderSteps();
-                updateProgress();
-                updateButtons();
+            if (!activeTutorial) return;
+            if (currentStepIndex < activeTutorial.steps.length - 1) {
+                currentStepIndex++;
+                updateStepView();
             } else {
-                // Tutorial completado
-                document.getElementById('steps-container').style.display = 'none';
-                document.getElementById('navigation-buttons').style.display = 'none';
-                document.getElementById('completion-message').classList.add('active');
+                closeTutorial();
             }
         }
 
         function previousStep() {
-            if (currentStep > 0) {
-                currentStep--;
-                renderSteps();
-                updateProgress();
-                updateButtons();
+            if (!activeTutorial) return;
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                updateStepView();
             }
         }
 
-        function updateProgress() {
-            const progress = ((currentStep + 1) / currentTutorial.steps.length) * 100;
-            document.getElementById('progress-fill').style.width = progress + '%';
-        }
-
-        function updateButtons() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-
-            prevBtn.disabled = currentStep === 0;
-
-            if (currentStep === currentTutorial.steps.length - 1) {
-                nextBtn.textContent = 'Completar ✓';
-            } else {
-                nextBtn.textContent = 'Siguiente →';
-            }
-        }
-
-        // Cerrar modal con ESC
         document.addEventListener('keydown', (e) => {
+            if (!activeTutorial) return;
+            if (e.key === 'ArrowRight' || e.key === 'Enter') nextStep();
+            if (e.key === 'ArrowLeft') previousStep();
             if (e.key === 'Escape') closeTutorial();
         });
 
-        // Navegación con flechas
-        document.addEventListener('keydown', (e) => {
-            if (!currentTutorial) return;
-
-            if (e.key === 'ArrowRight') nextStep();
-            if (e.key === 'ArrowLeft') previousStep();
-        });
+        renderGrid();
     </script>
-
 </body>
-
 </html>

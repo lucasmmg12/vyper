@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Usuario - Vyper Labs System</title>
+    <title>Manual de Usuario Oficial v3.0 — Vyper Labs System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,1349 +15,570 @@
         }
 
         :root {
-            --primary-color: #4ade80;
-            --secondary-color: #a5b4fc;
-            --accent-color: #fbbf24;
-            --danger-color: #ef4444;
-            --dark-bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-main: #FFFFFF;
+            --bg-secondary: #F8F9FA;
+            --bg-tertiary: #F1F3F5;
+            --text-primary: #111111;
+            --text-secondary: #374151;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --border-strong: #111111;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.09);
+            --radius: 14px;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-main);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50,40 L35,75 L55,70 L40,110 L75,60 L55,65 L65,40 Z' stroke-width='2' stroke-opacity='0.04' transform='rotate(-15 50 75)'/%3E%3Cpath d='M150,150 L200,150 M140,130 L140,170 M150,135 L150,165 M200,135 L200,165 M210,130 L210,170' stroke-width='2.5' stroke-opacity='0.04' transform='rotate(30 175 150)'/%3E%3Cpath d='M350,50 L400,50 L400,60 L395,60 L395,110 L355,110 L355,60 L350,60 Z M355,70 L395,70 M365,85 L385,85 L385,100 L365,100 Z' stroke-width='2' stroke-opacity='0.03' transform='rotate(-10 375 80)'/%3E%3C/g%3E%3C/svg%3E");
+            background-attachment: fixed;
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 3rem 2rem;
+            background: #111111;
+            color: #FFFFFF;
+            padding: 3.5rem 2rem;
             text-align: center;
-            border-bottom: 3px solid var(--primary-color);
-            box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+            border-bottom: 4px solid #111111;
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: #FFFFFF;
+            color: #111111;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            margin-bottom: 1rem;
         }
 
         .header h1 {
-            font-size: 3.5rem;
+            font-size: 2.75rem;
             font-weight: 900;
-            letter-spacing: 0.05em;
+            letter-spacing: -0.03em;
             margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #FFFFFF;
         }
 
         .header .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            font-weight: 300;
+            font-size: 1.05rem;
+            color: #D1D5DB;
+            max-width: 720px;
+            margin: 0 auto;
         }
 
-        .header .version {
-            display: inline-block;
-            margin-top: 1rem;
-            padding: 0.5rem 1.5rem;
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid var(--primary-color);
-            border-radius: 50px;
-            font-size: 0.9rem;
-            color: var(--primary-color);
-        }
-
-        /* Navigation */
+        /* Sticky Navigation */
         .nav {
             position: sticky;
             top: 0;
-            background: rgba(26, 26, 26, 0.95);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-bottom: 2px solid #111111;
             z-index: 1000;
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
             overflow-x: auto;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .nav a {
-            color: var(--text-secondary);
+            color: #111111;
             text-decoration: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 8px;
-            transition: all 0.3s ease;
+            font-size: 0.8125rem;
+            font-weight: 700;
             white-space: nowrap;
-            font-weight: 600;
             border: 1px solid transparent;
+            transition: all 0.15s ease;
         }
 
         .nav a:hover {
-            color: var(--primary-color);
-            background: rgba(74, 222, 128, 0.1);
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
+            background: #111111;
+            color: #FFFFFF;
         }
 
         /* Container */
         .container {
-            max-width: 1200px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 3rem 1.5rem 5rem;
         }
 
         /* Section */
         .section {
             margin-bottom: 4rem;
-            scroll-margin-top: 100px;
+            scroll-margin-top: 80px;
+        }
+
+        .section-header {
+            border-bottom: 2px solid #111111;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .section-title {
-            font-size: 2.5rem;
+            font-size: 1.75rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: #111111;
+        }
+
+        .section-tag {
+            font-size: 0.75rem;
             font-weight: 800;
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.25rem 0.75rem;
+            background: #111111;
+            color: #FFFFFF;
+            border-radius: 6px;
         }
 
-        .section-title .icon {
-            font-size: 2.5rem;
+        /* Grid & Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
         }
 
-        .section-subtitle {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            padding-left: 4rem;
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
         }
 
-        /* Card */
         .card {
-            background: var(--card-bg);
+            background: #FFFFFF;
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(74, 222, 128, 0.2);
-            border-color: var(--primary-color);
+            border-color: #111111;
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .card-strong {
+            border: 2px solid #111111;
         }
 
         .card h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            color: var(--secondary-color);
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 0.65rem;
+            color: #111111;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
-        .card h4 {
-            font-size: 1.3rem;
-            margin: 1.5rem 0 1rem 0;
-            color: var(--primary-color);
+        .card p {
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+            margin-bottom: 0.75rem;
         }
 
         /* Steps */
         .steps {
-            counter-reset: step-counter;
             list-style: none;
-            padding-left: 0;
+            counter-reset: step-counter;
+            margin-top: 0.75rem;
         }
 
         .steps li {
             counter-increment: step-counter;
-            margin-bottom: 1.5rem;
-            padding-left: 3.5rem;
             position: relative;
+            padding-left: 2.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.925rem;
+            color: var(--text-secondary);
         }
 
         .steps li::before {
             content: counter(step-counter);
             position: absolute;
             left: 0;
-            top: 0;
-            width: 2.5rem;
-            height: 2.5rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            top: 0.1rem;
+            width: 1.65rem;
+            height: 1.65rem;
             border-radius: 50%;
+            background: #111111;
+            color: #FFFFFF;
+            font-size: 0.75rem;
+            font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #000;
         }
 
-        /* Feature Grid */
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .feature-card {
-            background: linear-gradient(135deg, rgba(74, 222, 128, 0.05), rgba(165, 180, 252, 0.05));
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            border-color: var(--primary-color);
-            transform: scale(1.05);
-        }
-
-        .feature-card .icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .feature-card h4 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-        }
-
-        .feature-card p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        /* Screenshot */
-        .screenshot {
-            width: 100%;
-            border-radius: 12px;
-            border: 2px solid var(--border-color);
-            margin: 2rem 0;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .screenshot:hover {
-            transform: scale(1.02);
-            border-color: var(--primary-color);
-            box-shadow: 0 12px 40px rgba(74, 222, 128, 0.3);
-        }
-
-        /* Alert Boxes */
-        .alert {
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            border-left: 4px solid;
-            display: flex;
-            align-items: start;
-            gap: 1rem;
-        }
-
-        .alert-info {
-            background: rgba(165, 180, 252, 0.1);
-            border-color: var(--secondary-color);
-            color: var(--secondary-color);
-        }
-
-        .alert-success {
-            background: rgba(74, 222, 128, 0.1);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .alert-warning {
-            background: rgba(251, 191, 36, 0.1);
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-
-        .alert .icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
+        /* Callout Box (Monochrome) */
+        .callout {
+            background: var(--bg-secondary);
+            border-left: 4px solid #111111;
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #111111;
+            margin-top: 0.75rem;
         }
 
         /* Table */
-        .table-container {
-            overflow-x: auto;
-            margin: 2rem 0;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--card-bg);
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
 
         th {
-            background: rgba(74, 222, 128, 0.1);
-            color: var(--primary-color);
-            padding: 1rem;
-            text-align: left;
+            background: #111111;
+            color: #FFFFFF;
             font-weight: 700;
-            border-bottom: 2px solid var(--primary-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
         }
 
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-secondary);
+        tr:nth-child(even) td {
+            background: var(--bg-secondary);
         }
 
-        tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        /* Code Block */
-        .code-block {
-            background: #0d0d0d;
+        code {
+            font-family: monospace;
+            background: var(--bg-tertiary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            color: var(--primary-color);
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--card-bg);
-            padding: 3rem 2rem;
-            text-align: center;
-            border-top: 1px solid var(--border-color);
-            margin-top: 4rem;
-        }
-
-        .footer p {
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .section-title {
-                font-size: 1.8rem;
-            }
-
-            .nav {
-                flex-wrap: wrap;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-
-            .nav {
-                display: none;
-            }
-
-            .card {
-                break-inside: avoid;
-            }
-        }
-
-        /* Smooth Scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Badge */
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.85rem;
+            font-size: 0.825rem;
+            color: #111111;
             font-weight: 600;
-            margin-left: 0.5rem;
         }
 
-        .badge-new {
-            background: var(--primary-color);
-            color: #000;
+        .footer {
+            background: #111111;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            font-size: 0.85rem;
         }
 
-        .badge-important {
-            background: var(--danger-color);
-            color: #fff;
-        }
-
-        .badge-tip {
-            background: var(--accent-color);
-            color: #000;
+        @media print {
+            .nav { display: none; }
+            .card { break-inside: avoid; box-shadow: none; border: 1px solid #000; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <h1>📊 VYPER LABS SYSTEM</h1>
-        <p class="subtitle">Manual de Usuario Completo</p>
-        <span class="version">Versión 2.0 | Diciembre 2025</span>
-    </div>
+    <header class="header">
+        <div class="header-badge">DOCUMENTACIÓN OFICIAL · VERSIÓN 3.0 (BLANCO &amp; NEGRO)</div>
+        <h1>VYPER LABS SYSTEM</h1>
+        <p class="subtitle">Manual Integral de Operación: ERP Administrativo, POS con Escáner SKU, Ecommerce Mayorista y Minorista, Automatización por WhatsApp e Inteligencia Artificial.</p>
+    </header>
 
-    <!-- Navigation -->
     <nav class="nav">
-        <a href="#introduccion">📖 Introducción</a>
-        <a href="#inicio">🏠 Inicio Rápido</a>
-        <a href="#dashboard">📊 Dashboard</a>
-        <a href="#ventas">💰 Ventas</a>
-        <a href="#egresos">💸 Egresos</a>
-        <a href="#clientes">👥 Clientes</a>
-        <a href="#cuenta-corriente">💳 Cuenta Corriente</a>
-        <a href="#vyper-coins">🪙 Vyper Coins</a>
-        <a href="#analytics">📈 Analytics</a>
-        <a href="#tips">💡 Tips & Trucos</a>
+        <a href="#arquitectura">1. Arquitectura</a>
+        <a href="#pos">2. POS &amp; Escáner</a>
+        <a href="#tienda">3. Ecommerce B2B/B2C</a>
+        <a href="#personalizacion">4. Editor Tienda &amp; IA</a>
+        <a href="#catalogo">5. Productos &amp; Precios Masivos</a>
+        <a href="#pedidos">6. Pedidos &amp; Sync ERP</a>
+        <a href="#ctacte">7. Cta. Corriente &amp; Coins</a>
+        <a href="#ia">8. Copiloto BI &amp; Retención IA</a>
+        <a href="#portal">9. Portal Cliente &amp; Tracking</a>
     </nav>
 
-    <!-- Container -->
-    <div class="container">
+    <main class="container">
 
-        <!-- Introducción -->
-        <section id="introduccion" class="section">
-            <h2 class="section-title">
-                <span class="icon">📖</span>
-                Introducción
-            </h2>
-            <p class="section-subtitle">Bienvenido al sistema de gestión integral Vyper Labs</p>
-
-            <div class="card">
-                <h3>🎯 ¿Qué es Vyper Labs?</h3>
-                <p>Vyper Labs es un sistema integral de gestión empresarial diseñado para optimizar todas las operaciones de tu negocio. Desde el registro de ventas y egresos hasta el análisis avanzado de datos, Vyper Labs centraliza toda la información en una plataforma moderna, intuitiva y potente.</p>
-
-                <h4>✨ Características Principales</h4>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="icon">💰</div>
-                        <h4>Gestión de Ventas</h4>
-                        <p>Registra ventas de forma rápida y eficiente con múltiples métodos de pago</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">💸</div>
-                        <h4>Control de Egresos</h4>
-                        <p>Monitorea todos los gastos operativos y categorízalos automáticamente</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">👥</div>
-                        <h4>Base de Clientes</h4>
-                        <p>Administra tu cartera de clientes con información detallada y actualizada</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">💳</div>
-                        <h4>Cuenta Corriente</h4>
-                        <p>Gestiona créditos y pagos de clientes con notificaciones automáticas</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🪙</div>
-                        <h4>Programa de Fidelización</h4>
-                        <p>Sistema de puntos Vyper Coins para premiar a tus mejores clientes</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📊</div>
-                        <h4>Business Intelligence</h4>
-                        <p>Análisis avanzado con gráficos, tendencias y proyecciones</p>
-                    </div>
-                </div>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Consejo:</strong> Este manual está organizado por módulos. Puedes navegar usando el menú superior o leer secuencialmente para una comprensión completa del sistema.
-                    </div>
-                </div>
+        <!-- 1. ARQUITECTURA -->
+        <section id="arquitectura" class="section">
+            <div class="section-header">
+                <h2 class="section-title">1. Arquitectura General del Ecosistema</h2>
+                <span class="section-tag">Visión Global</span>
             </div>
-        </section>
-
-        <!-- Inicio Rápido -->
-        <section id="inicio" class="section">
-            <h2 class="section-title">
-                <span class="icon">🏠</span>
-                Inicio Rápido
-            </h2>
-            <p class="section-subtitle">Primeros pasos en el sistema</p>
-
-            <div class="card">
-                <h3>🚀 Acceso al Sistema</h3>
-                
-                <ol class="steps">
-                    <li>
-                        <strong>Abrir la aplicación</strong><br>
-                        Accede a la URL de Vyper Labs desde tu navegador web preferido (Chrome, Firefox, Edge, Safari).
-                    </li>
-                    <li>
-                        <strong>Pantalla de Inicio</strong><br>
-                        Verás dos opciones principales: <strong>Panel Operativo</strong> y <strong>Business Intelligence</strong>.
-                    </li>
-                    <li>
-                        <strong>Seleccionar Panel Operativo</strong><br>
-                        Haz clic en "INGRESAR" bajo "Panel Operativo" para acceder al dashboard principal.
-                    </li>
-                    <li>
-                        <strong>Explorar el Dashboard</strong><br>
-                        Desde aquí podrás acceder a todas las funcionalidades del sistema.
-                    </li>
-                </ol>
-
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <div>
-                        <strong>¡Listo!</strong> Ya estás dentro del sistema y puedes comenzar a trabajar.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>🗺️ Navegación General</h3>
-                <p>El sistema cuenta con una barra de navegación superior que te permite acceder rápidamente a cualquier módulo:</p>
-
-                <div class="table-container">
+            <div class="grid-2">
+                <div class="card card-strong">
+                    <h3>Módulos Conectados en Tiempo Real</h3>
+                    <p>Vyper Labs unifica en una sola base de datos la operatoria de mostrador y los canales digitales mayorista y minorista:</p>
                     <table>
                         <thead>
                             <tr>
-                                <th>Botón</th>
-                                <th>Función</th>
-                                <th>Descripción</th>
+                                <th>Ruta</th>
+                                <th>Función Principal</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>🪙 VYPER COINS</td>
-                                <td>Programa de Fidelización</td>
-                                <td>Gestiona el sistema de puntos y recompensas</td>
+                                <td><code>/admin</code></td>
+                                <td>POS de Ventas, Egresos, Escáner SKU e Importación Excel</td>
                             </tr>
                             <tr>
-                                <td>💳 CTA CTE</td>
-                                <td>Cuenta Corriente</td>
-                                <td>Administra créditos y pagos de clientes</td>
+                                <td><code>/tienda</code></td>
+                                <td>Catálogo Mayorista B2B (con Modo Planilla Rápida y PDF)</td>
                             </tr>
                             <tr>
-                                <td>👥 CLIENTES</td>
-                                <td>Gestión de Clientes</td>
-                                <td>Base de datos completa de clientes</td>
+                                <td><code>/minorista</code></td>
+                                <td>Tienda Oficial Minorista B2C con Personal Shopper IA</td>
                             </tr>
                             <tr>
-                                <td>📊 ANALYTICS</td>
-                                <td>Business Intelligence</td>
-                                <td>Análisis avanzado y reportes</td>
+                                <td><code>/client</code></td>
+                                <td>Portal de Autogestión (Puntos, Deuda e Historial de Pedidos)</td>
                             </tr>
                             <tr>
-                                <td>SALIR</td>
-                                <td>Volver al Inicio</td>
-                                <td>Regresa a la pantalla principal</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dashboard -->
-        <section id="dashboard" class="section">
-            <h2 class="section-title">
-                <span class="icon">📊</span>
-                Dashboard Principal
-            </h2>
-            <p class="section-subtitle">Centro de operaciones diarias</p>
-
-            <div class="card">
-                <h3>🎛️ Vista General del Dashboard</h3>
-                <p>El dashboard es el corazón del sistema donde realizarás la mayoría de las operaciones diarias. Está dividido en dos secciones principales: <strong>VENTAS</strong> y <strong>EGRESOS</strong>.</p>
-
-                <img src="C:/Users/lucas/.gemini/antigravity/brain/3000d8c5-6a29-40da-a7a4-68a6a8186b5e/dashboard_main_view_1765314558245.png" alt="Dashboard Principal" class="screenshot">
-
-                <h4>📋 Componentes del Dashboard</h4>
-                <ul style="margin-left: 2rem; color: var(--text-secondary);">
-                    <li><strong>Pestañas VENTAS/EGRESOS:</strong> Alterna entre el registro de ventas y gastos</li>
-                    <li><strong>Formulario de Registro:</strong> Panel izquierdo para ingresar nuevas transacciones</li>
-                    <li><strong>Historial Reciente:</strong> Panel derecho con las últimas transacciones registradas</li>
-                    <li><strong>Botón Importar Excel:</strong> Permite cargar múltiples registros desde un archivo Excel</li>
-                </ul>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Usa las pestañas para cambiar rápidamente entre ventas y egresos sin perder tu progreso.
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Ventas -->
-        <section id="ventas" class="section">
-            <h2 class="section-title">
-                <span class="icon">💰</span>
-                Gestión de Ventas
-            </h2>
-            <p class="section-subtitle">Registra y administra todas tus ventas</p>
-
-            <div class="card">
-                <h3>📝 Registrar una Venta</h3>
-                
-                <ol class="steps">
-                    <li>
-                        <strong>Seleccionar la pestaña VENTAS</strong><br>
-                        En el dashboard principal, asegúrate de estar en la pestaña "VENTAS".
-                    </li>
-                    <li>
-                        <strong>Completar la Fecha</strong><br>
-                        El campo de fecha se completa automáticamente con la fecha actual. Puedes modificarla si necesitas registrar una venta de otro día.
-                    </li>
-                    <li>
-                        <strong>Seleccionar Cliente</strong><br>
-                        Haz clic en el campo "CLIENTE" y comienza a escribir el nombre o teléfono. El sistema mostrará sugerencias automáticamente. Selecciona el cliente correcto de la lista.
-                    </li>
-                    <li>
-                        <strong>Ingresar el Importe</strong><br>
-                        Escribe el monto total de la venta en el campo "IMPORTE ($)".
-                    </li>
-                    <li>
-                        <strong>Seleccionar Método de Pago</strong><br>
-                        Elige entre: Efectivo, Transferencia, Tarjeta de Débito, Tarjeta de Crédito, o Cuenta Corriente.
-                    </li>
-                    <li>
-                        <strong>Agregar Conceptos (Opcional)</strong><br>
-                        Puedes detallar los productos o servicios vendidos en el campo "CONCEPTOS".
-                    </li>
-                    <li>
-                        <strong>Guardar la Venta</strong><br>
-                        Haz clic en el botón "💰 REGISTRAR VENTA" para guardar la transacción.
-                    </li>
-                </ol>
-
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <div>
-                        <strong>Confirmación:</strong> Verás un mensaje de confirmación y la venta aparecerá inmediatamente en el historial.
-                    </div>
-                </div>
-
-                <h4>💳 Métodos de Pago Disponibles</h4>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Método</th>
-                                <th>Descripción</th>
-                                <th>Uso Recomendado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>💵 Efectivo</td>
-                                <td>Pago en dinero físico</td>
-                                <td>Transacciones en el local</td>
+                                <td><code>/pedido/[id]</code></td>
+                                <td>Tracking Público en Vivo de cada pedido web</td>
                             </tr>
                             <tr>
-                                <td>🏦 Transferencia</td>
-                                <td>Transferencia bancaria</td>
-                                <td>Pagos remotos o grandes montos</td>
-                            </tr>
-                            <tr>
-                                <td>💳 Tarjeta Débito</td>
-                                <td>Pago con tarjeta de débito</td>
-                                <td>Transacciones con POS</td>
-                            </tr>
-                            <tr>
-                                <td>💳 Tarjeta Crédito</td>
-                                <td>Pago con tarjeta de crédito</td>
-                                <td>Ventas con financiación</td>
-                            </tr>
-                            <tr>
-                                <td>📝 Cuenta Corriente</td>
-                                <td>Compra a crédito</td>
-                                <td>Clientes con línea de crédito</td>
+                                <td><code>/tutorial</code></td>
+                                <td>Centro de Ayuda y Manual Interactivo dentro del sistema</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="alert alert-warning">
-                    <span class="icon">⚠️</span>
-                    <div>
-                        <strong>Importante:</strong> Si seleccionas "Cuenta Corriente", la deuda del cliente se actualizará automáticamente y recibirá una notificación por WhatsApp.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>📊 Importar Ventas desde Excel</h3>
-                <p>Para registrar múltiples ventas de forma masiva:</p>
-
-                <ol class="steps">
-                    <li>
-                        <strong>Hacer clic en "IMPORTAR EXCEL"</strong><br>
-                        Se abrirá el panel de importación.
-                    </li>
-                    <li>
-                        <strong>Descargar la plantilla</strong><br>
-                        Haz clic en "📥 DESCARGAR PLANTILLA" para obtener el formato correcto.
-                    </li>
-                    <li>
-                        <strong>Completar la plantilla</strong><br>
-                        Llena el archivo Excel con tus datos siguiendo el formato de la plantilla.
-                    </li>
-                    <li>
-                        <strong>Subir el archivo</strong><br>
-                        Arrastra el archivo a la zona de carga o haz clic para seleccionarlo.
-                    </li>
-                    <li>
-                        <strong>Importar</strong><br>
-                        Haz clic en "IMPORTAR" y espera la confirmación.
-                    </li>
-                </ol>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Asegúrate de que los nombres de clientes en el Excel coincidan exactamente con los registrados en el sistema.
+                <div class="card">
+                    <h3>Política de Stock Flexible (Sin Bloqueos)</h3>
+                    <p>El sistema está configurado bajo una filosofía de <strong>stock relajado</strong> adaptada a la dinámica real del negocio:</p>
+                    <ol class="steps">
+                        <li><strong>Nunca bloquea ventas ni pedidos:</strong> Tanto en la tienda web como en el POS de mostrador se pueden vender productos aunque su stock figure en <code>0</code>.</li>
+                        <li><strong>Descuento inteligente:</strong> Al completar un pedido web o venta, si el producto tiene stock cargado mayor a cero se descuenta; si está en cero, permanece en <code>0</code> sin arrojar errores.</li>
+                        <li><strong>Carga ágil por Compras:</strong> Cuando ingresa mercadería en <code>/admin/ecommerce/compras</code>, podés actualizar costos y cantidades usando el lector rápido de SKU.</li>
+                    </ol>
+                    <div class="callout">
+                        <strong>Roles de Usuario (<code>/admin/usuarios</code>):</strong> Existen 3 perfiles: <strong>Super Admin</strong> (acceso total y alta de usuarios), <strong>Administrador</strong> (gestión completa) y <strong>Vendedor</strong> (operación comercial).
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Egresos -->
-        <section id="egresos" class="section">
-            <h2 class="section-title">
-                <span class="icon">💸</span>
-                Control de Egresos
-            </h2>
-            <p class="section-subtitle">Administra todos los gastos operativos</p>
-
-            <div class="card">
-                <h3>📝 Registrar un Egreso</h3>
-                
-                <ol class="steps">
-                    <li>
-                        <strong>Seleccionar la pestaña EGRESOS</strong><br>
-                        En el dashboard principal, cambia a la pestaña "EGRESOS".
-                    </li>
-                    <li>
-                        <strong>Completar la Fecha</strong><br>
-                        La fecha actual se carga automáticamente.
-                    </li>
-                    <li>
-                        <strong>Ingresar el Importe</strong><br>
-                        Escribe el monto del gasto en el campo "IMPORTE ($)".
-                    </li>
-                    <li>
-                        <strong>Seleccionar Categoría</strong><br>
-                        Elige la categoría que mejor describa el gasto (Salarios, Alquiler, Servicios, Compras, etc.).
-                    </li>
-                    <li>
-                        <strong>Agregar Descripción</strong><br>
-                        Detalla el concepto del gasto en el campo "DESCRIPCIÓN".
-                    </li>
-                    <li>
-                        <strong>Seleccionar Método de Pago</strong><br>
-                        Indica cómo se realizó el pago del egreso.
-                    </li>
-                    <li>
-                        <strong>Guardar el Egreso</strong><br>
-                        Haz clic en "💸 REGISTRAR EGRESO".
-                    </li>
-                </ol>
-
-                <h4>📂 Categorías de Egresos</h4>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="icon">👨‍💼</div>
-                        <h4>Salarios</h4>
-                        <p>Pagos a empleados y personal</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🏢</div>
-                        <h4>Alquiler</h4>
-                        <p>Renta de local o instalaciones</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">⚡</div>
-                        <h4>Servicios</h4>
-                        <p>Luz, agua, internet, teléfono</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📦</div>
-                        <h4>Compras</h4>
-                        <p>Adquisición de mercadería</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🔧</div>
-                        <h4>Mantenimiento</h4>
-                        <p>Reparaciones y mantenimiento</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📢</div>
-                        <h4>Marketing</h4>
-                        <p>Publicidad y promociones</p>
-                    </div>
+        <!-- 2. POS -->
+        <section id="pos" class="section">
+            <div class="section-header">
+                <h2 class="section-title">2. Punto de Venta (POS), Egresos y Escáner SKU</h2>
+                <span class="section-tag">Módulo /admin</span>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Registrar Ventas con Escáner SKU o Catálogo</h3>
+                    <ol class="steps">
+                        <li>Ingresá a <code>/admin</code> y asegurate de estar en la pestaña <strong>Ventas</strong>.</li>
+                        <li>Usá el bloque <strong>"Escáner SKU / Sumar Productos del Catálogo"</strong>: podés pasar el lector de código de barras o tipear el SKU/nombre y presionar <strong>Enter</strong>.</li>
+                        <li>El sistema agrega el ítem a la lista de la venta, suma automáticamente el <strong>Importe Total ($)</strong> y completa el detalle de conceptos.</li>
+                        <li>Seleccioná el <strong>Cliente</strong> (buscando por nombre o teléfono) y el <strong>Método de Pago</strong> (Efectivo, Transferencia, Tarjeta o Cuenta Corriente).</li>
+                        <li>Presioná <strong>Registrar Venta</strong>: se acreditan automáticamente sus <strong>Vyper Coins</strong> y se dispara el comprobante por WhatsApp.</li>
+                    </ol>
                 </div>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Categorizar correctamente los egresos te permitirá obtener análisis más precisos en el módulo de Analytics.
+                <div class="card">
+                    <h3>Control de Egresos y Cierre de Caja</h3>
+                    <p>Desde la pestaña <strong>Egresos</strong> registrás salidas de dinero clasificadas por categoría (Proveedores, Alquiler, Servicios, Sueldos, Logística, etc.).</p>
+                    <div class="callout">
+                        <strong>Resumen Diario por WhatsApp:</strong> En la esquina superior derecha del panel disponés del botón para generar y enviar el resumen diario de ingresos, egresos y balance neto directamente al teléfono del titular.
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Clientes -->
-        <section id="clientes" class="section">
-            <h2 class="section-title">
-                <span class="icon">👥</span>
-                Gestión de Clientes
-            </h2>
-            <p class="section-subtitle">Administra tu base de datos de clientes</p>
-
-            <div class="card">
-                <h3>👤 Vista de Clientes</h3>
-                <p>El módulo de clientes te permite visualizar, buscar, crear y editar información de todos tus clientes.</p>
-
-                <img src="C:/Users/lucas/.gemini/antigravity/brain/3000d8c5-6a29-40da-a7a4-68a6a8186b5e/clients_management_view_1765314591403.png" alt="Gestión de Clientes" class="screenshot">
-
-                <h4>🔍 Buscar Clientes</h4>
-                <ol class="steps">
-                    <li>
-                        <strong>Acceder al módulo</strong><br>
-                        Haz clic en "👥 CLIENTES" en la barra de navegación superior.
-                    </li>
-                    <li>
-                        <strong>Usar el buscador</strong><br>
-                        Escribe el nombre o teléfono del cliente en la barra de búsqueda.
-                    </li>
-                    <li>
-                        <strong>Ver resultados</strong><br>
-                        Los resultados se filtran automáticamente mientras escribes.
-                    </li>
-                </ol>
-
-                <h4>➕ Agregar Nuevo Cliente</h4>
-                <ol class="steps">
-                    <li>
-                        <strong>Hacer clic en "NUEVO CLIENTE"</strong><br>
-                        Se abrirá un formulario modal.
-                    </li>
-                    <li>
-                        <strong>Completar los datos</strong><br>
-                        Ingresa: Nombre completo, Teléfono (con código de área), Email (opcional).
-                    </li>
-                    <li>
-                        <strong>Guardar</strong><br>
-                        Haz clic en "GUARDAR CLIENTE".
-                    </li>
-                </ol>
-
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <div>
-                        <strong>Automático:</strong> Los nuevos clientes comienzan con deuda $0 y 0 Vyper Coins.
-                    </div>
+        <!-- 3. ECOMMERCE -->
+        <section id="tienda" class="section">
+            <div class="section-header">
+                <h2 class="section-title">3. Ecommerce Mayorista (/tienda) y Minorista (/minorista)</h2>
+                <span class="section-tag">Conversión B2B &amp; B2C</span>
+            </div>
+            <div class="grid-3">
+                <div class="card card-strong">
+                    <h3>Modo Planilla Rápida B2B</h3>
+                    <p>En <code>/tienda</code> los clientes mayoristas (gimnasios, dietéticas, distribuidores) pueden activar el botón <strong>"📋 Modo Planilla Rápida"</strong>.</p>
+                    <p>Muestra una tabla compacta con buscador instantáneo, selector de sabor/variante en cada fila, controles de cantidad <code>- / +</code> y barra flotante inferior para armar pedidos de 30+ productos en menos de 2 minutos.</p>
                 </div>
+                <div class="card">
+                    <h3>Variantes (Sabores/Talles) y Combos</h3>
+                    <p>Cada producto con variantes permite elegir el sabor o talle directamente desde la tarjeta del catálogo o la ficha del producto.</p>
+                    <p>El carrito distingue cada variante como un renglón independiente (ej. <em>2x Whey Vainilla</em> y <em>3x Whey Chocolate</em>) y lo detalla claramente en el pedido de WhatsApp.</p>
+                </div>
+                <div class="card">
+                    <h3>Catálogo PDF Dinámico</h3>
+                    <p>El botón <strong>"📄 Lista de Precios PDF"</strong> disponible en el catálogo genera en el acto un documento limpio en blanco y negro con logo institucional, fecha del día, categorías, SKUs, sabores y precios actualizados al minuto, listo para guardar como PDF o compartir por WhatsApp.</p>
+                </div>
+            </div>
 
-                <h4>✏️ Editar Cliente</h4>
+            <div class="card" style="margin-top: 1.25rem;">
+                <h3>Barra de Incentivos en Carrito y Checkout Inteligente</h3>
                 <ol class="steps">
-                    <li>
-                        <strong>Localizar el cliente</strong><br>
-                        Busca el cliente que deseas editar.
-                    </li>
-                    <li>
-                        <strong>Hacer clic en "EDITAR"</strong><br>
-                        Se abrirá el formulario con los datos actuales.
-                    </li>
-                    <li>
-                        <strong>Modificar información</strong><br>
-                        Actualiza los campos necesarios.
-                    </li>
-                    <li>
-                        <strong>Guardar cambios</strong><br>
-                        Haz clic en "GUARDAR CAMBIOS".
-                    </li>
+                    <li><strong>Progreso de Envío Gratis y Descuento por Volumen:</strong> En <code>/tienda/carrito</code> y <code>/minorista/carrito</code> una barra dinámica motiva al comprador mostrando cuánto le falta agregar para desbloquear el Envío Gratis o el porcentaje de descuento por volumen.</li>
+                    <li><strong>Autocompletado por Teléfono y Repetir Último Pedido:</strong> Al escribir su teléfono en el Checkout, el sistema reconoce al cliente recurrente, completa su nombre y email, muestra su saldo de <strong>Vyper Coins</strong> y ofrece el botón <strong>"🔄 Cargar mi último pedido"</strong>.</li>
+                    <li><strong>Canje de Cupones y Vyper Coins:</strong> El comprador puede aplicar códigos promocionales (<code>VYPER5</code>, <code>VYPER10</code>, <code>BIENVENIDO</code> o promociones activas) y canjear sus Vyper Coins acumulados.</li>
                 </ol>
+            </div>
+        </section>
 
-                <h4>📊 Información Visible de Cada Cliente</h4>
-                <ul style="margin-left: 2rem; color: var(--text-secondary);">
-                    <li><strong>Nombre:</strong> Nombre completo del cliente</li>
-                    <li><strong>Teléfono:</strong> Número de contacto (usado para notificaciones de WhatsApp)</li>
-                    <li><strong>Deuda:</strong> Saldo pendiente en cuenta corriente (en rojo si tiene deuda)</li>
-                    <li><strong>Vyper Coins:</strong> Puntos acumulados en el programa de fidelización</li>
-                </ul>
-
-                <div class="alert alert-warning">
-                    <span class="icon">⚠️</span>
-                    <div>
-                        <strong>Importante:</strong> No puedes eliminar clientes que tengan transacciones registradas. Primero debes resolver sus cuentas.
-                    </div>
+        <!-- 4. PERSONALIZACION -->
+        <section id="personalizacion" class="section">
+            <div class="section-header">
+                <h2 class="section-title">4. Editor de Personalización de Tienda, Vista Previa e Historial</h2>
+                <span class="section-tag">CMS Dinámico</span>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>12 Secciones Configurables sin Código</h3>
+                    <p>Desde <code>/admin/ecommerce/personalizacion</code> administrás toda la identidad visual y comercial:</p>
+                    <ul class="steps">
+                        <li><strong>Identidad y Colores:</strong> Nombre, subtítulos, logo con subida <em>Drag &amp; Drop</em>, colores primario/acento, horarios, email, Instagram, TikTok y Facebook.</li>
+                        <li><strong>Hero y Carrusel de Banners:</strong> Títulos, fondos, video de YouTube y banners promocionales independientes para Mayorista y Minorista.</li>
+                        <li><strong>Marquesinas e Incentivos:</strong> Mensajes animados superiores y montos mínimos para envío gratis y descuento por volumen.</li>
+                        <li><strong>WhatsApp y FAQs:</strong> Números de contacto, mensajes pre-cargados, link de Google Maps y preguntas frecuentes editables.</li>
+                    </ul>
+                </div>
+                <div class="card card-strong">
+                    <h3>Vista Previa en Vivo, Historial y Asesor IA</h3>
+                    <p>Tres herramientas exclusivas para editar con total seguridad:</p>
+                    <ol class="steps">
+                        <li><strong>👁️ Vista Previa en Vivo (Split-Screen):</strong> Previsualizá en tiempo real cómo se ve la tienda en <strong>Desktop 💻</strong> o <strong>Móvil 📱</strong> mientras editás cada campo, antes de guardar.</li>
+                        <li><strong>🕒 Historial de Versiones (Rollback):</strong> El sistema guarda automáticamente las últimas 10 instantáneas de cada sección. Podés restaurar cualquier versión previa con 1 clic.</li>
+                        <li><strong>✨ Asesor IA con Aplicación en 1 Clic:</strong> Pedile al chat IA que redacte títulos, banners o FAQs y presioná <strong>"Aplicar cambios sugeridos en el editor"</strong> para autocompletar el formulario.</li>
+                    </ol>
                 </div>
             </div>
         </section>
 
-        <!-- Cuenta Corriente -->
-        <section id="cuenta-corriente" class="section">
-            <h2 class="section-title">
-                <span class="icon">💳</span>
-                Cuenta Corriente
-            </h2>
-            <p class="section-subtitle">Gestiona créditos y pagos de clientes</p>
-
-            <div class="card">
-                <h3>💰 Sistema de Cuenta Corriente</h3>
-                <p>El módulo de Cuenta Corriente permite gestionar las compras a crédito y los pagos de tus clientes, con notificaciones automáticas por WhatsApp.</p>
-
-                <img src="C:/Users/lucas/.gemini/antigravity/brain/3000d8c5-6a29-40da-a7a4-68a6a8186b5e/cuenta_corriente_view_1765314573339.png" alt="Cuenta Corriente" class="screenshot">
-
-                <h4>📝 Registrar una Compra en Cuenta Corriente</h4>
-                <ol class="steps">
-                    <li>
-                        <strong>Acceder al módulo</strong><br>
-                        Haz clic en "💳 CTA CTE" en la navegación superior.
-                    </li>
-                    <li>
-                        <strong>Buscar y seleccionar cliente</strong><br>
-                        Escribe el nombre o teléfono del cliente en el campo de búsqueda y selecciónalo.
-                    </li>
-                    <li>
-                        <strong>Ingresar el importe</strong><br>
-                        Escribe el monto de la compra.
-                    </li>
-                    <li>
-                        <strong>Seleccionar "COMPRA EN CUENTA CORRIENTE"</strong><br>
-                        Haz clic en el botón rojo de "COMPRA EN CUENTA CORRIENTE".
-                    </li>
-                    <li>
-                        <strong>Verificar el balance</strong><br>
-                        El sistema mostrará una vista previa del balance actual y el nuevo balance después de la transacción.
-                    </li>
-                    <li>
-                        <strong>Confirmar</strong><br>
-                        Haz clic en "📝 REGISTRAR COMPRA".
-                    </li>
-                </ol>
-
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <div>
-                        <strong>Notificación Automática:</strong> El cliente recibirá un mensaje de WhatsApp con el detalle de la compra y su nuevo saldo.
-                    </div>
+        <!-- 5. CATALOGO Y PRECIOS MASIVOS -->
+        <section id="catalogo" class="section">
+            <div class="section-header">
+                <h2 class="section-title">5. Gestión de Productos, Precios Masivos, Combos e IA</h2>
+                <span class="section-tag">Módulo Productos</span>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <h3>📈 Actualizador Masivo de Precios</h3>
+                    <p>En <code>/admin/ecommerce/productos</code> hacé clic en <strong>"Actualizar Precios Masivo"</strong>:</p>
+                    <p>Elegí si querés ajustar todo el catálogo, una <strong>Marca</strong> o una <strong>Categoría</strong>; seleccioná si impacta en Costo, Mayorista, Minorista o Todos; definí el porcentaje (ej. <code>+10%</code>) y el redondeo automático (múltiplos de $100, $50 o $10) con vista previa antes de confirmar.</p>
                 </div>
-
-                <h4>💵 Registrar un Pago</h4>
-                <ol class="steps">
-                    <li>
-                        <strong>Seleccionar cliente</strong><br>
-                        Busca y selecciona el cliente que realizará el pago.
-                    </li>
-                    <li>
-                        <strong>Ingresar el monto del pago</strong><br>
-                        Escribe cuánto está pagando el cliente.
-                    </li>
-                    <li>
-                        <strong>Seleccionar "PAGO"</strong><br>
-                        Haz clic en el botón verde de "PAGO".
-                    </li>
-                    <li>
-                        <strong>Verificar el nuevo balance</strong><br>
-                        Revisa que el cálculo sea correcto en la vista previa.
-                    </li>
-                    <li>
-                        <strong>Confirmar</strong><br>
-                        Haz clic en "💰 REGISTRAR PAGO".
-                    </li>
-                </ol>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Puedes registrar pagos parciales. El sistema actualizará el saldo automáticamente.
-                    </div>
+                <div class="card">
+                    <h3>✨ Descripciones con IA en Lote</h3>
+                    <p>El botón <strong>"Completar Descripciones con IA"</strong> detecta automáticamente los productos que aún no tienen descripción comercial y genera textos persuasivos en español argentino en lote mediante OpenAI.</p>
                 </div>
-
-                <h4>📊 Historial de Movimientos</h4>
-                <p>En la parte inferior del módulo verás todos los movimientos del mes en curso:</p>
-                <ul style="margin-left: 2rem; color: var(--text-secondary);">
-                    <li><strong>Fecha:</strong> Cuándo se realizó la transacción</li>
-                    <li><strong>Cliente:</strong> Nombre del cliente</li>
-                    <li><strong>Tipo:</strong> COMPRA (rojo) o PAGO (verde)</li>
-                    <li><strong>Importe:</strong> Monto de la transacción</li>
-                    <li><strong>Balance:</strong> Saldo después de la transacción</li>
-                </ul>
-
-                <div class="alert alert-warning">
-                    <span class="icon">⚠️</span>
-                    <div>
-                        <strong>Importante:</strong> El historial muestra solo los movimientos del mes actual. Para ver históricos completos, usa el módulo de Analytics.
-                    </div>
+                <div class="card">
+                    <h3>📦 Combos / Packs y Escáner en Compras</h3>
+                    <p>Creá paquetes promocionales desde el botón <strong>"Nuevo Combo / Pack"</strong> y registrá la entrada de mercadería en <code>/admin/ecommerce/compras</code> utilizando el lector rápido de código/SKU.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Vyper Coins -->
-        <section id="vyper-coins" class="section">
-            <h2 class="section-title">
-                <span class="icon">🪙</span>
-                Vyper Coins
-            </h2>
-            <p class="section-subtitle">Programa de fidelización y recompensas</p>
-
-            <div class="card">
-                <h3>🎁 Sistema de Puntos Vyper Coins</h3>
-                <p>Vyper Coins es un programa de fidelización que permite premiar a tus clientes más frecuentes con puntos canjeables.</p>
-
-                <img src="C:/Users/lucas/.gemini/antigravity/brain/3000d8c5-6a29-40da-a7a4-68a6a8186b5e/vyper_coins_view_1765314622034.png" alt="Vyper Coins" class="screenshot">
-
-                <h4>➕ Agregar Coins a un Cliente</h4>
+        <!-- 6. PEDIDOS Y SYNC ERP -->
+        <section id="pedidos" class="section">
+            <div class="section-header">
+                <h2 class="section-title">6. Pedidos Web, Sincronización ERP y Avisos WhatsApp</h2>
+                <span class="section-tag">Unificación Operativa</span>
+            </div>
+            <div class="card card-strong">
+                <h3>Flujo Automático de extremo a extremo en <code>/admin/ecommerce/pedidos</code></h3>
                 <ol class="steps">
-                    <li>
-                        <strong>Acceder al módulo</strong><br>
-                        Haz clic en "🪙 VYPER COINS" en la navegación superior.
-                    </li>
-                    <li>
-                        <strong>Buscar cliente</strong><br>
-                        Escribe el nombre o teléfono del cliente y selecciónalo.
-                    </li>
-                    <li>
-                        <strong>Ingresar cantidad de coins</strong><br>
-                        Escribe cuántos coins deseas agregar.
-                    </li>
-                    <li>
-                        <strong>Seleccionar "AGREGAR COINS"</strong><br>
-                        Haz clic en el botón verde.
-                    </li>
-                    <li>
-                        <strong>Confirmar</strong><br>
-                        Haz clic en "➕ AGREGAR COINS".
-                    </li>
+                    <li><strong>Aviso Automático por WhatsApp:</strong> Al cambiar el estado de un pedido a <code>procesando</code> o <code>completado</code>, BuilderBot envía un mensaje automático al WhatsApp del cliente informándole el avance e incluyendo su link de seguimiento <code>/pedido/[id]</code>.</li>
+                    <li><strong>Acreditación Automática en ERP y Vyper Coins:</strong> Al marcar un pedido como <code>completado</code>, el sistema busca o crea al cliente por su teléfono, registra la venta en el historial financiero (<code>sales</code>) y suma sus <strong>Vyper Coins</strong> automáticamente.</li>
+                    <li><strong>Botón "💳 Pasar a Cta. Corriente":</strong> Si el pedido mayorista se entrega a crédito, con 1 clic dentro del pedido se carga el importe en la Cuenta Corriente del cliente y se envía la notificación de saldo.</li>
                 </ol>
+            </div>
+        </section>
 
-                <h4>➖ Descontar Coins (Canje)</h4>
-                <ol class="steps">
-                    <li>
-                        <strong>Seleccionar cliente</strong><br>
-                        Busca al cliente que desea canjear sus coins.
-                    </li>
-                    <li>
-                        <strong>Ingresar cantidad a descontar</strong><br>
-                        Escribe cuántos coins va a canjear.
-                    </li>
-                    <li>
-                        <strong>Seleccionar "DESCONTAR COINS"</strong><br>
-                        Haz clic en el botón rojo.
-                    </li>
-                    <li>
-                        <strong>Verificar saldo</strong><br>
-                        Asegúrate de que el cliente tenga suficientes coins.
-                    </li>
-                    <li>
-                        <strong>Confirmar</strong><br>
-                        Haz clic en "➖ DESCONTAR COINS".
-                    </li>
-                </ol>
-
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <div>
-                        <strong>Notificación:</strong> El cliente recibirá un mensaje de WhatsApp informando sobre el movimiento de coins.
-                    </div>
+        <!-- 7. CTA CORRIENTE Y COINS -->
+        <section id="ctacte" class="section">
+            <div class="section-header">
+                <h2 class="section-title">7. Cuenta Corriente, Recordatorios Masivos y Vyper Coins</h2>
+                <span class="section-tag">Finanzas &amp; Fidelización</span>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Cuenta Corriente y Recordatorios (<code>/admin/debt</code>)</h3>
+                    <p>Visualizá el listado de deudores activos en la parte superior del módulo con selección múltiple:</p>
+                    <ul class="steps">
+                        <li><strong>💰 Registrar Pago Rápido:</strong> Autocompleta el cliente para asentar pagos parciales o totales.</li>
+                        <li><strong>📲 Recordatorio Individual o Masivo:</strong> Enviá recordatorios cordiales de saldo pendiente por Bot automático o WhatsApp directo a un cliente o a todos los deudores seleccionados con 1 clic.</li>
+                    </ul>
                 </div>
-
-                <h4>💡 Sugerencias de Uso</h4>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="icon">🎯</div>
-                        <h4>Por Compra</h4>
-                        <p>Otorga 1 coin por cada $100 de compra</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🎂</div>
-                        <h4>Cumpleaños</h4>
-                        <p>Regala coins especiales en el cumpleaños del cliente</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📢</div>
-                        <h4>Referidos</h4>
-                        <p>Premia a clientes que traigan nuevos clientes</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🏆</div>
-                        <h4>Promociones</h4>
-                        <p>Ofrece coins dobles en fechas especiales</p>
-                    </div>
-                </div>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Define claramente las reglas de acumulación y canje de coins para que tus clientes sepan cómo aprovechar el programa.
-                    </div>
+                <div class="card">
+                    <h3>Programa Vyper Coins (<code>/admin/vyper-coins</code>)</h3>
+                    <p>Fidelizá a tus compradores con 4 niveles VIP (Bronce, Plata, Oro y Platino). Cada compra suma monedas (1 Coin cada $1.000 ARS) que pueden canjearse tanto en el mostrador como en el Checkout de la tienda online.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Analytics -->
-        <section id="analytics" class="section">
-            <h2 class="section-title">
-                <span class="icon">📈</span>
-                Business Intelligence
-            </h2>
-            <p class="section-subtitle">Análisis avanzado de datos y reportes</p>
-
-            <div class="card">
-                <h3>📊 Dashboard de Analytics</h3>
-                <p>El módulo de Analytics te proporciona una visión completa del rendimiento de tu negocio con gráficos interactivos, tendencias y proyecciones.</p>
-
-                <img src="C:/Users/lucas/.gemini/antigravity/brain/3000d8c5-6a29-40da-a7a4-68a6a8186b5e/analytics_dashboard_view_1765314604588.png" alt="Analytics Dashboard" class="screenshot">
-
-                <h4>📈 Métricas Principales</h4>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="icon">💰</div>
-                        <h4>Ingresos Totales</h4>
-                        <p>Suma de todas las ventas del período seleccionado</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">💸</div>
-                        <h4>Egresos Totales</h4>
-                        <p>Total de gastos operativos</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📊</div>
-                        <h4>Utilidad Neta</h4>
-                        <p>Diferencia entre ingresos y egresos</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📈</div>
-                        <h4>Margen de Ganancia</h4>
-                        <p>Porcentaje de rentabilidad</p>
-                    </div>
+        <!-- 8. IA EN BI Y RETENCION -->
+        <section id="ia" class="section">
+            <div class="section-header">
+                <h2 class="section-title">8. Inteligencia Artificial en Analytics y Retención</h2>
+                <span class="section-tag">OpenAI GPT-4o-mini</span>
+            </div>
+            <div class="grid-2">
+                <div class="card card-strong">
+                    <h3>🧠 Copiloto Financiero IA en Analytics (<code>/admin/bi</code>)</h3>
+                    <p>Dentro del panel de Business Intelligence, presioná <strong>"ANALIZAR FINANZAS CON COPILOTO IA"</strong>. El motor analiza ingresos, egresos, margen neto, deuda en la calle y concentración de clientes para entregarte:</p>
+                    <ul class="steps">
+                        <li><strong>Resumen Ejecutivo</strong> del estado actual del negocio.</li>
+                        <li><strong>Puntos Fuertes</strong> y <strong>Alertas Tempranas</strong> de liquidez o gastos.</li>
+                        <li><strong>4 Acciones Comerciales Concretas</strong> para ejecutar en la semana.</li>
+                    </ul>
                 </div>
+                <div class="card card-strong">
+                    <h3>✨ Motor de Retención con IA (<code>/admin/retention</code>)</h3>
+                    <p>Un suplemento promedio dura 30 días. El módulo filtra clientes por ventana de inactividad (<code>15-25 días</code>, <code>25-35 días ideal</code>, <code>+35 días</code>).</p>
+                    <p>Al hacer clic en <strong>"✨ Redactar con IA"</strong>, el sistema escribe un mensaje personalizado mencionando su última compra y sus Vyper Coins disponibles, listo para enviar automáticamente por BuilderBot o abrir en WhatsApp.</p>
+                </div>
+            </div>
+        </section>
 
-                <h4>📊 Gráficos Disponibles</h4>
-                <ul style="margin-left: 2rem; color: var(--text-secondary);">
-                    <li><strong>Tendencia de Ingresos:</strong> Evolución de ventas en el tiempo</li>
-                    <li><strong>Distribución de Egresos:</strong> Gráfico de torta por categorías</li>
-                    <li><strong>Comparativa Mensual:</strong> Barras comparando meses anteriores</li>
-                    <li><strong>Métodos de Pago:</strong> Distribución de ventas por método de pago</li>
-                    <li><strong>Top Clientes:</strong> Clientes con mayor volumen de compras</li>
-                </ul>
-
-                <h4>🔍 Filtros Disponibles</h4>
+        <!-- 9. PORTAL CLIENTE Y TRACKING -->
+        <section id="portal" class="section">
+            <div class="section-header">
+                <h2 class="section-title">9. Portal de Autogestión (/client) y Tracking (/pedido/[id])</h2>
+                <span class="section-tag">Experiencia del Cliente</span>
+            </div>
+            <div class="card">
+                <h3>Autogestión 24/7 sin fricciones</h3>
+                <p>Tus clientes pueden ingresar en cualquier momento a <code>/client</code> desde el menú superior de la tienda con su número de teléfono o DNI para:</p>
                 <ol class="steps">
-                    <li>
-                        <strong>Período de Tiempo</strong><br>
-                        Selecciona: Hoy, Esta Semana, Este Mes, Este Año, o Rango Personalizado.
-                    </li>
-                    <li>
-                        <strong>Tipo de Transacción</strong><br>
-                        Filtra por: Todas, Solo Ventas, Solo Egresos.
-                    </li>
-                    <li>
-                        <strong>Método de Pago</strong><br>
-                        Analiza ventas por método de pago específico.
-                    </li>
-                    <li>
-                        <strong>Cliente</strong><br>
-                        Visualiza el historial completo de un cliente específico.
-                    </li>
+                    <li>Consultar su saldo actualizado de <strong>Vyper Coins</strong> y cuánto les falta para el próximo nivel VIP.</li>
+                    <li>Revisar el estado al día de su <strong>Cuenta Corriente</strong>.</li>
+                    <li>Ver su <strong>Historial de Pedidos Web</strong>, abrir el seguimiento en vivo en <code>/pedido/[id]</code>, imprimir su comprobante o presionar <strong>"🔄 Repetir Pedido"</strong> para volver a llenar el carrito en 1 segundo.</li>
                 </ol>
-
-                <div class="alert alert-info">
-                    <span class="icon">💡</span>
-                    <div>
-                        <strong>Tip:</strong> Revisa el dashboard de Analytics semanalmente para identificar tendencias y tomar decisiones informadas.
-                    </div>
-                </div>
-
-                <h4>📥 Exportar Reportes</h4>
-                <p>Puedes exportar los datos en diferentes formatos:</p>
-                <ul style="margin-left: 2rem; color: var(--text-secondary);">
-                    <li><strong>PDF:</strong> Reporte visual con gráficos incluidos</li>
-                    <li><strong>Excel:</strong> Datos en formato de hoja de cálculo para análisis adicional</li>
-                    <li><strong>CSV:</strong> Formato compatible con otras herramientas</li>
-                </ul>
             </div>
         </section>
 
-        <!-- Tips & Trucos -->
-        <section id="tips" class="section">
-            <h2 class="section-title">
-                <span class="icon">💡</span>
-                Tips & Trucos
-            </h2>
-            <p class="section-subtitle">Aprovecha al máximo Vyper Labs</p>
+    </main>
 
-            <div class="card">
-                <h3>🚀 Mejores Prácticas</h3>
-
-                <h4>⚡ Productividad</h4>
-                <div class="alert alert-success">
-                    <span class="icon">⌨️</span>
-                    <div>
-                        <strong>Atajos de Teclado:</strong> Usa Tab para navegar entre campos del formulario y Enter para guardar rápidamente.
-                    </div>
-                </div>
-
-                <div class="alert alert-success">
-                    <span class="icon">📋</span>
-                    <div>
-                        <strong>Importación Masiva:</strong> Si tienes muchas transacciones pendientes, usa la función de importar Excel en lugar de ingresarlas una por una.
-                    </div>
-                </div>
-
-                <div class="alert alert-success">
-                    <span class="icon">🔄</span>
-                    <div>
-                        <strong>Actualización Automática:</strong> Los historiales se actualizan automáticamente. No necesitas recargar la página.
-                    </div>
-                </div>
-
-                <h4>🎯 Gestión de Clientes</h4>
-                <div class="alert alert-info">
-                    <span class="icon">📱</span>
-                    <div>
-                        <strong>Formato de Teléfono:</strong> Ingresa los teléfonos con código de área para que las notificaciones de WhatsApp funcionen correctamente (ej: 5491112345678).
-                    </div>
-                </div>
-
-                <div class="alert alert-info">
-                    <span class="icon">👥</span>
-                    <div>
-                        <strong>Nombres Únicos:</strong> Evita duplicar clientes. Usa el buscador antes de crear uno nuevo para verificar que no exista.
-                    </div>
-                </div>
-
-                <h4>💰 Finanzas</h4>
-                <div class="alert alert-warning">
-                    <span class="icon">📊</span>
-                    <div>
-                        <strong>Categorización:</strong> Categoriza correctamente los egresos desde el inicio. Esto facilitará el análisis posterior en Analytics.
-                    </div>
-                </div>
-
-                <div class="alert alert-warning">
-                    <span class="icon">💳</span>
-                    <div>
-                        <strong>Cuenta Corriente:</strong> Establece límites de crédito claros para cada cliente y revisa regularmente los saldos pendientes.
-                    </div>
-                </div>
-
-                <h4>🔒 Seguridad</h4>
-                <div class="alert alert-danger">
-                    <span class="icon">🔐</span>
-                    <div>
-                        <strong>Datos Sensibles:</strong> No compartas las credenciales de acceso. Cada usuario debería tener su propia cuenta.
-                    </div>
-                </div>
-
-                <div class="alert alert-danger">
-                    <span class="icon">💾</span>
-                    <div>
-                        <strong>Respaldos:</strong> Exporta reportes periódicamente como respaldo de tus datos.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>❓ Preguntas Frecuentes</h3>
-
-                <h4>¿Puedo editar una transacción después de guardarla?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Sí, en el historial reciente puedes hacer clic en el ícono de editar para modificar cualquier transacción. Los cambios se reflejarán inmediatamente.
-                </p>
-
-                <h4>¿Cómo elimino una transacción incorrecta?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    En el historial, cada transacción tiene un botón de eliminar (🗑️). Haz clic y confirma la eliminación. Esta acción no se puede deshacer.
-                </p>
-
-                <h4>¿Las notificaciones de WhatsApp se envían automáticamente?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Sí, cuando registras una compra en cuenta corriente o un movimiento de Vyper Coins, el sistema envía automáticamente una notificación al cliente si tiene un número de teléfono válido registrado.
-                </p>
-
-                <h4>¿Puedo usar el sistema desde mi celular?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Sí, Vyper Labs es completamente responsive y funciona perfectamente en dispositivos móviles. Simplemente accede desde el navegador de tu teléfono.
-                </p>
-
-                <h4>¿Cómo recupero datos si borro algo por error?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    El sistema mantiene un registro de todas las transacciones. Si eliminas algo por error, contacta al administrador del sistema para recuperarlo desde la base de datos.
-                </p>
-
-                <h4>¿Puedo personalizar las categorías de egresos?</h4>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Las categorías están predefinidas para mantener consistencia en los reportes. Si necesitas una categoría adicional, contacta al administrador del sistema.
-                </p>
-            </div>
-
-            <div class="card">
-                <h3>🆘 Soporte y Ayuda</h3>
-                <p>Si encuentras algún problema o tienes dudas adicionales:</p>
-
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="icon">📧</div>
-                        <h4>Email</h4>
-                        <p>soporte@vyperlabs.com</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">💬</div>
-                        <h4>WhatsApp</h4>
-                        <p>+54 9 11 XXXX-XXXX</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📚</div>
-                        <h4>Documentación</h4>
-                        <p>docs.vyperlabs.com</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🎥</div>
-                        <h4>Video Tutoriales</h4>
-                        <p>youtube.com/vyperlabs</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <p><strong>Vyper Labs System</strong> - Manual de Usuario v2.0</p>
-        <p>© 2025 Vyper Labs. Todos los derechos reservados.</p>
-        <p style="margin-top: 1rem; font-size: 0.9rem;">
-            Última actualización: Diciembre 2025
-        </p>
-    </div>
+    <footer class="footer">
+        <p><strong>VYPER LABS SYSTEM v3.0</strong> · Documentación Oficial en Blanco y Negro</p>
+        <p style="margin-top: 0.35rem; color: #9CA3AF;">Desarrollado por Grow Labs · Todos los derechos reservados</p>
+    </footer>
 
 </body>
 </html>

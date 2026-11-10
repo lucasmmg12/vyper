@@ -1,9 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreditCard, Search, TrendingUp, TrendingDown, DollarSign, History } from 'lucide-react';
-import Link from 'next/link';
+import { CreditCard, Search, TrendingUp, TrendingDown, DollarSign, History, MessageCircle, Send, Users, Loader2, CheckCircle2 } from 'lucide-react';
 
 interface Client {
     id: number;
@@ -35,6 +33,12 @@ export default function DebtManagementPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
+    // Debt reminders state
+    const [sendingClientId, setSendingClientId] = useState<number | null>(null);
+    const [massSending, setMassSending] = useState(false);
+    const [reminderFeedback, setReminderFeedback] = useState<string | null>(null);
+    const [selectedDebtorIds, setSelectedDebtorIds] = useState<number[]>([]);
+
     useEffect(() => {
         fetchClients();
         fetchTransactions();
@@ -44,7 +48,10 @@ export default function DebtManagementPage() {
         try {
             const res = await fetch('/api/clients?limit=10000');
             const data = await res.json();
-            setClients(data.clients || []);
+            const list: Client[] = data.clients || [];
+            setClients(list);
+            const activeDebtors = list.filter(c => Number(c.debt_balance) > 0 && c.phone);
+            setSelectedDebtorIds(activeDebtors.map(d => d.id));
         } catch (err) {
             console.error('Error fetching clients:', err);
         }
@@ -52,13 +59,103 @@ export default function DebtManagementPage() {
 
     const fetchTransactions = async () => {
         try {
-            // Obtener todas las transacciones del mes actual
             const res = await fetch('/api/debt-transactions?current_month=true');
             const data = await res.json();
             setTransactions(data.transactions || []);
         } catch (err) {
             console.error('Error fetching transactions:', err);
         }
+    };
+
+    const debtors = clients
+        .filter(c => Number(c.debt_balance) > 0)
+        .sort((a, b) => Number(b.debt_balance) - Number(a.debt_balance));
+
+    const totalPendingDebt = debtors.reduce((sum, c) => sum + Number(c.debt_balance || 0), 0);
+
+    const handleSendSingleReminderBot = async (client: Client) => {
+        if (!client.phone) {
+            alert('Este cliente no tiene teléfono registrado.');
+            return;
+        }
+        setSendingClientId(client.id);
+        setReminderFeedback(null);
+        try {
+            const res = await fetch('/api/ai/retention-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'debt-reminder',
+                    clientName: client.name,
+                    balance: Number(client.debt_balance),
+                    phone: client.phone,
+                }),
+            });
+            const data = await res.json();
+            if (data.sent) {
+                setReminderFeedback(`✅ Recordatorio automático enviado por Bot a ${client.name}`);
+            } else {
+                setReminderFeedback(`⚠️ No se pudo enviar por Bot a ${client.name}. Usá el botón "Abrir WA".`);
+            }
+        } catch {
+            setReminderFeedback(`❌ Error al enviar recordatorio a ${client.name}`);
+        } finally {
+            setSendingClientId(null);
+        }
+    };
+
+    const handleOpenWaLink = (client: Client) => {
+        const cleanPhone = (client.phone || '').replace(/\D/g, '');
+        if (!cleanPhone) {
+            alert('Este cliente no tiene teléfono registrado.');
+            return;
+        }
+        const waPhone = cleanPhone.startsWith('54') ? cleanPhone : `549${cleanPhone}`;
+        const formattedBalance = `$${Number(client.debt_balance).toLocaleString('es-AR')}`;
+        const msg = `👋 Hola *${client.name}*, ¿cómo estás?\n\nTe escribimos de *Vyper Suplementos* para recordarte amablemente que tu cuenta corriente registra un saldo pendiente de *${formattedBalance}* 💳.\n\nPodés abonar por transferencia o en sucursal cuando gustes. ¡Muchas gracias! 🦾`;
+        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    const handleMassReminder = async () => {
+        const targets = debtors.filter(d => selectedDebtorIds.includes(d.id) && d.phone);
+        if (targets.length === 0) {
+            alert('Seleccioná al menos un cliente con deuda y teléfono.');
+            return;
+        }
+        if (!confirm(`¿Enviar recordatorio automático de saldo por WhatsApp (BuilderBot) a ${targets.length} clientes con deuda?`)) {
+            return;
+        }
+        setMassSending(true);
+        setReminderFeedback(null);
+        let sentCount = 0;
+
+        for (const client of targets) {
+            try {
+                const res = await fetch('/api/ai/retention-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'debt-reminder',
+                        clientName: client.name,
+                        balance: Number(client.debt_balance),
+                        phone: client.phone,
+                    }),
+                });
+                const data = await res.json();
+                if (data.sent) sentCount++;
+            } catch {
+                // continue with next
+            }
+        }
+
+        setMassSending(false);
+        setReminderFeedback(`📢 Recordatorio masivo finalizado: ${sentCount} de ${targets.length} mensajes enviados vía BuilderBot.`);
+    };
+
+    const toggleSelectDebtor = (id: number) => {
+        setSelectedDebtorIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
     };
 
     const filteredClients = clients.filter(c => {
@@ -135,13 +232,60 @@ export default function DebtManagementPage() {
 
     return (
         <div className="page-container">
-            <header style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <CreditCard size={28} />
-                    CUENTA CORRIENTE
-                </h1>
-                <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>Gestión de Deudas y Pagos</p>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <CreditCard size={28} />
+                        CUENTA CORRIENTE
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Gestión de Deudas, Cobranzas y Recordatorios por WhatsApp · Total por cobrar: <strong style={{ color: '#ef4444' }}>${totalPendingDebt.toLocaleString('es-AR')}</strong>
+                    </p>
+                </div>
+
+                {debtors.length > 0 && (
+                    <button
+                        onClick={handleMassReminder}
+                        disabled={massSending || selectedDebtorIds.length === 0}
+                        style={{
+                            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '0.65rem 1.25rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                        }}
+                    >
+                        {massSending ? (
+                            <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Enviando recordatorios...</>
+                        ) : (
+                            <><Send size={16} /> 📢 Recordatorio Masivo a Deudores ({selectedDebtorIds.length})</>
+                        )}
+                    </button>
+                )}
             </header>
+
+            {reminderFeedback && (
+                <div style={{
+                    padding: '0.875rem 1.25rem',
+                    marginBottom: '1.5rem',
+                    borderRadius: '10px',
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    border: '1px solid #10b981',
+                    color: '#059669',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                }}>
+                    <CheckCircle2 size={18} />
+                    <span>{reminderFeedback}</span>
+                </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
 
@@ -373,6 +517,122 @@ export default function DebtManagementPage() {
                             )}
                         </div>
                     </form>
+                </div>
+
+                {/* Active Debtors & Automated WhatsApp Reminders */}
+                <div className="glass-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h2 style={{ fontSize: '1.35rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Users size={22} color="#ef4444" />
+                            Clientes con Saldo Pendiente ({debtors.length})
+                        </h2>
+                        {debtors.length > 0 && (
+                            <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', margin: 0 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedDebtorIds.length === debtors.length}
+                                    onChange={e => setSelectedDebtorIds(e.target.checked ? debtors.map(d => d.id) : [])}
+                                    style={{ width: 16, height: 16, minHeight: 'auto', margin: 0 }}
+                                />
+                                Seleccionar todos
+                            </label>
+                        )}
+                    </div>
+
+                    {debtors.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#10b981', padding: '1.5rem', fontWeight: 600 }}>
+                            🎉 ¡Excelente! No hay clientes con deuda pendiente actualmente.
+                        </p>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid var(--border-light)' }}>
+                                        <th style={{ padding: '0.75rem 0.5rem', width: 36 }}></th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', fontSize: '0.8rem' }}>CLIENTE</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', fontSize: '0.8rem' }}>TELÉFONO</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontSize: '0.8rem' }}>SALDO DEUDOR</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontSize: '0.8rem' }}>ACCIONES DE COBRANZA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {debtors.map(d => (
+                                        <tr key={d.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedDebtorIds.includes(d.id)}
+                                                    onChange={() => toggleSelectDebtor(d.id)}
+                                                    style={{ width: 16, height: 16, minHeight: 'auto', margin: 0 }}
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700, fontSize: '0.9rem' }}>{d.name}</td>
+                                            <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{d.phone || '—'}</td>
+                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 800, color: '#ef4444', fontSize: '0.95rem' }}>
+                                                ${Number(d.debt_balance).toLocaleString('es-AR')}
+                                            </td>
+                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>
+                                                <div style={{ display: 'inline-flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        type="button"
+                                                        className="secondary"
+                                                        onClick={() => {
+                                                            setSelectedClient(d);
+                                                            setTransactionType('payment');
+                                                            setAmount(Number(d.debt_balance));
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}
+                                                    >
+                                                        💰 Registrar Pago
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSendSingleReminderBot(d)}
+                                                        disabled={sendingClientId === d.id}
+                                                        style={{
+                                                            padding: '0.4rem 0.75rem',
+                                                            fontSize: '0.75rem',
+                                                            background: '#2563eb',
+                                                            color: '#fff',
+                                                            border: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.35rem',
+                                                        }}
+                                                        title="Enviar recordatorio automático vía BuilderBot"
+                                                    >
+                                                        {sendingClientId === d.id ? (
+                                                            <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> Enviando...</>
+                                                        ) : (
+                                                            <><Send size={13} /> 📲 Recordatorio Bot</>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenWaLink(d)}
+                                                        style={{
+                                                            padding: '0.4rem 0.75rem',
+                                                            fontSize: '0.75rem',
+                                                            background: '#25D366',
+                                                            color: '#000',
+                                                            border: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.35rem',
+                                                        }}
+                                                        title="Abrir recordatorio en WhatsApp Web"
+                                                    >
+                                                        <MessageCircle size={13} /> Abrir WA
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Transactions History */}

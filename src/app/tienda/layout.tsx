@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-import { ShoppingCart, Search, Menu, X, ChevronRight, Package, HelpCircle } from 'lucide-react';
+import { ShoppingCart, Menu, X, ChevronRight, Package, HelpCircle, UserCheck } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import MarqueeBar from '@/components/tienda/MarqueeBar';
 import MegaMenu from '@/components/tienda/MegaMenu';
+import PersonalShopperIA from '@/components/tienda/PersonalShopperIA';
 import { useStoreConfig } from '@/hooks/useStoreConfig';
 
 export default function TiendaLayout({ children }: { children: React.ReactNode }) {
@@ -82,10 +83,21 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
             <Link href="/tienda/como-comprar">
               <button className="btn-ghost" style={{ fontSize: '0.875rem' }}>Como comprar?</button>
             </Link>
+            <Link href="/client">
+              <button className="btn-ghost" style={{ fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
+                <UserCheck size={16} /> Mi Cuenta / Mis Pedidos
+              </button>
+            </Link>
           </nav>
 
           {/* Right: Cart + Mobile menu */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Link href="/client" className="mobile-only" title="Mi Cuenta / Mis Pedidos">
+              <button className="btn-ghost" style={{ padding: '0.625rem' }}>
+                <UserCheck size={20} />
+              </button>
+            </Link>
+
             <Link href="/tienda/carrito">
               <button className="btn-ghost" style={{ position: 'relative', padding: '0.625rem' }}>
                 <ShoppingCart size={22} />
@@ -150,10 +162,25 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                borderBottom: '1px solid var(--border-light)',
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600 }}>
                   <ShoppingCart size={18} /> Mi Pedido
                   {cartCount > 0 && <span className="badge badge-blue">{cartCount}</span>}
+                </span>
+                <ChevronRight size={16} color="var(--text-light)" />
+              </div>
+            </Link>
+            <Link href="/client" onClick={() => setMobileMenuOpen(false)}>
+              <div style={{
+                padding: '0.875rem 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid var(--border-light)',
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600 }}>
+                  <UserCheck size={18} /> Mi Cuenta / Mis Pedidos
                 </span>
                 <ChevronRight size={16} color="var(--text-light)" />
               </div>
@@ -179,6 +206,9 @@ export default function TiendaLayout({ children }: { children: React.ReactNode }
       <main>
         {children}
       </main>
+
+      {/* ===== PERSONAL SHOPPER IA ===== */}
+      <PersonalShopperIA storeType="mayorista" />
 
       {/* ===== FOOTER ===== */}
       <footer style={{

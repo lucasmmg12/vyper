@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Download, HelpCircle, TrendingUp, TrendingDown, UserX, DollarSign, Users, Coins, CreditCard, Target, ShoppingCart } from 'lucide-react';
+import { Download, HelpCircle, TrendingUp, TrendingDown, UserX, DollarSign, Users, Coins, CreditCard, Target, ShoppingCart, Sparkles, Loader2, CheckCircle2, AlertTriangle, Lightbulb } from 'lucide-react';
 import { generateFinancialReport } from '@/utils/generateFinancialReport';
 import { TierBadge, getTier } from '@/utils/tiers';
 import {
@@ -40,12 +40,21 @@ interface ExtendedMetrics {
     tierDistribution: { tier: string; emoji: string; count: number; color: string }[];
 }
 
+interface CopilotDiagnosis {
+    resumen_ejecutivo: string;
+    puntos_fuertes: string[];
+    alertas: string[];
+    acciones_recomendadas: string[];
+}
+
 const COLORS = ['#db2777', '#6d28d9', '#4ade80', '#facc15', '#ef4444', '#3b82f6'];
 
 export default function BusinessIntelligence() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [metrics, setMetrics] = useState<ExtendedMetrics | null>(null);
     const [loading, setLoading] = useState(true);
+    const [copilotLoading, setCopilotLoading] = useState(false);
+    const [diagnosis, setDiagnosis] = useState<CopilotDiagnosis | null>(null);
 
     useEffect(() => {
         Promise.all([
@@ -147,9 +156,43 @@ export default function BusinessIntelligence() {
 
     const fmt = (n: number) => `$${n.toLocaleString('es-AR')}`;
 
+    const totalSalesVal = data.timeline.reduce((acc, curr) => acc + curr.sales, 0);
+    const totalExpensesVal = data.timeline.reduce((acc, curr) => acc + curr.expenses, 0);
+    const netBalanceVal = totalSalesVal - totalExpensesVal;
+
+    const handleRunCopilot = async () => {
+        setCopilotLoading(true);
+        try {
+            const res = await fetch('/api/ai/bi-copilot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    totalSales: totalSalesVal,
+                    totalExpenses: totalExpensesVal,
+                    netBalance: netBalanceVal,
+                    avgTicket: metrics?.avgTicket || 0,
+                    avgLTV: metrics?.avgLTV || 0,
+                    totalDebt: metrics?.totalDebt || 0,
+                    debtClientsCount: metrics?.debtClientsCount || 0,
+                    totalClients: metrics?.totalClients || 0,
+                    topDebtors: metrics?.topDebtors || [],
+                    expenseCategories: processedExpenseCategories,
+                }),
+            });
+            const json = await res.json();
+            if (json.diagnosis) {
+                setDiagnosis(json.diagnosis);
+            }
+        } catch (err) {
+            console.error('Error running AI Copilot:', err);
+        } finally {
+            setCopilotLoading(false);
+        }
+    };
+
     return (
         <div className="page-container">
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                         ANALYTICS
@@ -157,21 +200,105 @@ export default function BusinessIntelligence() {
                     <p style={{ color: 'var(--text-muted)' }}>Business Intelligence Dashboard</p>
                 </div>
 
-                <button
-                    onClick={() => generateFinancialReport(data)}
-                    className="secondary"
-                    style={{
-                        padding: '0.5rem 1.25rem',
-                        fontSize: '0.8125rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}
-                >
-                    <Download size={16} />
-                    DESCARGAR INFORME
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={handleRunCopilot}
+                        disabled={copilotLoading}
+                        style={{
+                            padding: '0.5rem 1.25rem',
+                            fontSize: '0.8125rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                            color: '#fff',
+                            border: 'none',
+                        }}
+                    >
+                        {copilotLoading ? (
+                            <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> ANALIZANDO CON IA...</>
+                        ) : (
+                            <><Sparkles size={16} /> 🧠 ANALIZAR FINANZAS CON COPILOTO IA</>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => generateFinancialReport(data)}
+                        className="secondary"
+                        style={{
+                            padding: '0.5rem 1.25rem',
+                            fontSize: '0.8125rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}
+                    >
+                        <Download size={16} />
+                        DESCARGAR INFORME
+                    </button>
+                </div>
             </header>
+
+            {/* ═══════════════════════════════════════════════ */}
+            {/* AI FINANCIAL COPILOT DIAGNOSIS                 */}
+            {/* ═══════════════════════════════════════════════ */}
+            {diagnosis && (
+                <div className="glass-card" style={{
+                    marginBottom: '2rem',
+                    border: '1px solid rgba(124, 58, 237, 0.35)',
+                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(124, 58, 237, 0.06) 100%)',
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <Sparkles size={20} color="#7c3aed" />
+                            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>DIAGNÓSTICO EJECUTIVO · COPILOTO FINANCIERO IA</h3>
+                        </div>
+                        <span className="badge badge-blue" style={{ fontSize: '0.7rem' }}>GPT-4o Mini CFO</span>
+                    </div>
+
+                    <p style={{ fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.25rem', padding: '0.875rem 1rem', background: 'rgba(255,255,255,0.7)', borderRadius: 10, border: '1px solid rgba(0,0,0,0.06)' }}>
+                        {diagnosis.resumen_ejecutivo}
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+                        {/* Puntos Fuertes */}
+                        <div style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 12, padding: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: '#059669', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                                <CheckCircle2 size={16} /> PUNTOS FUERTES
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: 1.45 }}>
+                                {(diagnosis.puntos_fuertes || []).map((pf, idx) => (
+                                    <li key={idx}>{pf}</li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Alertas */}
+                        <div style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 12, padding: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: '#dc2626', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                                <AlertTriangle size={16} /> ALERTAS Y CUELLOS DE BOTELLA
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: 1.45 }}>
+                                {(diagnosis.alertas || []).map((al, idx) => (
+                                    <li key={idx}>{al}</li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Acciones Recomendadas */}
+                        <div style={{ background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: 12, padding: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: '#2563eb', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                                <Lightbulb size={16} /> ACCIONES PARA ESTA SEMANA
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: 1.45 }}>
+                                {(diagnosis.acciones_recomendadas || []).map((ac, idx) => (
+                                    <li key={idx}>{ac}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════ */}
             {/* KPI CARDS — Financial Overview                 */}

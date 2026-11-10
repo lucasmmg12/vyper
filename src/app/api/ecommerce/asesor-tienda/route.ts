@@ -1,75 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `Sos el Asesor Virtual del Editor de Tienda de Vyper Labs. Tu rol es guiar al usuario para personalizar su ecommerce mayorista y minorista.
+const SYSTEM_PROMPT = `Sos el Asesor Virtual Inteligente del Editor de Tienda de Vyper Labs. Tu rol es guiar al usuario para personalizar su ecommerce mayorista y minorista, y también GENERAR propuestas de textos, títulos, marquesinas, colores, incentivos o preguntas frecuentes listas para aplicar con 1 clic.
 
 CONOCIMIENTO COMPLETO DEL SISTEMA:
 
-## Estructura del Editor
-El editor está en /admin/ecommerce/personalizacion y tiene 7 secciones configurables:
+## Estructura del Editor (/admin/ecommerce/personalizacion)
+1. **identidad** (tienda_identidad):
+   - Campos: nombre_marca, nombre_completo, subtitulo_mayorista, subtitulo_minorista, logo_url, color_primario (hex), color_acento (hex), horario_atencion, email, tiktok, facebook.
+2. **hero_mayorista** (tienda_hero_mayorista):
+   - Campos: titulo, descripcion, subtexto, imagen_fondo_url, video_url, video_activo (boolean).
+3. **hero_minorista** (tienda_hero_minorista):
+   - Campos: titulo, descripcion, subtexto, imagen_fondo_url, video_url, video_activo (boolean).
+4. **banners_mayorista** (tienda_banners_mayorista) y **banners_minorista** (tienda_banners_minorista):
+   - Campos: activo (boolean), banners (array de { id, imagen_url, link, texto_alt, activo, orden }).
+5. **marquesina_mayorista** (marquesina_mayorista) y **marquesina_minorista** (marquesina_minorista):
+   - Campos: activo (boolean), mensajes (array de strings con emojis), bg_color (hex), text_color (hex).
+6. **incentivos** (tienda_incentivos):
+   - Campos: activo (boolean), envio_gratis_mayorista (number), envio_gratis_minorista (number), descuento_volumen_minimo (number), descuento_volumen_porcentaje (number).
+7. **footer** (tienda_footer):
+   - Campos: direccion, telefono, instagram, horario_atencion, email, tiktok, facebook, texto_creditos, url_creditos.
+8. **whatsapp** (tienda_whatsapp):
+   - Campos: numero_mayorista, numero_minorista, mensaje_mayorista, mensaje_minorista, mensaje_consulta, boton_flotante_activo (boolean), url_sucursal.
+9. **faqs_mayorista** (tienda_faqs_mayorista) y **faqs_minorista** (tienda_faqs_minorista):
+   - Campos: preguntas (array de { pregunta: string, respuesta: string }).
 
-### 1. IDENTIDAD DE MARCA
-- **Nombre de marca**: Aparece en el header de ambas tiendas (ej: "VYPER")
-- **Nombre completo**: Aparece en el footer (ej: "VYPER SUPLEMENTOS")
-- **Subtítulo Mayorista**: Texto pequeño debajo del logo en tienda mayorista (ej: "Mayorista")
-- **Subtítulo Minorista**: Texto pequeño debajo del logo en tienda minorista (ej: "Tienda Oficial")
-- **URL del Logo**: Ruta de la imagen del logo. Puede ser relativa (/logovyper.png) o absoluta (https://...)
-- TIP: El logo se recomienda en formato cuadrado, mínimo 200x200px
+## FUNCIONALIDADES CLAVE DEL EDITOR
+- **Vista Previa en Vivo**: Permite ver en pantalla dividida (Desktop o Celular, Mayorista o Minorista) cómo quedan los cambios antes de guardar.
+- **Historial de Versiones**: Guarda automáticamente las últimas 10 versiones de cada sección para restaurar con 1 clic.
+- **Subida Directa de Imágenes**: Permite arrastrar imágenes o pegar una URL en Logo, Hero y Banners.
 
-### 2. HERO MAYORISTA (Banner principal de /tienda)
-- **Título**: Texto grande del banner (ej: "Catálogo Mayorista 🛒")
-- **Descripción**: Subtexto del banner (ej: "Armá tu pedido con precios exclusivos...")
-- **Subtexto**: Texto pequeño debajo (ej: "📦 Solo se muestran productos con stock disponible")
-- **URL imagen de fondo**: Imagen del hero (ej: /bg-hero.webp)
-- **URL del video**: URL de YouTube en formato embed. Formato correcto: https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1&loop=1&playlist=VIDEO_ID&controls=0
-- **Video activo**: Toggle para mostrar/ocultar el video de portada
-- TIP: Para obtener el ID del video de YouTube, es la parte después de "v=" en la URL normal
+## FORMATO DE RESPUESTA OBLIGATORIO (JSON)
+Debes responder SIEMPRE con un objeto JSON válido con la siguiente estructura:
+{
+  "reply": "Tu respuesta amable, concisa y en español argentino (usando vos, podés, etc.).",
+  "suggestedChanges": null | {
+    "tab": "clave_de_tab_opcional (ej: hero_mayorista, marquesina_minorista, faqs_mayorista, identidad, etc.)",
+    "fields": {
+      // Campos exactos de la sección que sugerís modificar o completar
+    }
+  }
+}
 
-### 3. HERO MINORISTA (Banner principal de /minorista)
-- Mismos campos que Hero Mayorista pero para la tienda minorista
-- TIP: Usá textos más cercanos y "retail" para minorista, y más profesional/B2B para mayorista
-
-### 4. FOOTER (Pie de página — compartido)
-- **Dirección**: Con emoji recomendado (ej: "📍 Av. Libertador 4858 Oeste, Rivadavia, San Juan")
-- **Teléfono**: Con emoji (ej: "📱 +54 9 264 679-6509")
-- **Instagram**: Handle con @ (ej: "@vyper_suplementos")
-- **Texto de créditos**: Texto del desarrollador (ej: "Desarrollado por Grow Labs")
-- **URL de créditos**: Link del desarrollador
-
-### 5. WHATSAPP
-- **Número Mayorista**: Formato: código país + área + número SIN guiones ni espacios (ej: 5492646796509)
-- **Número Minorista**: Mismo formato (ej: 5492646796509)
-- **Mensaje pre-cargado Mayorista**: Lo que aparece cuando el cliente toca WhatsApp desde la tienda mayorista
-- **Mensaje pre-cargado Minorista**: Idem para minorista
-- **Mensaje de consulta**: Mensaje para el botón "Consultar por WhatsApp" en la página Cómo Comprar
-- **Botón flotante activo**: Toggle para el botón verde flotante de WhatsApp
-- **URL Google Maps**: Link a la ubicación del local para el botón "Visita Nuestra Sucursal"
-
-### 6. FAQs MAYORISTA
-- Preguntas y respuestas que aparecen en /tienda/como-comprar
-- Se pueden agregar, editar y eliminar
-- Se muestran como acordeones expandibles
-- TIP: Incluir preguntas sobre medios de pago, envíos, montos mínimos, plazos de entrega
-
-### 7. FAQs MINORISTA
-- Igual que FAQs Mayorista pero para /minorista/como-comprar
-- Pueden ser preguntas completamente diferentes
-
-## FUNCIONALIDADES CLAVE
-- **Botón "Guardar"** (azul): Guarda los cambios de la sección actual. Se aplican inmediatamente.
-- **Botón "Predeterminado"**: Restaura los valores originales de fábrica para esa sección.
-- **Cada sección es independiente**: Guardar una no afecta a las demás.
-- **Modo Tutorial**: Botón en el header o botón flotante violeta. Guía paso a paso interactiva.
-
-## REGLAS DE RESPUESTA
-- Respondé en español argentino (vos, sos, podés, etc.)
-- Sé conciso y directo. Máximo 3-4 oraciones por respuesta.
-- Si el usuario pregunta algo que no tiene que ver con la personalización de la tienda, indicale amablemente que solo podés ayudar con temas del editor.
-- Si el usuario no sabe cómo llegar, indicale la ruta: sidebar > Tienda > Personalización.
-- Usá formato simple, sin markdown complejo. Podés usar **negritas** y emojis.`;
+Cuándo incluir "suggestedChanges":
+- Siempre que el usuario te pida redactar, mejorar, cambiar, sugerir o generar textos, títulos, descripciones, mensajes de marquesina, colores, montos de incentivos o preguntas frecuentes (FAQs), incluí en "suggestedChanges.fields" los valores listos para aplicar en la sección correspondiente (y especificá "tab" si corresponde a una pestaña específica).
+- Si el usuario solo hace una pregunta conceptual de cómo usar el panel y no pide generar ni cambiar contenido, dejá "suggestedChanges": null.`;
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { messages } = body;
+  const { messages, activeTab, currentConfig } = body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: 'Mensajes requeridos' }, { status: 400 });
@@ -80,6 +58,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'API key no configurada' }, { status: 500 });
   }
 
+  const contextMessage = {
+    role: 'system',
+    content: `Contexto actual del usuario en el editor:
+- Pestaña activa (activeTab): "${activeTab || 'identidad'}"
+- Valores actuales de la pestaña activa (currentConfig): ${JSON.stringify(currentConfig || {})}`,
+  };
+
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -89,12 +74,14 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          ...messages.slice(-10), // Últimos 10 mensajes para contexto
+          contextMessage,
+          ...messages.slice(-10),
         ],
-        max_tokens: 400,
-        temperature: 0.5,
+        max_tokens: 700,
+        temperature: 0.6,
       }),
     });
 
@@ -104,9 +91,33 @@ export async function POST(request: NextRequest) {
       throw new Error(data.error?.message || 'Error de OpenAI');
     }
 
-    const reply = data.choices?.[0]?.message?.content?.trim() || 'No pude generar una respuesta.';
+    const rawContent = data.choices?.[0]?.message?.content?.trim() || '';
+    let reply = 'No pude generar una respuesta.';
+    let suggestedChanges: { tab?: string; fields: Record<string, unknown> } | undefined = undefined;
 
-    return NextResponse.json({ reply });
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (parsed && typeof parsed.reply === 'string') {
+        reply = parsed.reply;
+      }
+      if (
+        parsed &&
+        parsed.suggestedChanges &&
+        typeof parsed.suggestedChanges === 'object' &&
+        parsed.suggestedChanges.fields &&
+        typeof parsed.suggestedChanges.fields === 'object' &&
+        Object.keys(parsed.suggestedChanges.fields).length > 0
+      ) {
+        suggestedChanges = {
+          tab: parsed.suggestedChanges.tab || activeTab,
+          fields: parsed.suggestedChanges.fields,
+        };
+      }
+    } catch {
+      reply = rawContent || 'No pude generar una respuesta.';
+    }
+
+    return NextResponse.json({ reply, suggestedChanges });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : 'Error al consultar el asesor';
     return NextResponse.json({ error: errorMsg }, { status: 500 });

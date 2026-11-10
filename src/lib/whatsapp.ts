@@ -18,24 +18,41 @@ export function generateWhatsAppMessage(
   pedidoNumero?: number,
   tienda: 'minorista' | 'mayorista' = 'mayorista'
 ): string {
-  const total = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+  const descuento = checkout.descuento_monto && checkout.descuento_monto > 0 ? checkout.descuento_monto : 0;
+  const total = Math.max(0, subtotal - descuento);
   const pedidoId = pedidoNumero ? `#${String(pedidoNumero).padStart(4, '0')}` : '';
 
   const productLines = items
-    .map(item => `• ${item.cantidad}x ${item.nombre} — ${formatCurrency(item.precio)} c/u`)
+    .map(item => {
+      const hasVarInName = item.variante && item.nombre.toLowerCase().includes(`(${item.variante.toLowerCase()})`);
+      const displayName = item.variante && !hasVarInName ? `${item.nombre} (${item.variante})` : item.nombre;
+      return `• ${item.cantidad}x ${displayName} — ${formatCurrency(item.precio)} c/u`;
+    })
     .join('\n');
 
   const title = tienda === 'mayorista' ? `🛒 *Nuevo Pedido Mayorista ${pedidoId}*` : `🛒 *Nuevo Pedido Minorista ${pedidoId}*`;
+
+  let discountLines = '';
+  if (descuento > 0) {
+    discountLines += `\n💵 *Subtotal:* ${formatCurrency(subtotal)}`;
+    if (checkout.cupon_codigo) {
+      discountLines += `\n🏷️ *Cupón (${checkout.cupon_codigo}):* -${formatCurrency(descuento)}`;
+    } else if (checkout.coins_usados && checkout.coins_usados > 0) {
+      discountLines += `\n🪙 *Canje Vyper Coins (${checkout.coins_usados}):* -${formatCurrency(descuento)}`;
+    } else {
+      discountLines += `\n🏷️ *Descuento aplicado:* -${formatCurrency(descuento)}`;
+    }
+  }
 
   const message = `${title}
 ━━━━━━━━━━━━━━━━
 👤 *Cliente:* ${checkout.cliente_nombre}
 📱 *Tel:* ${checkout.cliente_telefono}
-📧 *Email:* ${checkout.cliente_email}
-
+${checkout.cliente_email ? `📧 *Email:* ${checkout.cliente_email}\n` : ''}
 📦 *Productos:*
 ${productLines}
-
+${discountLines}
 💰 *Total: ${formatCurrency(total)}*
 ━━━━━━━━━━━━━━━━
 ${checkout.notas ? `📝 *Notas:* ${checkout.notas}\n` : ''}_Pedido generado desde Vyper Labs_`;

@@ -63,6 +63,8 @@ export interface Producto {
   created_at: string;
   updated_at: string;
   variantes?: ProductoVariante[];
+  es_combo?: boolean;
+  combo_items?: { producto_id: string; nombre: string; cantidad: number }[];
   // Joined
   categoria?: Categoria;
   marca?: Marca;
@@ -92,6 +94,9 @@ export interface Pedido {
   estado: 'pendiente' | 'procesando' | 'completado' | 'cancelado';
   total: number;
   notas?: string;
+  cupon_codigo?: string;
+  descuento_monto?: number;
+  coins_usados?: number;
   notificado_whatsapp: boolean;
   created_at: string;
   // Joined
@@ -197,6 +202,8 @@ export interface CartItem {
   imagen?: string;
   stock: number;
   cantidad_minima: number;
+  variante?: string;
+  cart_key?: string;
   venta_costo?: number;
   venta_lista?: ListaPrecio;
 }
@@ -206,6 +213,9 @@ export interface CheckoutData {
   cliente_email: string;
   cliente_telefono: string;
   notas?: string;
+  cupon_codigo?: string;
+  descuento_monto?: number;
+  coins_usados?: number;
 }
 
 // API response types

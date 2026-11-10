@@ -1,42 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface MarqueeConfig {
-  activo: boolean;
-  mensajes: string[];
-}
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 
 export default function MarqueeBar({ storeType = 'minorista' }: { storeType?: 'minorista' | 'mayorista' }) {
-  const [config, setConfig] = useState<MarqueeConfig | null>(null);
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const res = await fetch(`/api/ecommerce/configuraciones?clave=marquesina_${storeType}`);
-        const data = await res.json();
-        if (data && data.valor) {
-          setConfig(data.valor);
-        }
-      } catch (err) {
-        console.error('Error fetching marquee config:', err);
-      }
-    };
-    fetchConfig();
-  }, [storeType]);
+  const { config } = useStoreConfig(storeType === 'mayorista' ? 'marquesina_mayorista' : 'marquesina_minorista');
 
   if (!config || !config.activo || !config.mensajes || config.mensajes.length === 0) {
     return null; // Do not render if disabled or no messages
   }
 
+  // Filter out empty messages
+  const activeMessages = config.mensajes.filter((m) => m && m.trim().length > 0);
+  if (activeMessages.length === 0) {
+    return null;
+  }
+
   // Duplicate messages to create a seamless infinite loop effect
-  const displayMessages = [...config.mensajes, ...config.mensajes, ...config.mensajes];
+  const displayMessages = [...activeMessages, ...activeMessages, ...activeMessages];
 
   return (
     <div style={{
       width: '100%',
-      background: '#222222', // Dark background for the marquee as in tiendanube
-      color: '#ffffff',
+      background: config.bg_color || '#111111',
+      color: config.text_color || '#ffffff',
       overflow: 'hidden',
       position: 'relative',
       zIndex: 60,

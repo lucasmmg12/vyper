@@ -34,6 +34,8 @@ export default function ComprasAdminPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [activeSearchIdx, setActiveSearchIdx] = useState<number | null>(null);
+  const [scannerInput, setScannerInput] = useState('');
+  const [scannerStatus, setScannerStatus] = useState<string>('');
 
   const fetchCompras = useCallback(async () => {
     const res = await fetch('/api/ecommerce/compras');
@@ -83,6 +85,54 @@ export default function ComprasAdminPage() {
     setActiveSearchIdx(null);
     setProductSearch('');
     setProductos([]);
+  };
+
+  const handleQuickScanAdd = async (query: string) => {
+    const clean = query.trim();
+    if (!clean) return;
+    setScannerStatus('Buscando...');
+    try {
+      const res = await fetch(`/api/ecommerce/productos?all=true&limit=10&search=${encodeURIComponent(clean)}`);
+      const data = await res.json();
+      const matches: Producto[] = data.productos || [];
+      // Exact SKU match first, or first search result
+      const exactSku = matches.find(p => p.sku && p.sku.toLowerCase() === clean.toLowerCase());
+      const prod = exactSku || matches[0];
+
+      if (!prod) {
+        setScannerStatus(`❌ Sin resultados para "${clean}"`);
+        return;
+      }
+
+      setItems(prev => {
+        const existingIdx = prev.findIndex(i => i.producto_id === prod.id);
+        if (existingIdx >= 0) {
+          return prev.map((it, idx) =>
+            idx === existingIdx
+              ? { ...it, cantidad: String((parseInt(it.cantidad) || 0) + 1) }
+              : it
+          );
+        }
+        const emptyIdx = prev.findIndex(i => !i.producto_id);
+        const newRow: CompraFormItem = {
+          producto_id: prod.id,
+          producto_nombre: prod.nombre,
+          cantidad: '1',
+          precio_unitario: prod.precio_costo ? String(prod.precio_costo) : '0',
+          precio_anterior: prod.precio_costo || 0,
+        };
+        if (emptyIdx >= 0) {
+          return prev.map((it, idx) => (idx === emptyIdx ? newRow : it));
+        }
+        return [...prev, newRow];
+      });
+
+      setScannerInput('');
+      setScannerStatus(`✅ +1 ${prod.nombre}`);
+      setTimeout(() => setScannerStatus(''), 3000);
+    } catch {
+      setScannerStatus('❌ Error buscando producto');
+    }
   };
 
   const calcTotal = () => {
@@ -215,6 +265,40 @@ export default function ComprasAdminPage() {
                 <label>N° Factura</label>
                 <input value={numeroFactura} onChange={e => setNumeroFactura(e.target.value)} placeholder="Ej: FC-00123" />
               </div>
+            </div>
+
+            {/* Quick Barcode / SKU Scanner */}
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              borderRadius: 12,
+              padding: '0.75rem 1rem',
+              marginBottom: '1rem',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: 'var(--accent-blue)' }}>
+                  🔫 Escáner / Búsqueda Rápida por SKU o Código (Presioná Enter)
+                </label>
+                {scannerStatus && (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: scannerStatus.startsWith('✅') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                    {scannerStatus}
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                autoFocus
+                value={scannerInput}
+                onChange={e => setScannerInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleQuickScanAdd(scannerInput);
+                  }
+                }}
+                placeholder="Escaneá el código de barras / SKU o escribí el nombre y presioná Enter..."
+                style={{ marginBottom: 0, background: 'var(--card-bg)' }}
+              />
             </div>
 
             {/* Items */}
