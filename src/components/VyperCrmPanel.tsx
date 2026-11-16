@@ -509,7 +509,7 @@ export default function VyperCrmPanel() {
                         amount: amountNum,
                         branch: 'Rivadavia',
                         client_id: clientId,
-                        payment_method: 'Efectivo / WhatsApp',
+                        observations: `Venta desde CRM WhatsApp - ${cName}`,
                     }),
                 });
                 // Also add Vyper Coins (1 coin per $1000)
@@ -519,9 +519,10 @@ export default function VyperCrmPanel() {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            userId: clientId,
+                            client_id: clientId,
+                            client_name: cName,
                             amount: amountNum,
-                            coinsAdded: coinsToAdd,
+                            coins_added: coinsToAdd,
                         }),
                     });
                 }
@@ -531,9 +532,10 @@ export default function VyperCrmPanel() {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            userId: clientId,
+                            client_id: clientId,
+                            client_name: cName,
                             amount: amountNum,
-                            transactionType: quickActionType === 'debt_charge' ? 'charge' : 'payment',
+                            transaction_type: quickActionType === 'debt_charge' ? 'charge' : 'payment',
                             notes: 'Cargado desde CRM WhatsApp',
                         }),
                     });
@@ -544,9 +546,10 @@ export default function VyperCrmPanel() {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            userId: clientId,
+                            client_id: clientId,
+                            client_name: cName,
                             amount: amountNum * 1000,
-                            coinsAdded: amountNum,
+                            coins_added: amountNum,
                         }),
                     });
                 }

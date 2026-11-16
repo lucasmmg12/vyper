@@ -42,12 +42,20 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Get client info including phone number and updated coin balance
+        // Get client info including phone number and current coin balance
         const { data: clientData, error: clientError } = await supabase
             .from('users')
             .select('phone, coin_balance')
             .eq('id', client_id)
             .single();
+
+        const updatedCoins = (Number(clientData?.coin_balance || 0)) + parseInt(coins_added);
+        if (!clientError && clientData) {
+            await supabase
+                .from('users')
+                .update({ coin_balance: updatedCoins })
+                .eq('id', client_id);
+        }
 
         if (!clientError && clientData && clientData.phone) {
             // Send WhatsApp notification
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
                 const success = await sendWhatsAppNotification(
                     client_name,
                     parseFloat(amount),
-                    clientData.coin_balance || 0,
+                    updatedCoins,
                     clientData.phone
                 );
 

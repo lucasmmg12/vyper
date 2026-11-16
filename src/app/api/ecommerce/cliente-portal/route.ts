@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     let transactions: any[] = [];
     if (userRow?.id) {
       const { data: txData } = await supabase
-        .from('transactions')
+        .from('coin_transactions')
         .select('*')
-        .eq('user_id', userRow.id)
+        .eq('client_id', userRow.id)
         .order('created_at', { ascending: false })
         .limit(10);
       transactions = txData || [];
@@ -64,9 +64,9 @@ export async function GET(request: NextRequest) {
           debt_balance: Number(userRow.debt_balance || 0),
           transactions: transactions.map(t => ({
             ...t,
-            amountFiat: t.amount_fiat,
-            amountCoins: t.amount_coins,
-            createdAt: t.created_at,
+            amountFiat: Number(t.amount || t.amount_fiat || 0),
+            amountCoins: Number(t.coins_added || t.amount_coins || 0),
+            createdAt: t.date || t.created_at,
           })),
         }
       : pedidosData && pedidosData.length > 0

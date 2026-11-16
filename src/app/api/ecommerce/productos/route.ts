@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     `, { count: 'exact' });
 
   if (!all) {
-    query = query.eq('activo', true).gt('stock', 0);
+    query = query.eq('activo', true);
     query = query.eq(tienda === 'minorista' ? 'activo_minorista' : 'activo_mayorista', true);
     // Filter out empty arrays at DB level to improve pagination consistency
     query = query.not('imagenes', 'eq', '[]').not('imagenes', 'is', null);
@@ -138,6 +138,8 @@ export async function POST(request: NextRequest) {
       lista_escalonada_id: body.lista_escalonada_id || null,
       lista_escalonada_minorista_id: body.lista_escalonada_minorista_id || null,
       variantes: body.variantes || [],
+      es_combo: body.es_combo ?? false,
+      combo_items: body.combo_items || [],
     }])
     .select()
     .single();
