@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getTemplateMapping, sendWhatsAppTemplate } from '@/lib/builderbot';
 
 export async function POST(request: Request) {
     try {
@@ -248,28 +249,52 @@ ${alerts.join('\n')}`;
 
 🤖 Automatización creada por *Grow Labs*.`;
 
-        // ─── SEND VIA BUILDERBOT ────────────────────────
+        // ─── SEND VIA BUILDERBOT META TEMPLATE ──────────
 
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-builderbot': apiKey
-            },
-            body: JSON.stringify({
-                messages: {
-                    content: message
-                },
-                number: ownerPhone,
-                checkIfExists: false
-            })
-        });
+        const mapping = await getTemplateMapping();
+        const sucursalesSummary =
+            salesRivadavia > 0 || salesRawson > 0
+                ? `Rivadavia: $${salesRivadavia.toLocaleString('es-AR')} | Rawson: $${salesRawson.toLocaleString('es-AR')}`
+                : 'General (sin desglose por sucursal)';
+        const ctaCteSummary = `Cargos: $${newCharges.toLocaleString('es-AR')} | Cobros: $${payments.toLocaleString('es-AR')}`;
+        const alertasSummary = alerts.length > 0 ? alerts.join(' | ').replace(/\*/g, '') : 'Sin alertas críticas hoy';
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Daily summary send error:', response.status, errorText);
+        const sendRes =
+            mapping.modo === 'universal'
+                ? await sendWhatsAppTemplate({
+                      to: ownerPhone,
+                      templateName: mapping.universalTemplateName,
+                      languageCode: mapping.languageCode,
+                      parameters: [
+                          'Equipo Vyper',
+                          `Resumen Financiero del Día (${dayName} ${dateStr})`,
+                          `Ventas: $${totalSales.toLocaleString('es-AR')} (${salesCount} ops) · Egresos: $${totalExpenses.toLocaleString('es-AR')} (${expensesCount} ops) · Ganancia Neta: $${netProfit.toLocaleString('es-AR')} · Ticket Prom: $${avgTicket.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`,
+                          `Sucursales: ${sucursalesSummary} · Cta Cte: ${ctaCteSummary} · Alertas: ${alertasSummary}`,
+                      ],
+                  })
+                : await sendWhatsAppTemplate({
+                      to: ownerPhone,
+                      templateName: mapping.templates.resumen_diario,
+                      languageCode: mapping.languageCode,
+                      parameters: [
+                          `${dayName} ${dateStr}`,
+                          `$${totalSales.toLocaleString('es-AR')}`,
+                          String(salesCount),
+                          `$${totalExpenses.toLocaleString('es-AR')}`,
+                          String(expensesCount),
+                          `$${netProfit.toLocaleString('es-AR')}`,
+                          `$${avgTicket.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`,
+                          comparisonStr.replace(/\*/g, ''),
+                          sucursalesSummary,
+                          ctaCteSummary,
+                          alertasSummary,
+                      ],
+                  });
+
+        if (!sendRes.ok) {
+            console.error('Daily summary template send error:', sendRes.error, sendRes.response);
             return NextResponse.json(
-                { error: 'Failed to send daily summary', details: errorText },
+                { error: 'Failed to send daily summary template', details: sendRes.error },
                 { status: 500 }
             );
         }
