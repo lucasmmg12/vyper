@@ -619,10 +619,9 @@ export default function VyperCrmPanel() {
         });
     }, [conversations, quickFilter, searchQuery]);
 
-    const webhookUrl =
-        typeof window !== 'undefined'
-            ? `${window.location.origin}/api/webhook/whatsapp`
-            : 'https://tu-dominio.vercel.app/api/webhook/whatsapp';
+    const webhookUrl = `${
+        process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ophbmcprxcnpkpndusbe.supabase.co'
+    }/functions/v1/whatsapp-webhook`;
 
     return (
         <div
