@@ -1,6 +1,8 @@
-// Helper functions to send and list WhatsApp Meta Templates via BuilderBot API v2
+// Helper functions to send and list WhatsApp Meta Templates & Direct Messages via BuilderBot API v2
 import { getTierText, getTier } from '@/utils/tiers';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
+
+const db = supabaseAdmin || supabase;
 
 export interface WhatsAppTemplatePayload {
     to: string;
@@ -64,19 +66,100 @@ export function sanitizeMetaParam(val: string | number | undefined | null): stri
 }
 
 /**
- * Normalizes Argentine phone numbers to international format without '+'
- * e.g., 2646796509 -> 5492646796509
+ * Normaliza un número argentino para WhatsApp (estándar 549 + 10 dígitos, default San Juan 264)
+ * Idéntico al normalizador probado en ADM-QUI.
  */
-export function normalizePhoneForMeta(phone: string): string {
-    const digits = (phone || '').replace(/\D/g, '');
-    if (!digits) return '';
-    if (digits.startsWith('54')) return digits;
-    return `549${digits}`;
+const DEFAULT_AREA_CODE = '264';
+
+export function normalizeArgentinePhone(phone: string | null | undefined): string {
+    if (!phone) return '';
+    let clean = String(phone).replace(/\D/g, '');
+    if (!clean) return '';
+
+    if (clean.startsWith('549') && clean.length === 13) return clean;
+
+    if (clean.startsWith('549') && clean.length > 13) {
+        const inner = clean.slice(3);
+        const idx15 = inner.indexOf('15');
+        if (idx15 >= 2 && idx15 <= 4) {
+            const cleaned = inner.slice(0, idx15) + inner.slice(idx15 + 2);
+            if (cleaned.length === 10) return '549' + cleaned;
+        }
+        return '549' + inner.slice(0, 10);
+    }
+
+    if (clean.startsWith('54') && !clean.startsWith('549')) {
+        clean = clean.slice(2);
+    }
+
+    if (clean.startsWith('0')) {
+        clean = clean.slice(1);
+    }
+
+    if (clean.startsWith('15') && clean.length <= 10) {
+        clean = DEFAULT_AREA_CODE + clean.slice(2);
+        return '549' + clean;
+    }
+
+    if (clean.length > 10 && clean.includes('15')) {
+        const idx = clean.indexOf('15');
+        if (idx >= 2 && idx <= 4) {
+            clean = clean.slice(0, idx) + clean.slice(idx + 2);
+        }
+    }
+
+    if (clean.length === 7) {
+        clean = DEFAULT_AREA_CODE + clean;
+    }
+
+    if (clean.length > 10) {
+        clean = clean.slice(0, 10);
+    }
+
+    return '549' + clean;
+}
+
+export const normalizePhoneForMeta = normalizeArgentinePhone;
+
+/**
+ * Registra un mensaje saliente en la tabla whatsapp_messages del CRM
+ */
+export async function logOutgoingCrmMessage({
+    phone,
+    content,
+    mediaUrl = null,
+    mediaType = 'text',
+    senderName = 'Vyper Labs',
+    rawPayload = null,
+}: {
+    phone: string;
+    content: string;
+    mediaUrl?: string | null;
+    mediaType?: string;
+    senderName?: string;
+    rawPayload?: any;
+}) {
+    try {
+        const normPhone = normalizeArgentinePhone(phone);
+        if (!normPhone) return;
+        await db.from('whatsapp_messages').insert({
+            phone: normPhone,
+            direction: 'outgoing',
+            content: content || '',
+            media_url: mediaUrl,
+            media_type: mediaType || 'text',
+            sender_name: senderName,
+            is_read: true,
+            raw_payload: rawPayload,
+        });
+    } catch (e) {
+        console.warn('[CRM] No se pudo registrar mensaje saliente en whatsapp_messages:', e);
+    }
 }
 
 export async function getTemplateMapping(): Promise<WhatsAppTemplateMapping> {
     try {
-        const { data } = await supabase
+        const { data } = await db
             .from('configuraciones')
             .select('valor')
             .eq('clave', 'whatsapp_meta_templates')
@@ -147,19 +230,106 @@ export async function listWhatsAppTemplates(limit = 50): Promise<{
 }
 
 /**
+ * POST /api/v2/{id}/messages
+ * Envía un mensaje directo (texto o archivo multimedia) dentro de la ventana de 24h de WhatsApp
+ */
+export async function sendDirectWhatsAppMessage({
+    to,
+    content,
+    mediaUrl,
+    senderName = 'Operador Vyper',
+    skipCrmLog = false,
+}: {
+    to: string;
+    content: string;
+    mediaUrl?: string;
+    senderName?: string;
+    skipCrmLog?: boolean;
+}): Promise<{ ok: boolean; error?: string; response?: any }> {
+    try {
+        const baseUrl = getBuilderBotBaseUrl();
+        const apiKey = process.env.BUILDERBOT_API_KEY;
+
+        if (!baseUrl || !apiKey) {
+            return { ok: false, error: 'Credenciales de BuilderBot no configuradas' };
+        }
+
+        const cleanPhone = normalizeArgentinePhone(to);
+        if (!cleanPhone) {
+            return { ok: false, error: 'Número de teléfono inválido' };
+        }
+
+        const payload = {
+            messages: {
+                content: content || (mediaUrl ? '📎 Archivo adjunto' : ''),
+                ...(mediaUrl ? { mediaUrl } : {}),
+            },
+            number: cleanPhone,
+            checkIfExists: false,
+        };
+
+        const response = await fetch(`${baseUrl}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-builderbot': apiKey,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json().catch(async () => ({ raw: await response.text() }));
+
+        if (!response.ok) {
+            return {
+                ok: false,
+                error: data?.error || data?.message || `Error HTTP ${response.status}`,
+                response: data,
+            };
+        }
+
+        if (!skipCrmLog) {
+            const inferredType = mediaUrl
+                ? /\.(mp3|ogg|oga|opus|wav|m4a|webm)($|\?)/i.test(mediaUrl)
+                    ? 'audio'
+                    : /\.(jpe?g|png|gif|webp)($|\?)/i.test(mediaUrl)
+                    ? 'image'
+                    : 'document'
+                : 'text';
+
+            await logOutgoingCrmMessage({
+                phone: cleanPhone,
+                content: content || '',
+                mediaUrl: mediaUrl || null,
+                mediaType: inferredType,
+                senderName,
+                rawPayload: { source: 'crm_direct', response: data },
+            });
+        }
+
+        return { ok: true, response: data };
+    } catch (error: any) {
+        return { ok: false, error: error?.message || 'Error de red enviando mensaje' };
+    }
+}
+
+/**
  * POST /api/v2/{id}/whatsapp-template
- * Envía una plantilla aprobada por Meta a través de BuilderBot
+ * Envía una plantilla aprobada por Meta a través de BuilderBot y la registra en el CRM
  */
 export async function sendWhatsAppTemplate({
     to,
     templateName,
     languageCode = 'es_AR',
     parameters = [],
+    renderedText,
+    senderName = 'Sistema Vyper (Plantilla Meta)',
 }: {
     to: string;
     templateName: string;
     languageCode?: string;
     parameters?: (string | number)[];
+    renderedText?: string;
+    senderName?: string;
 }): Promise<{ ok: boolean; error?: string; response?: any }> {
     try {
         const baseUrl = getBuilderBotBaseUrl();
@@ -169,10 +339,12 @@ export async function sendWhatsAppTemplate({
             return { ok: false, error: 'BuilderBot credentials not configured' };
         }
 
-        const cleanPhone = normalizePhoneForMeta(to);
+        const cleanPhone = normalizeArgentinePhone(to);
         if (!cleanPhone) {
             return { ok: false, error: 'Número de teléfono inválido' };
         }
+
+        const sanitizedParams = parameters.map(p => sanitizeMetaParam(p));
 
         const payload: WhatsAppTemplatePayload = {
             to: cleanPhone,
@@ -180,13 +352,13 @@ export async function sendWhatsAppTemplate({
             languageCode,
         };
 
-        if (parameters.length > 0) {
+        if (sanitizedParams.length > 0) {
             payload.components = [
                 {
                     type: 'body',
-                    parameters: parameters.map(p => ({
+                    parameters: sanitizedParams.map(text => ({
                         type: 'text',
-                        text: sanitizeMetaParam(p),
+                        text,
                     })),
                 },
             ];
@@ -202,6 +374,28 @@ export async function sendWhatsAppTemplate({
         });
 
         const data = await response.json().catch(async () => ({ raw: await response.text() }));
+
+        const previewContent =
+            renderedText ||
+            (templateName === 'vyper_notificacion_general' && sanitizedParams.length >= 4
+                ? `👋 Hola *${sanitizedParams[0]}*, te enviamos una actualización de *Vyper Suplementos*:\n\n📌 *Motivo:* ${sanitizedParams[1]}\n📊 *Detalle:* ${sanitizedParams[2]}\n\n💡 ${sanitizedParams[3]}`
+                : `📋 [Plantilla Meta: ${templateName}] ${sanitizedParams.join(' | ')}`);
+
+        // Log in CRM even if template is still PENDING approval in Meta so operator sees the attempt
+        await logOutgoingCrmMessage({
+            phone: cleanPhone,
+            content: previewContent,
+            mediaType: 'text',
+            senderName,
+            rawPayload: {
+                source: 'meta_template',
+                templateName,
+                languageCode,
+                parameters: sanitizedParams,
+                ok: response.ok,
+                response: data,
+            },
+        });
 
         if (!response.ok) {
             console.error('BuilderBot whatsapp-template error:', response.status, data);

@@ -17,6 +17,7 @@ import {
     Send,
     UserCog,
     Settings,
+    MessageSquare,
 } from 'lucide-react';
 
 interface CurrentUser {
@@ -27,7 +28,8 @@ interface CurrentUser {
 }
 
 const navItems = [
-    { href: '/admin', label: 'Inicio', icon: LayoutDashboard },
+    { href: '/admin', label: 'Inicio (POS & CRM)', icon: LayoutDashboard },
+    { href: '/admin/crm', label: 'CRM WhatsApp', icon: MessageSquare },
     { href: '/admin/vyper-coins', label: 'Vyper Coins', icon: Coins },
     { href: '/admin/debt', label: 'Cta Corriente', icon: CreditCard },
     { href: '/admin/clients', label: 'Clientes', icon: Users },
