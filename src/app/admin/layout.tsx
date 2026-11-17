@@ -30,7 +30,7 @@ interface CurrentUser {
 }
 
 const navItems = [
-    { href: '/admin', label: 'Inicio (POS & CRM)', icon: LayoutDashboard },
+    { href: '/admin', label: 'Inicio', icon: LayoutDashboard },
     { href: '/admin/crm', label: 'Whatsapp', icon: MessageSquare },
     { href: '/admin/vyper-coins', label: 'Vyper Coins', icon: Coins },
     { href: '/admin/debt', label: 'Cta Corriente', icon: CreditCard },
