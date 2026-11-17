@@ -35,9 +35,13 @@ import {
     Mic,
     Square,
     Eye,
+    Bot,
+    StickyNote,
+    Tag as TagIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getTier } from '@/utils/tiers';
+import { showVyperToast } from '@/components/CommandPalette';
 
 const EMOJI_LIST = [
     '😀', '😂', '😊', '😎', '🤩', '🥳', '💪', '🦾', '🔥', '⚡',
@@ -210,6 +214,14 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
     const recordingTimerRef = useRef<any>(null);
     const recognitionRef = useRef<any>(null);
 
+    // Smart features: Audio speed, AI Smart Reply, Internal Note Mode, Chat Tags & Product Quoter
+    const [audioSpeeds, setAudioSpeeds] = useState<Record<number, number>>({});
+    const [suggestingReply, setSuggestingReply] = useState(false);
+    const [isNoteMode, setIsNoteMode] = useState(false);
+    const [chatTags, setChatTags] = useState<Record<string, string>>({});
+    const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+    const [quoteSearch, setQuoteSearch] = useState('');
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -265,6 +277,7 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
             }
             if (data.shortcuts) setShortcuts(data.shortcuts);
             if (data.botStatus) setBotStatus(data.botStatus);
+            if (data.chatTags) setChatTags(data.chatTags);
         } catch (e) {
             console.error('Error fetching CRM list:', e);
         } finally {
@@ -301,6 +314,30 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
         }, 8000);
         return () => clearInterval(interval);
     }, [selectedPhone]);
+
+    // Auto-open phone from URL query parameter (?phone=...) and load catalog for quick quoting
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const phoneParam = params.get('phone');
+            if (phoneParam) {
+                const digits = phoneParam.replace(/\D/g, '');
+                const norm = digits.startsWith('549')
+                    ? digits
+                    : digits.startsWith('54')
+                    ? `549${digits.slice(2)}`
+                    : `549${digits}`;
+                setSelectedPhone(norm);
+                fetchConversationDetail(norm);
+            }
+        }
+        fetch('/api/ecommerce/productos?all=true&limit=200')
+            .then(r => r.json())
+            .then(d => {
+                if (d?.productos) setCatalogProducts(d.productos);
+            })
+            .catch(() => {});
+    }, []);
 
     // Realtime subscription to whatsapp_messages
     useEffect(() => {
@@ -645,7 +682,53 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
         }
     };
 
-    // Send direct message (or pending attachment)
+    // Suggest smart reply using Growy AI
+    const handleSuggestReplyWithGrowy = async () => {
+        if (!selectedPhone || suggestingReply) return;
+        setSuggestingReply(true);
+        try {
+            const res = await fetch('/api/ai/growy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mode: 'suggest_reply',
+                    chatContext: {
+                        clientName: activeClient?.name || selectedConv?.senderName || 'Cliente',
+                        coins: activeClient?.coin_balance || 0,
+                        debt: activeClient?.debt_balance || 0,
+                        messages: messages.slice(-8),
+                    },
+                }),
+            });
+            const data = await res.json();
+            if (data?.reply) {
+                setMessageText(data.reply);
+                showVyperToast('✨ Respuesta sugerida por Growy lista para enviar');
+            }
+        } catch {
+            showVyperToast('Error consultando sugerencia de Growy', 'error');
+        } finally {
+            setSuggestingReply(false);
+        }
+    };
+
+    const handleSetChatTag = async (tag: string) => {
+        if (!selectedPhone) return;
+        setChatTags(prev => {
+            const next = { ...prev };
+            if (!tag) delete next[selectedPhone];
+            else next[selectedPhone] = tag;
+            return next;
+        });
+        await fetch('/api/crm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set_chat_tag', phone: selectedPhone, tag }),
+        });
+        showVyperToast(tag ? `Etiqueta "${tag}" asignada` : 'Etiqueta quitada');
+    };
+
+    // Send direct message (or pending attachment or internal note)
     const handleSendMessage = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         if (!selectedPhone || sending || uploadingMedia) return;
@@ -666,6 +749,30 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
         setMessageText('');
         setShowEmoji(false);
 
+        if (isNoteMode) {
+            try {
+                await fetch('/api/crm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'add_internal_note',
+                        phone: selectedPhone,
+                        content: textToSend,
+                    }),
+                });
+                setIsNoteMode(false);
+                showVyperToast('📌 Nota interna guardada en el historial');
+                await fetchConversationDetail(selectedPhone, true);
+                scrollToBottom();
+            } catch {
+                showVyperToast('Error guardando nota interna', 'error');
+                setMessageText(textToSend);
+            } finally {
+                setSending(false);
+            }
+            return;
+        }
+
         try {
             const res = await fetch('/api/crm', {
                 method: 'POST',
@@ -678,7 +785,10 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
             });
             const data = await res.json();
             if (!res.ok || !data.ok) {
-                alert(`No se pudo enviar el mensaje directo: ${data.error || 'Verificá si la ventana de 24h está abierta o enviá una Plantilla Meta.'}`);
+                showVyperToast(
+                    `No se pudo enviar directo: ${data.error || 'Usá Plantilla Meta'}`,
+                    'error'
+                );
                 setMessageText(textToSend);
             } else {
                 await fetchConversationDetail(selectedPhone, true);
@@ -686,7 +796,7 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                 scrollToBottom();
             }
         } catch (err: any) {
-            alert(`Error enviando mensaje: ${err?.message}`);
+            showVyperToast(`Error enviando mensaje: ${err?.message}`, 'error');
             setMessageText(textToSend);
         } finally {
             setSending(false);
@@ -1530,6 +1640,23 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                                                     }}
                                                 >
+                                                    {msg.media_type === 'note' && (
+                                                        <div
+                                                            style={{
+                                                                fontSize: '0.675rem',
+                                                                fontWeight: 900,
+                                                                textTransform: 'uppercase',
+                                                                color: '#FBBF24',
+                                                                marginBottom: 4,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 5,
+                                                            }}
+                                                        >
+                                                            📌 NOTA INTERNA (No enviada al cliente)
+                                                        </div>
+                                                    )}
+
                                                     {/* Media Rendering */}
                                                     {msg.media_url && (msg.media_type === 'image' || msg.media_type === 'sticker') && (
                                                         <div style={{ marginBottom: 6 }}>
@@ -1554,15 +1681,52 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                                             (typeof msg.raw_payload === 'object' && msg.raw_payload?.transcription) ||
                                                             '';
                                                         const isTranscribing = Boolean(transcribingIds[msg.id]);
+                                                        const currentSpeed = audioSpeeds[msg.id] || 1;
 
                                                         return (
-                                                            <div style={{ marginBottom: 6, minWidth: 255 }}>
-                                                                <audio
-                                                                    controls
-                                                                    preload="metadata"
-                                                                    src={msg.media_url}
-                                                                    style={{ width: '100%', height: 36 }}
-                                                                />
+                                                            <div style={{ marginBottom: 6, minWidth: 265 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <audio
+                                                                        id={`crm-audio-${msg.id}`}
+                                                                        controls
+                                                                        preload="metadata"
+                                                                        src={msg.media_url}
+                                                                        style={{ flex: 1, height: 36 }}
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const nextSpeed =
+                                                                                currentSpeed === 1
+                                                                                    ? 1.5
+                                                                                    : currentSpeed === 1.5
+                                                                                    ? 2
+                                                                                    : 1;
+                                                                            setAudioSpeeds(prev => ({
+                                                                                ...prev,
+                                                                                [msg.id]: nextSpeed,
+                                                                            }));
+                                                                            const el = document.getElementById(
+                                                                                `crm-audio-${msg.id}`
+                                                                            ) as HTMLAudioElement | null;
+                                                                            if (el) el.playbackRate = nextSpeed;
+                                                                        }}
+                                                                        title="Cambiar velocidad de reproducción (1x / 1.5x / 2x)"
+                                                                        style={{
+                                                                            padding: '0.25rem 0.45rem',
+                                                                            borderRadius: 6,
+                                                                            fontSize: '0.675rem',
+                                                                            fontWeight: 900,
+                                                                            background: isOut ? '#FFFFFF' : '#111111',
+                                                                            color: isOut ? '#111111' : '#FFFFFF',
+                                                                            minHeight: 'auto',
+                                                                            boxShadow: 'none',
+                                                                            flexShrink: 0,
+                                                                        }}
+                                                                    >
+                                                                        {currentSpeed}x
+                                                                    </button>
+                                                                </div>
                                                                 <div
                                                                     style={{
                                                                         display: 'flex',
@@ -2275,6 +2439,50 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                         <Mic size={19} />
                                     </button>
 
+                                    <button
+                                        type="button"
+                                        onClick={handleSuggestReplyWithGrowy}
+                                        disabled={suggestingReply || sending}
+                                        className="btn-ghost"
+                                        style={{
+                                            padding: '0.4rem 0.6rem',
+                                            minHeight: 'auto',
+                                            fontSize: '0.725rem',
+                                            fontWeight: 800,
+                                            border: '1px solid #E5E7EB',
+                                            borderRadius: 8,
+                                            color: '#111111',
+                                        }}
+                                        title="Sugerir respuesta automática con Growy IA"
+                                    >
+                                        {suggestingReply ? (
+                                            <Loader2 size={15} className="animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Sparkles size={14} /> Growy
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsNoteMode(!isNoteMode)}
+                                        className="btn-ghost"
+                                        style={{
+                                            padding: '0.4rem 0.6rem',
+                                            minHeight: 'auto',
+                                            fontSize: '0.725rem',
+                                            fontWeight: 800,
+                                            borderRadius: 8,
+                                            background: isNoteMode ? '#111111' : 'transparent',
+                                            color: isNoteMode ? '#FBBF24' : '#6B7280',
+                                            border: '1px solid #E5E7EB',
+                                        }}
+                                        title="Modo Nota Interna (solo visible para el equipo, no se envía al cliente)"
+                                    >
+                                        📌 Nota
+                                    </button>
+
                                     <input
                                         type="text"
                                         value={messageText}
@@ -2573,6 +2781,154 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                         </button>
                                     </div>
                                 </form>
+                            )}
+                        </div>
+
+                        {/* Chat Tag Selector & Quick Product Quoter */}
+                        <div>
+                            <div
+                                style={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 800,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.06em',
+                                    color: '#6B7280',
+                                    marginBottom: 6,
+                                }}
+                            >
+                                ETIQUETA DE CONVERSACIÓN
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {['Pendiente Pago', 'Para Despachar', 'Mayorista', 'Resuelto'].map(tag => {
+                                    const active = chatTags[selectedPhone] === tag;
+                                    return (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => handleSetChatTag(active ? '' : tag)}
+                                            style={{
+                                                padding: '0.25rem 0.55rem',
+                                                fontSize: '0.675rem',
+                                                fontWeight: 700,
+                                                borderRadius: 999,
+                                                background: active ? '#111111' : '#F3F4F6',
+                                                color: active ? '#FFFFFF' : '#374151',
+                                                border: 'none',
+                                                minHeight: 'auto',
+                                                boxShadow: 'none',
+                                            }}
+                                        >
+                                            {tag}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Quick Product Quoter right inside Chat */}
+                        <div>
+                            <div
+                                style={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 800,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.06em',
+                                    color: '#6B7280',
+                                    marginBottom: 6,
+                                }}
+                            >
+                                🛒 COTIZAR PRODUCTO EN EL CHAT
+                            </div>
+                            <input
+                                type="text"
+                                value={quoteSearch}
+                                onChange={e => setQuoteSearch(e.target.value)}
+                                placeholder="Buscar suplemento o SKU..."
+                                style={{
+                                    marginBottom: 6,
+                                    padding: '0.4rem 0.65rem',
+                                    fontSize: '0.775rem',
+                                }}
+                            />
+                            {quoteSearch.trim().length > 1 && (
+                                <div
+                                    style={{
+                                        maxHeight: 165,
+                                        overflowY: 'auto',
+                                        border: '1px solid #E5E7EB',
+                                        borderRadius: 8,
+                                        background: '#FAFAFA',
+                                    }}
+                                >
+                                    {catalogProducts
+                                        .filter(
+                                            p =>
+                                                (p.nombre || '')
+                                                    .toLowerCase()
+                                                    .includes(quoteSearch.toLowerCase()) ||
+                                                (p.codigo_sku || '')
+                                                    .toLowerCase()
+                                                    .includes(quoteSearch.toLowerCase())
+                                        )
+                                        .slice(0, 6)
+                                        .map(prod => {
+                                            const priceB2C = Number(prod.precio_minorista || prod.precio || 0);
+                                            const priceB2B = Number(prod.precio_mayorista || prod.precio || 0);
+                                            return (
+                                                <div
+                                                    key={prod.id}
+                                                    style={{
+                                                        padding: '0.45rem 0.6rem',
+                                                        borderBottom: '1px solid #E5E7EB',
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        gap: 6,
+                                                    }}
+                                                >
+                                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                                        <div
+                                                            style={{
+                                                                fontWeight: 700,
+                                                                whiteSpace: 'nowrap',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                            }}
+                                                        >
+                                                            {prod.nombre}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.675rem', color: '#6B7280' }}>
+                                                            May: ${priceB2B.toLocaleString('es-AR')} · Min: $
+                                                            {priceB2C.toLocaleString('es-AR')}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const quoteLine = `📦 *${prod.nombre}*: $${priceB2C.toLocaleString('es-AR')} (Mayorista: $${priceB2B.toLocaleString('es-AR')})`;
+                                                            setMessageText(prev =>
+                                                                prev ? `${prev}\n${quoteLine}` : quoteLine
+                                                            );
+                                                            setQuoteSearch('');
+                                                            showVyperToast('Cotización insertada en el mensaje');
+                                                        }}
+                                                        style={{
+                                                            padding: '0.2rem 0.5rem',
+                                                            fontSize: '0.675rem',
+                                                            background: '#111111',
+                                                            color: '#FFFFFF',
+                                                            borderRadius: 6,
+                                                            minHeight: 'auto',
+                                                            boxShadow: 'none',
+                                                        }}
+                                                    >
+                                                        + Chat
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
                             )}
                         </div>
 

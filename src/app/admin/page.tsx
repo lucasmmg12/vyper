@@ -8,6 +8,7 @@ import ExcelImporter from '@/components/ExcelImporter';
 import VyperCrmPanel from '@/components/VyperCrmPanel';
 import { Upload, Send, MessageSquare } from 'lucide-react';
 import DailySummaryModal from '@/components/DailySummaryModal';
+import { showVyperToast } from '@/components/CommandPalette';
 
 export default function AdminPage() {
     const [view, setView] = useState<'SALES' | 'EXPENSES' | 'CRM'>('SALES');
@@ -34,7 +35,7 @@ export default function AdminPage() {
     }, []);
 
     const handleSuccess = () => {
-        alert(view === 'SALES' ? 'Venta guardada' : 'Gasto guardado');
+        showVyperToast(view === 'SALES' ? '✅ Venta registrada correctamente' : '✅ Egreso registrado correctamente');
         setRefreshTrigger(prev => prev + 1);
         setShowImporter(false);
     };

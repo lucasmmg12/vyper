@@ -187,6 +187,7 @@ export default function ClientsPage() {
                                         <th style={{ padding: '0.75rem 0.5rem', color: '#111' }}>Teléfono</th>
                                         <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Coins</th>
                                         <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Deuda</th>
+                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>CRM</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -195,20 +196,41 @@ export default function ClientsPage() {
                                             key={c.id}
                                             onClick={() => setSelectedClient(c)}
                                             style={{
-                                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                                borderBottom: '1px solid #F3F4F6',
                                                 cursor: 'pointer',
                                                 transition: 'background 0.2s'
                                             }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#F8F9FA'}
                                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         >
-                                            <td style={{ padding: '0.75rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <td style={{ padding: '0.75rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}>
                                                 {c.name} <TierBadge coins={c.coin_balance} size="sm" />
                                             </td>
                                             <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)' }}>{c.phone}</td>
-                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#facc15' }}>{c.coin_balance}</td>
-                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: c.debt_balance > 0 ? '#ef4444' : '#4ade80' }}>
+                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#111111' }}>🪙 {c.coin_balance}</td>
+                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 700, color: c.debt_balance > 0 ? '#ef4444' : '#10b981' }}>
                                                 ${c.debt_balance.toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                                                {c.phone && (
+                                                    <Link
+                                                        href={`/admin/crm?phone=${encodeURIComponent(c.phone)}`}
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: 4,
+                                                            padding: '0.25rem 0.6rem',
+                                                            borderRadius: 6,
+                                                            background: '#111111',
+                                                            color: '#FFFFFF',
+                                                            fontSize: '0.725rem',
+                                                            fontWeight: 700,
+                                                            textDecoration: 'none',
+                                                        }}
+                                                    >
+                                                        💬 Chat
+                                                    </Link>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

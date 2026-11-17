@@ -20,7 +20,11 @@ import {
     MessageSquare,
     PanelLeftClose,
     PanelLeftOpen,
+    Search,
+    Bot,
 } from 'lucide-react';
+import GrowyAssistant from '@/components/GrowyAssistant';
+import CommandPalette from '@/components/CommandPalette';
 
 interface CurrentUser {
     id: string;
@@ -51,6 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const router = useRouter();
     const [user, setUser] = useState<CurrentUser | null>(null);
     const [collapsed, setCollapsed] = useState(false);
+    const [unreadWhatsapp, setUnreadWhatsapp] = useState(0);
     const isLoginPage = pathname === '/admin/login';
     const isCrmFullPage = pathname === '/admin/crm';
 
@@ -62,6 +67,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             // ignore
         }
     }, []);
+
+    // Poll unread WhatsApp messages for global sidebar badge
+    useEffect(() => {
+        if (isLoginPage) return;
+        const fetchUnread = () => {
+            fetch('/api/crm')
+                .then(r => r.json())
+                .then(d => {
+                    if (typeof d?.totalUnread === 'number') {
+                        setUnreadWhatsapp(d.totalUnread);
+                    }
+                })
+                .catch(() => {});
+        };
+        fetchUnread();
+        const interval = setInterval(fetchUnread, 10000);
+        return () => clearInterval(interval);
+    }, [isLoginPage]);
 
     const toggleSidebar = () => {
         setCollapsed(prev => {
@@ -167,18 +190,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* Nav */}
                 <nav className="sidebar-nav">
                     <div className="sidebar-nav-group">
+                        {/* Quick Global Search (Ctrl+K) */}
+                        <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+                            title="Buscador rápido (Ctrl + K)"
+                            className="sidebar-nav-item"
+                            style={{
+                                marginBottom: 6,
+                                background: 'rgba(255,255,255,0.08)',
+                                border: '1px solid rgba(255,255,255,0.14)',
+                                color: '#E5E7EB',
+                                justifyContent: collapsed ? 'center' : 'space-between',
+                            }}
+                        >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                <Search size={16} style={{ flexShrink: 0 }} />
+                                {!collapsed && <span>Buscar...</span>}
+                            </span>
+                            {!collapsed && (
+                                <kbd
+                                    style={{
+                                        fontSize: '0.65rem',
+                                        padding: '0.1rem 0.35rem',
+                                        borderRadius: 4,
+                                        background: 'rgba(255,255,255,0.15)',
+                                        color: '#FFFFFF',
+                                    }}
+                                >
+                                    Ctrl+K
+                                </kbd>
+                            )}
+                        </button>
+
                         {navItems.map(item => {
                             const Icon = item.icon;
                             const active = isActive(item.href);
+                            const isWa = item.href === '/admin/crm';
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
                                     title={collapsed ? item.label : undefined}
                                     className={`sidebar-nav-item ${active ? 'active' : ''}`}
+                                    style={{ position: 'relative', justifyContent: collapsed ? 'center' : 'space-between' }}
                                 >
-                                    <Icon size={18} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
-                                    {!collapsed && <span>{item.label}</span>}
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                        <Icon size={18} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
+                                        {!collapsed && <span>{item.label}</span>}
+                                    </span>
+                                    {isWa && unreadWhatsapp > 0 && (
+                                        <span
+                                            style={{
+                                                background: active ? '#111111' : '#FFFFFF',
+                                                color: active ? '#FFFFFF' : '#111111',
+                                                borderRadius: 999,
+                                                padding: collapsed ? '0.05rem 0.35rem' : '0.1rem 0.45rem',
+                                                fontSize: '0.65rem',
+                                                fontWeight: 900,
+                                                position: collapsed ? 'absolute' : 'static',
+                                                top: collapsed ? 4 : undefined,
+                                                right: collapsed ? 4 : undefined,
+                                            }}
+                                        >
+                                            {unreadWhatsapp}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}
@@ -263,6 +340,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <p className="admin-topbar-sub">Sistema de gestión integral</p>
                         </div>
                         <div className="admin-topbar-right">
+                            <button
+                                type="button"
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+                                className="secondary"
+                                style={{
+                                    padding: '0.45rem 0.85rem',
+                                    fontSize: '0.775rem',
+                                    borderRadius: 999,
+                                    minHeight: 'auto',
+                                }}
+                            >
+                                <Search size={14} /> Buscar <kbd style={{ fontSize: '0.675rem', opacity: 0.7 }}>Ctrl+K</kbd>
+                            </button>
                             <span className="admin-topbar-date">{formattedDate}</span>
                         </div>
                     </header>
@@ -273,6 +363,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {children}
                 </main>
             </div>
+
+            {/* Global Command Palette (Ctrl+K) + Toast System + Growy Virtual Assistant */}
+            <CommandPalette />
+            <GrowyAssistant />
         </div>
     );
 }

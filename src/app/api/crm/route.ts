@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // 2. Listado general de conversaciones + Clientes + Pedidos + Atajos + Estado del Bot
-        const [messagesRes, usersRes, pedidosRes, shortcutsRes, botStatusRes] = await Promise.all([
+        // 2. Listado general de conversaciones + Clientes + Pedidos + Atajos + Estado del Bot + Etiquetas
+        const [messagesRes, usersRes, pedidosRes, shortcutsRes, botStatusRes, tagsConfigRes] = await Promise.all([
             db
                 .from('whatsapp_messages')
                 .select('id, phone, content, direction, sender_name, is_read, created_at, media_type, media_url')
@@ -91,7 +91,17 @@ export async function GET(request: NextRequest) {
                 .select('valor, updated_at')
                 .eq('clave', 'whatsapp_bot_status')
                 .maybeSingle(),
+            db
+                .from('configuraciones')
+                .select('valor')
+                .eq('clave', 'whatsapp_chat_tags')
+                .maybeSingle(),
         ]);
+
+        const chatTagsMap: Record<string, string> =
+            typeof tagsConfigRes.data?.valor === 'object' && tagsConfigRes.data?.valor
+                ? tagsConfigRes.data.valor
+                : {};
 
         // Mapa de clientes por teléfono normalizado (y últimos 8 dígitos)
         const clientsByPhone = new Map<string, any>();
@@ -192,6 +202,7 @@ export async function GET(request: NextRequest) {
             totalUnread,
             shortcuts: shortcutsRes.data || [],
             botStatus: botStatusRes.data?.valor || { online: true, status: 'ready' },
+            chatTags: chatTagsMap,
         });
     } catch (error: any) {
         console.error('[API /api/crm GET] Error:', error);
@@ -381,6 +392,64 @@ export async function POST(request: NextRequest) {
                 .single();
             if (error) throw error;
             return NextResponse.json({ ok: true, message: inserted });
+        }
+
+        // 8. Agregar Nota Interna en el hilo del chat (no se envía a WhatsApp)
+        if (action === 'add_internal_note') {
+            const { phone, content } = body;
+            const normPhone = normalizeArgentinePhone(phone);
+            if (!normPhone || !content?.trim()) {
+                return NextResponse.json({ error: 'Teléfono y nota requeridos' }, { status: 400 });
+            }
+            const { data: inserted, error } = await db
+                .from('whatsapp_messages')
+                .insert({
+                    phone: normPhone,
+                    direction: 'outgoing',
+                    content: content.trim(),
+                    media_type: 'note',
+                    sender_name: 'Nota Interna',
+                    is_read: true,
+                    raw_payload: { internalNote: true, createdAt: new Date().toISOString() },
+                })
+                .select()
+                .single();
+            if (error) throw error;
+            return NextResponse.json({ ok: true, message: inserted });
+        }
+
+        // 9. Asignar Etiqueta de Estado a una conversación
+        if (action === 'set_chat_tag') {
+            const { phone, tag } = body;
+            const normPhone = normalizeArgentinePhone(phone);
+            if (!normPhone) {
+                return NextResponse.json({ error: 'Teléfono requerido' }, { status: 400 });
+            }
+            const { data: existing } = await db
+                .from('configuraciones')
+                .select('valor')
+                .eq('clave', 'whatsapp_chat_tags')
+                .maybeSingle();
+
+            const currentMap: Record<string, string> =
+                typeof existing?.valor === 'object' && existing?.valor ? { ...existing.valor } : {};
+
+            if (!tag) {
+                delete currentMap[normPhone];
+            } else {
+                currentMap[normPhone] = String(tag);
+            }
+
+            await db.from('configuraciones').upsert(
+                {
+                    clave: 'whatsapp_chat_tags',
+                    valor: currentMap,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: 'clave' }
+            );
+
+            return NextResponse.json({ ok: true, chatTags: currentMap });
         }
 
         return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });

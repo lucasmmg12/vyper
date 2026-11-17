@@ -5,8 +5,10 @@ import Link from 'next/link';
 import {
   ChevronLeft, ChevronRight, BookOpen, Rocket, DollarSign, Users,
   CreditCard, Coins, BarChart3, ShoppingBag, Shield, Store, HelpCircle,
-  ArrowLeft, Sparkles, RefreshCcw, PackagePlus, Paintbrush, CheckCircle2
+  ArrowLeft, Sparkles, RefreshCcw, PackagePlus, Paintbrush, CheckCircle2,
+  MessageSquare, Bot
 } from 'lucide-react';
+import GrowyAssistant from '@/components/GrowyAssistant';
 
 interface TutorialStep {
   title: string;
@@ -52,6 +54,58 @@ export default function TutorialPage() {
         {
           title: 'Roles y Permisos',
           content: 'Existen 3 niveles de acceso en <strong>/admin/usuarios</strong>: <strong>Super Admin</strong> (acceso total y gestión de usuarios), <strong>Administrador</strong> (gestión operativa completa) y <strong>Vendedor</strong> (operación diaria).'
+        },
+        {
+          title: 'Sidebar Colapsable y Buscador Global (Ctrl + K)',
+          content: 'Podés contraer el menú lateral izquierdo con el botón superior para ganar espacio en pantalla, y presionar <strong>Ctrl + K</strong> en cualquier momento para buscar clientes, abrir su Whatsapp o buscar productos sin usar el mouse.'
+        }
+      ]
+    },
+    'whatsapp-crm': {
+      title: 'Whatsapp CRM: Audios, Transcripción y Archivos',
+      description: 'Consola de pantalla completa, grabación/transcripción de audios en el momento y visor universal',
+      category: 'General',
+      icon: <MessageSquare size={20} />,
+      steps: [
+        {
+          title: 'Consola Whatsapp en Pantalla Completa (/admin/crm)',
+          content: 'El módulo <strong>Whatsapp</strong> ocupa el 100% de la pantalla y se divide en 3 columnas: <strong>Lista de Conversaciones</strong> (con filtros por No leídos, Ventana 24h, Con Deuda, Con Pedido y VIP), <strong>Consola de Chat Central</strong> y <strong>Ficha 360° del Cliente</strong>.'
+        },
+        {
+          title: 'Grabar, Recibir y Transcribir Audios en el Momento (🎤 / ✨)',
+          content: 'Tocá el ícono de micrófono (<strong>🎤</strong>) para grabar notas de voz con vista previa de texto en vivo. Los audios recibidos se transcriben automáticamente con <strong>OpenAI Whisper</strong>, y cualquier audio tiene el botón <strong>"✨ Transcribir en el momento"</strong> más el selector de velocidad <strong>1x / 1.5x / 2x</strong>.'
+        },
+        {
+          title: 'Enviar y Previsualizar Todo Tipo de Archivos (📎 / 👁️)',
+          content: 'Podés adjuntar cualquier formato (Imágenes, Audios, Videos, PDFs, Excel <code>.xlsx</code>, Word <code>.docx</code>, CSV, TXT) con el botón clip, arrastrando archivos al chat o pegando con <code>Ctrl + V</code>. Antes de enviar verás la barra de vista previa, y en el chat el botón <strong>"👁️ Previsualizar"</strong> abre el visor interactivo sin salir del sistema.'
+        },
+        {
+          title: 'Cotizador en Vivo, Respuestas con Growy y Notas Internas',
+          content: 'Usá el botón <strong>"✨ Growy"</strong> en la barra inferior para que la IA redacte la respuesta ideal según el historial del chat, el botón <strong>"📌 Nota"</strong> para dejar anotaciones internas privadas y el buscador <strong>"🛒 Cotizar Producto en el Chat"</strong> de la Ficha 360° para insertar precios del catálogo en 1 clic.'
+        },
+        {
+          title: 'Plantillas Oficiales Meta y Acciones ERP',
+          content: 'Si la ventana de 24h está cerrada, usá <strong>"✨ Enviar Plantilla Meta"</strong> (<code>vyper_notificacion_general</code>) con autocompletado de variables. Además, desde la Ficha 360° podés registrar <strong>+ Venta</strong>, <strong>+ Fiado</strong>, <strong>Cobrar Cta.</strong> o <strong>+ Coins</strong> en el acto.'
+        }
+      ]
+    },
+    'growy-ia': {
+      title: 'Growy: Asistente Virtual Inteligente',
+      description: 'Cómo consultar métricas en vivo, guías paso a paso y dictado por voz con Growy',
+      category: 'Inteligencia Artificial',
+      icon: <Bot size={20} />,
+      steps: [
+        {
+          title: '¿Qué es Growy?',
+          content: '<strong>Growy</strong> es el asistente virtual oficial de Vyper Labs (ubicado en el botón flotante inferior derecho <strong>"Growy IA"</strong>). Cuenta con toda la documentación del software y conexión en vivo con la base de datos.'
+        },
+        {
+          title: 'Consultas en Tiempo Real y Dictado por Voz',
+          content: 'Podés escribirle o hablarle con el micrófono para pedirle el <strong>resumen operativo de hoy en vivo</strong> (ventas del día, mensajes sin leer, pedidos pendientes y mayores deudores) o preguntarle cómo realizar cualquier tarea.'
+        },
+        {
+          title: 'Accesos Directos e Integración con Ctrl + K',
+          content: 'Growy incluye botones de acción rápida en cada respuesta para llevarte directamente a la pantalla que necesitás, y también podés invocarlo desde el buscador global <strong>Ctrl + K</strong>.'
         }
       ]
     },
@@ -718,6 +772,7 @@ export default function TutorialPage() {
           </div>
         </div>
       )}
+      <GrowyAssistant />
     </div>
   );
 }

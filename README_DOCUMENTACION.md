@@ -34,6 +34,14 @@ Manual exhaustivo en formato web e imprimible con estética Blanco & Negro que d
    - **Motor de Retención con IA** (`/admin/retention`) con envío directo por Bot o WhatsApp.
    - **Personal Shopper IA** flotante en Tienda Mayorista y Minorista.
 9. **Portal de Autogestión del Cliente (`/client`) y Tracking Público en Vivo (`/pedido/[id]`)**.
+10. **Whatsapp CRM en Pantalla Completa (`/admin/crm`)**:
+    - Grabación y envío de notas de voz (`🎤`) con previsualización antes de enviar.
+    - Recepción y **transcripción de audios en el momento (`✨`)** con OpenAI Whisper + control de velocidad `1x / 1.5x / 2x`.
+    - Envío y **previsualización universal de todo tipo de archivos (`📎` / `👁️`)**: Imágenes, Audios, Videos, PDFs, Excel, Word y documentos de texto.
+    - Cotizador de productos en vivo dentro de la Ficha 360°, Notas Internas (`📌`), Etiquetas de conversación, Respuestas sugeridas con IA y envío de Plantillas Meta (`vyper_notificacion_general`).
+11. **Asistente Virtual "Growy" (`/api/ai/growy`) y Buscador Global (`Ctrl + K`)**:
+    - Asistente flotante con toda la base de conocimientos de Vyper Labs, dictado por voz y consulta de métricas operativas en tiempo real.
+    - Sidebar colapsable y paleta de comandos rápida `Ctrl + K` con notificaciones *Toast* clínicas.
 
 ### 3. Tutorial Interactivo Standalone (`TUTORIAL_INTERACTIVO.html`)
 Aplicación HTML interactiva paso a paso en estética Blanco & Negro con soporte de teclado (`←`, `→`, `ESC`) y filtros por módulo para entrenar al equipo operativo y comercial.
