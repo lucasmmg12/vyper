@@ -32,6 +32,9 @@ import {
     ExternalLink,
     Webhook,
     Play,
+    Mic,
+    Square,
+    Eye,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getTier } from '@/utils/tiers';
@@ -81,7 +84,23 @@ interface CrmMessage {
     media_type?: string;
     sender_name?: string | null;
     is_read?: boolean;
+    raw_payload?: any;
     created_at: string;
+}
+
+interface PendingAttachment {
+    file: File;
+    previewUrl: string;
+    mediaType: 'image' | 'audio' | 'video' | 'document';
+    fileName: string;
+    size: number;
+    transcription?: string;
+}
+
+interface PreviewModalData {
+    url: string;
+    type: 'image' | 'audio' | 'video' | 'pdf' | 'office' | 'document';
+    title: string;
 }
 
 interface CrmShortcut {
@@ -171,12 +190,63 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
     const [quickAmount, setQuickAmount] = useState('');
     const [quickActionLoading, setQuickActionLoading] = useState(false);
 
-    // Lightbox & Webhook copy
+    // Lightbox & Universal File Preview Modal
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+    const [previewModal, setPreviewModal] = useState<PreviewModalData | null>(null);
     const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+    // Pre-send attachment preview & Audio Recording / Transcription state
+    const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
+    const [transcribingPending, setTranscribingPending] = useState(false);
+    const [transcriptions, setTranscriptions] = useState<Record<number, string>>({});
+    const [transcribingIds, setTranscribingIds] = useState<Record<number, boolean>>({});
+
+    // Voice Recorder state
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingSeconds, setRecordingSeconds] = useState(0);
+    const [liveTranscript, setLiveTranscript] = useState('');
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const recordingTimerRef = useRef<any>(null);
+    const recognitionRef = useRef<any>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const inferClientFileCategory = (file: File): 'image' | 'audio' | 'video' | 'document' => {
+        const mime = (file.type || '').toLowerCase();
+        const name = (file.name || '').toLowerCase();
+        if (mime.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name)) return 'image';
+        if (mime.startsWith('audio/') || /\.(ogg|oga|opus|mp3|wav|m4a|aac|weba)$/i.test(name)) return 'audio';
+        if (mime.startsWith('video/') || /\.(mp4|mov|avi|mkv|3gp|webm)$/i.test(name)) return 'video';
+        return 'document';
+    };
+
+    const openUniversalPreview = (url: string, mediaType?: string, title?: string) => {
+        const lower = (url || '').toLowerCase().split('?')[0];
+        const lowerTitle = (title || '').toLowerCase();
+        if (mediaType === 'image' || mediaType === 'sticker' || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(lower)) {
+            setPreviewModal({ url, type: 'image', title: title || 'Vista previa de imagen' });
+            return;
+        }
+        if (mediaType === 'audio' || /\.(ogg|oga|opus|mp3|wav|m4a|aac|weba)$/i.test(lower)) {
+            setPreviewModal({ url, type: 'audio', title: title || 'Reproductor de Audio' });
+            return;
+        }
+        if (mediaType === 'video' || /\.(mp4|mov|avi|mkv|3gp|webm)$/i.test(lower)) {
+            setPreviewModal({ url, type: 'video', title: title || 'Reproductor de Video' });
+            return;
+        }
+        if (lower.endsWith('.pdf') || lowerTitle.endsWith('.pdf')) {
+            setPreviewModal({ url, type: 'pdf', title: title || 'Documento PDF' });
+            return;
+        }
+        if (/\.(xlsx|xls|docx|doc|pptx|ppt)$/i.test(lower) || /\.(xlsx|xls|docx|doc|pptx|ppt)$/i.test(lowerTitle)) {
+            setPreviewModal({ url, type: 'office', title: title || 'Documento Office' });
+            return;
+        }
+        setPreviewModal({ url, type: 'document', title: title || 'Previsualización de archivo' });
+    };
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -296,10 +366,300 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
         setShowShortcutsPopup(false);
     };
 
-    // Send direct message (POST /api/v2/{id}/messages)
+    const clearPendingAttachment = () => {
+        if (pendingAttachment?.previewUrl && pendingAttachment.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(pendingAttachment.previewUrl);
+        }
+        setPendingAttachment(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const loadFileIntoPreview = (file: File, initialTranscription?: string) => {
+        if (pendingAttachment?.previewUrl && pendingAttachment.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(pendingAttachment.previewUrl);
+        }
+        const previewUrl = URL.createObjectURL(file);
+        const mediaType = inferClientFileCategory(file);
+        setPendingAttachment({
+            file,
+            previewUrl,
+            mediaType,
+            fileName: file.name,
+            size: file.size,
+            transcription: initialTranscription,
+        });
+    };
+
+    // Select file from input -> show Pre-Send Preview Bar
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedPhone) return;
+        loadFileIntoPreview(file);
+    };
+
+    // Transcribe pre-send audio blob in real time
+    const handleTranscribePendingAudio = async () => {
+        if (!pendingAttachment || pendingAttachment.mediaType !== 'audio' || transcribingPending) return;
+        setTranscribingPending(true);
+        try {
+            const fd = new FormData();
+            fd.append('action', 'transcribe_blob');
+            fd.append('file', pendingAttachment.file);
+            const res = await fetch('/api/crm/media', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'No se pudo transcribir el audio');
+            }
+            setPendingAttachment(prev => (prev ? { ...prev, transcription: data.text } : null));
+        } catch (err: any) {
+            alert(err?.message || 'Error transcribiendo audio');
+        } finally {
+            setTranscribingPending(false);
+        }
+    };
+
+    // Transcribe any incoming or outgoing audio message in the chat on the spot
+    const handleTranscribeMessage = async (msg: CrmMessage) => {
+        if (!msg.media_url || transcribingIds[msg.id]) return;
+        setTranscribingIds(prev => ({ ...prev, [msg.id]: true }));
+        try {
+            const res = await fetch('/api/crm/media', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'transcribe',
+                    audioUrl: msg.media_url,
+                    messageId: msg.id,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'No se pudo transcribir el audio');
+            }
+            setTranscriptions(prev => ({ ...prev, [msg.id]: data.text }));
+            setMessages(prev =>
+                prev.map(m =>
+                    m.id === msg.id
+                        ? {
+                              ...m,
+                              raw_payload: {
+                                  ...(typeof m.raw_payload === 'object' && m.raw_payload ? m.raw_payload : {}),
+                                  transcription: data.text,
+                              },
+                          }
+                        : m
+                )
+            );
+        } catch (err: any) {
+            alert(err?.message || 'Error transcribiendo audio');
+        } finally {
+            setTranscribingIds(prev => ({ ...prev, [msg.id]: false }));
+        }
+    };
+
+    // Upload a File and send it via WhatsApp
+    const uploadAndSendFile = async (fileToUpload: File, captionText: string, transcriptionText?: string) => {
+        if (!selectedPhone) return;
+        setUploadingMedia(true);
+        setSending(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', fileToUpload);
+            const uploadRes = await fetch('/api/crm/media', {
+                method: 'POST',
+                body: formData,
+            });
+            const uploadData = await uploadRes.json();
+            if (!uploadRes.ok || !uploadData.url) {
+                throw new Error(uploadData.error || 'Error subiendo archivo');
+            }
+
+            const defaultCaption =
+                uploadData.mediaType === 'audio'
+                    ? '🎤 Mensaje de voz'
+                    : uploadData.mediaType === 'image'
+                    ? ''
+                    : fileToUpload.name;
+
+            const sendRes = await fetch('/api/crm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'send_message',
+                    phone: selectedPhone,
+                    content: captionText.trim() || defaultCaption,
+                    mediaUrl: uploadData.url,
+                    mediaType: uploadData.mediaType,
+                    transcription: transcriptionText || undefined,
+                }),
+            });
+            const sendData = await sendRes.json();
+            if (!sendRes.ok || !sendData.ok) {
+                throw new Error(sendData.error || 'Error enviando archivo por WhatsApp');
+            }
+
+            setMessageText('');
+            clearPendingAttachment();
+            await fetchConversationDetail(selectedPhone, true);
+            fetchCrmList(true);
+            scrollToBottom();
+        } catch (err: any) {
+            alert(err?.message || 'Error enviando archivo');
+        } finally {
+            setUploadingMedia(false);
+            setSending(false);
+        }
+    };
+
+    // Voice Recording Controls (Microphone + Live Speech-to-Text + Whisper)
+    const startVoiceRecording = async () => {
+        if (!selectedPhone || isRecording) return;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
+            setLiveTranscript('');
+            setRecordingSeconds(0);
+
+            const preferredTypes = [
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                'audio/webm;codecs=opus',
+                'audio/webm',
+            ];
+            let chosenMime = '';
+            for (const t of preferredTypes) {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) {
+                    chosenMime = t;
+                    break;
+                }
+            }
+
+            const recorder = chosenMime
+                ? new MediaRecorder(stream, { mimeType: chosenMime })
+                : new MediaRecorder(stream);
+
+            recorder.ondataavailable = ev => {
+                if (ev.data && ev.data.size > 0) {
+                    audioChunksRef.current.push(ev.data);
+                }
+            };
+
+            mediaRecorderRef.current = recorder;
+            recorder.start(250);
+            setIsRecording(true);
+
+            recordingTimerRef.current = setInterval(() => {
+                setRecordingSeconds(prev => prev + 1);
+            }, 1000);
+
+            // Optional browser live speech recognition while speaking
+            const SpeechRec =
+                (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRec) {
+                try {
+                    const rec = new SpeechRec();
+                    rec.lang = 'es-AR';
+                    rec.continuous = true;
+                    rec.interimResults = true;
+                    rec.onresult = (event: any) => {
+                        let transcript = '';
+                        for (let i = 0; i < event.results.length; i++) {
+                            transcript += event.results[i][0].transcript + ' ';
+                        }
+                        setLiveTranscript(transcript.trim());
+                    };
+                    rec.start();
+                    recognitionRef.current = rec;
+                } catch {
+                    // ignore if speech recognition unavailable
+                }
+            }
+        } catch (err: any) {
+            alert('No se pudo acceder al micrófono. Verificá los permisos del navegador.');
+        }
+    };
+
+    const cleanupRecordingResources = () => {
+        if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+        }
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop();
+            } catch {
+                // ignore
+            }
+            recognitionRef.current = null;
+        }
+        if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+            mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+        }
+    };
+
+    const cancelVoiceRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.onstop = null;
+            mediaRecorderRef.current.stop();
+        }
+        cleanupRecordingResources();
+        audioChunksRef.current = [];
+        setIsRecording(false);
+        setRecordingSeconds(0);
+        setLiveTranscript('');
+    };
+
+    const finishVoiceRecording = (sendImmediately: boolean) => {
+        const recorder = mediaRecorderRef.current;
+        if (!recorder) return;
+
+        const capturedTranscript = liveTranscript.trim();
+
+        recorder.onstop = async () => {
+            cleanupRecordingResources();
+            setIsRecording(false);
+            setRecordingSeconds(0);
+
+            const mimeType = recorder.mimeType || 'audio/ogg';
+            const ext = mimeType.includes('mp4') ? 'm4a' : 'ogg';
+            const blob = new Blob(audioChunksRef.current, { type: mimeType });
+            audioChunksRef.current = [];
+
+            if (blob.size < 200) return;
+
+            const audioFile = new File([blob], `grabacion_${Date.now()}.${ext}`, {
+                type: mimeType,
+            });
+
+            if (sendImmediately) {
+                await uploadAndSendFile(audioFile, '', capturedTranscript || undefined);
+                setLiveTranscript('');
+            } else {
+                loadFileIntoPreview(audioFile, capturedTranscript || undefined);
+                setLiveTranscript('');
+            }
+        };
+
+        if (recorder.state !== 'inactive') {
+            recorder.stop();
+        }
+    };
+
+    // Send direct message (or pending attachment)
     const handleSendMessage = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!selectedPhone || !messageText.trim() || sending) return;
+        if (!selectedPhone || sending || uploadingMedia) return;
+
+        if (pendingAttachment) {
+            await uploadAndSendFile(
+                pendingAttachment.file,
+                messageText,
+                pendingAttachment.transcription
+            );
+            return;
+        }
+
+        if (!messageText.trim()) return;
 
         const textToSend = messageText.trim();
         setSending(true);
@@ -330,51 +690,6 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
             setMessageText(textToSend);
         } finally {
             setSending(false);
-        }
-    };
-
-    // Upload & Send Media Attachment
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !selectedPhone) return;
-
-        setUploadingMedia(true);
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const uploadRes = await fetch('/api/ecommerce/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const uploadData = await uploadRes.json();
-            if (!uploadRes.ok || !uploadData.url) {
-                throw new Error(uploadData.error || 'Error subiendo archivo');
-            }
-
-            const sendRes = await fetch('/api/crm', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'send_message',
-                    phone: selectedPhone,
-                    content: messageText.trim() || file.name,
-                    mediaUrl: uploadData.url,
-                }),
-            });
-            const sendData = await sendRes.json();
-            if (!sendRes.ok || !sendData.ok) {
-                throw new Error(sendData.error || 'Error enviando adjunto por WhatsApp');
-            }
-
-            setMessageText('');
-            await fetchConversationDetail(selectedPhone, true);
-            fetchCrmList(true);
-            scrollToBottom();
-        } catch (err: any) {
-            alert(err?.message || 'Error enviando archivo');
-        } finally {
-            setUploadingMedia(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -1216,12 +1531,12 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                                     }}
                                                 >
                                                     {/* Media Rendering */}
-                                                    {msg.media_url && msg.media_type === 'image' && (
+                                                    {msg.media_url && (msg.media_type === 'image' || msg.media_type === 'sticker') && (
                                                         <div style={{ marginBottom: 6 }}>
                                                             <img
                                                                 src={msg.media_url}
                                                                 alt="Adjunto"
-                                                                onClick={() => setLightboxUrl(msg.media_url!)}
+                                                                onClick={() => openUniversalPreview(msg.media_url!, 'image', msg.content || 'Imagen')}
                                                                 style={{
                                                                     maxWidth: '100%',
                                                                     maxHeight: 240,
@@ -1233,43 +1548,266 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                                         </div>
                                                     )}
 
-                                                    {msg.media_url && msg.media_type === 'audio' && (
-                                                        <div style={{ marginBottom: 6, minWidth: 220 }}>
-                                                            <audio
+                                                    {msg.media_url && msg.media_type === 'audio' && (() => {
+                                                        const transcriptText =
+                                                            transcriptions[msg.id] ||
+                                                            (typeof msg.raw_payload === 'object' && msg.raw_payload?.transcription) ||
+                                                            '';
+                                                        const isTranscribing = Boolean(transcribingIds[msg.id]);
+
+                                                        return (
+                                                            <div style={{ marginBottom: 6, minWidth: 255 }}>
+                                                                <audio
+                                                                    controls
+                                                                    preload="metadata"
+                                                                    src={msg.media_url}
+                                                                    style={{ width: '100%', height: 36 }}
+                                                                />
+                                                                <div
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        gap: 8,
+                                                                        marginTop: 5,
+                                                                    }}
+                                                                >
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleTranscribeMessage(msg)}
+                                                                        disabled={isTranscribing}
+                                                                        style={{
+                                                                            padding: '0.2rem 0.55rem',
+                                                                            fontSize: '0.6875rem',
+                                                                            fontWeight: 700,
+                                                                            borderRadius: 6,
+                                                                            background: isOut
+                                                                                ? 'rgba(255,255,255,0.16)'
+                                                                                : '#F3F4F6',
+                                                                            color: isOut ? '#FFFFFF' : '#111111',
+                                                                            border: isOut
+                                                                                ? '1px solid rgba(255,255,255,0.3)'
+                                                                                : '1px solid #D1D5DB',
+                                                                            cursor: 'pointer',
+                                                                            minHeight: 'auto',
+                                                                            boxShadow: 'none',
+                                                                        }}
+                                                                    >
+                                                                        {isTranscribing ? (
+                                                                            <>
+                                                                                <Loader2 size={12} className="animate-spin" /> Transcribiendo...
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Sparkles size={12} />{' '}
+                                                                                {transcriptText ? 'Re-transcribir' : 'Transcribir en el momento'}
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+
+                                                                    <a
+                                                                        href={msg.media_url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        download
+                                                                        style={{
+                                                                            fontSize: '0.675rem',
+                                                                            opacity: 0.75,
+                                                                            color: 'inherit',
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: 3,
+                                                                        }}
+                                                                    >
+                                                                        <Download size={11} /> Audio
+                                                                    </a>
+                                                                </div>
+
+                                                                {transcriptText && (
+                                                                    <div
+                                                                        style={{
+                                                                            marginTop: 6,
+                                                                            padding: '0.5rem 0.65rem',
+                                                                            borderRadius: 8,
+                                                                            background: isOut
+                                                                                ? 'rgba(255,255,255,0.12)'
+                                                                                : '#F9FAFB',
+                                                                            border: isOut
+                                                                                ? '1px solid rgba(255,255,255,0.2)'
+                                                                                : '1px solid #E5E7EB',
+                                                                            fontSize: '0.78rem',
+                                                                            lineHeight: 1.45,
+                                                                        }}
+                                                                    >
+                                                                        <div
+                                                                            style={{
+                                                                                fontSize: '0.625rem',
+                                                                                fontWeight: 800,
+                                                                                textTransform: 'uppercase',
+                                                                                opacity: 0.75,
+                                                                                marginBottom: 2,
+                                                                            }}
+                                                                        >
+                                                                            📝 Transcripción de Audio:
+                                                                        </div>
+                                                                        <div style={{ fontStyle: 'italic' }}>
+                                                                            &ldquo;{transcriptText}&rdquo;
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
+
+                                                    {msg.media_url && msg.media_type === 'video' && (
+                                                        <div style={{ marginBottom: 6, maxWidth: 280 }}>
+                                                            <video
                                                                 controls
+                                                                preload="metadata"
                                                                 src={msg.media_url}
-                                                                style={{ width: '100%', height: 36 }}
+                                                                style={{ width: '100%', maxHeight: 220, borderRadius: 8 }}
                                                             />
+                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        openUniversalPreview(
+                                                                            msg.media_url!,
+                                                                            'video',
+                                                                            msg.content || 'Video'
+                                                                        )
+                                                                    }
+                                                                    style={{
+                                                                        padding: '0.2rem 0.5rem',
+                                                                        fontSize: '0.675rem',
+                                                                        background: 'transparent',
+                                                                        color: 'inherit',
+                                                                        border: '1px solid currentColor',
+                                                                        borderRadius: 6,
+                                                                        minHeight: 'auto',
+                                                                        boxShadow: 'none',
+                                                                    }}
+                                                                >
+                                                                    <Eye size={12} /> Ampliar
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
 
                                                     {msg.media_url &&
                                                         msg.media_type !== 'image' &&
-                                                        msg.media_type !== 'audio' && (
-                                                            <a
-                                                                href={msg.media_url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 6,
-                                                                    padding: '0.45rem 0.65rem',
-                                                                    borderRadius: 8,
-                                                                    background: isOut
-                                                                        ? 'rgba(255,255,255,0.12)'
-                                                                        : '#F3F4F6',
-                                                                    color: 'inherit',
-                                                                    fontSize: '0.775rem',
-                                                                    fontWeight: 700,
-                                                                    marginBottom: 6,
-                                                                    textDecoration: 'none',
-                                                                }}
-                                                            >
-                                                                <FileText size={15} /> Abrir archivo adjunto
-                                                                <ExternalLink size={13} />
-                                                            </a>
-                                                        )}
+                                                        msg.media_type !== 'sticker' &&
+                                                        msg.media_type !== 'audio' &&
+                                                        msg.media_type !== 'video' && (() => {
+                                                            const cleanUrl = msg.media_url.split('?')[0];
+                                                            const ext = (
+                                                                cleanUrl.split('.').pop() || 'ARCHIVO'
+                                                            ).toUpperCase().slice(0, 6);
+                                                            const fileTitle =
+                                                                msg.content && !msg.content.startsWith('[')
+                                                                    ? msg.content
+                                                                    : `Documento (${ext})`;
+
+                                                            return (
+                                                                <div
+                                                                    style={{
+                                                                        padding: '0.55rem 0.7rem',
+                                                                        borderRadius: 10,
+                                                                        background: isOut
+                                                                            ? 'rgba(255,255,255,0.12)'
+                                                                            : '#F3F4F6',
+                                                                        border: isOut
+                                                                            ? '1px solid rgba(255,255,255,0.2)'
+                                                                            : '1px solid #E5E7EB',
+                                                                        marginBottom: 6,
+                                                                        minWidth: 230,
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: 8,
+                                                                            marginBottom: 6,
+                                                                        }}
+                                                                    >
+                                                                        <span
+                                                                            style={{
+                                                                                padding: '0.2rem 0.45rem',
+                                                                                borderRadius: 6,
+                                                                                background: isOut ? '#FFFFFF' : '#111111',
+                                                                                color: isOut ? '#111111' : '#FFFFFF',
+                                                                                fontSize: '0.625rem',
+                                                                                fontWeight: 900,
+                                                                            }}
+                                                                        >
+                                                                            {ext}
+                                                                        </span>
+                                                                        <span
+                                                                            style={{
+                                                                                fontSize: '0.78rem',
+                                                                                fontWeight: 700,
+                                                                                whiteSpace: 'nowrap',
+                                                                                overflow: 'hidden',
+                                                                                textOverflow: 'ellipsis',
+                                                                                maxWidth: 185,
+                                                                            }}
+                                                                        >
+                                                                            {fileTitle}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', gap: 6 }}>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                openUniversalPreview(
+                                                                                    msg.media_url!,
+                                                                                    msg.media_type,
+                                                                                    fileTitle
+                                                                                )
+                                                                            }
+                                                                            style={{
+                                                                                flex: 1,
+                                                                                padding: '0.28rem 0.55rem',
+                                                                                fontSize: '0.7rem',
+                                                                                fontWeight: 800,
+                                                                                borderRadius: 6,
+                                                                                background: isOut ? '#FFFFFF' : '#111111',
+                                                                                color: isOut ? '#111111' : '#FFFFFF',
+                                                                                border: 'none',
+                                                                                cursor: 'pointer',
+                                                                                minHeight: 'auto',
+                                                                                boxShadow: 'none',
+                                                                            }}
+                                                                        >
+                                                                            <Eye size={12} /> Previsualizar
+                                                                        </button>
+                                                                        <a
+                                                                            href={msg.media_url}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            download
+                                                                            style={{
+                                                                                padding: '0.28rem 0.55rem',
+                                                                                fontSize: '0.7rem',
+                                                                                fontWeight: 700,
+                                                                                borderRadius: 6,
+                                                                                border: isOut
+                                                                                    ? '1px solid rgba(255,255,255,0.35)'
+                                                                                    : '1px solid #D1D5DB',
+                                                                                color: 'inherit',
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                gap: 4,
+                                                                                textDecoration: 'none',
+                                                                            }}
+                                                                        >
+                                                                            <Download size={12} /> Descargar
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
 
                                                     {/* Message Text */}
                                                     {msg.content && (
@@ -1314,8 +1852,14 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* ─── COMPOSER BAR (With "/" Shortcuts, Emojis, Attachments & Meta Template) ─── */}
+                        {/* ─── COMPOSER BAR (With "/" Shortcuts, Emojis, Pre-Send Preview, Voice Recorder & All Files) ─── */}
                         <div
+                            onDragOver={e => e.preventDefault()}
+                            onDrop={e => {
+                                e.preventDefault();
+                                const f = e.dataTransfer?.files?.[0];
+                                if (f && selectedPhone) loadFileIntoPreview(f);
+                            }}
                             style={{
                                 position: 'relative',
                                 background: '#FFFFFF',
@@ -1323,6 +1867,161 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                 padding: '0.75rem 1rem',
                             }}
                         >
+                            {/* Pre-Send Attachment Preview Bar */}
+                            {pendingAttachment && (
+                                <div
+                                    style={{
+                                        marginBottom: '0.65rem',
+                                        padding: '0.65rem 0.85rem',
+                                        borderRadius: 12,
+                                        background: '#F8F9FA',
+                                        border: '2px solid #111111',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '0.5rem',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                            {pendingAttachment.mediaType === 'image' && (
+                                                <img
+                                                    src={pendingAttachment.previewUrl}
+                                                    alt="Preview"
+                                                    onClick={() =>
+                                                        openUniversalPreview(
+                                                            pendingAttachment.previewUrl,
+                                                            'image',
+                                                            pendingAttachment.fileName
+                                                        )
+                                                    }
+                                                    style={{
+                                                        width: 52,
+                                                        height: 52,
+                                                        objectFit: 'cover',
+                                                        borderRadius: 8,
+                                                        border: '1px solid #E5E7EB',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                />
+                                            )}
+
+                                            {pendingAttachment.mediaType === 'audio' && (
+                                                <audio
+                                                    controls
+                                                    src={pendingAttachment.previewUrl}
+                                                    style={{ height: 36, maxWidth: 260 }}
+                                                />
+                                            )}
+
+                                            {pendingAttachment.mediaType === 'video' && (
+                                                <video
+                                                    controls
+                                                    src={pendingAttachment.previewUrl}
+                                                    style={{ height: 56, borderRadius: 8 }}
+                                                />
+                                            )}
+
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: 800,
+                                                        color: '#111111',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                    }}
+                                                >
+                                                    {pendingAttachment.fileName}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: '#6B7280' }}>
+                                                    {(pendingAttachment.size / 1024).toFixed(1)} KB · Listo para enviar
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            {pendingAttachment.mediaType === 'audio' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleTranscribePendingAudio}
+                                                    disabled={transcribingPending}
+                                                    style={{
+                                                        padding: '0.3rem 0.65rem',
+                                                        fontSize: '0.725rem',
+                                                        fontWeight: 800,
+                                                        borderRadius: 8,
+                                                        background: '#111111',
+                                                        color: '#FFFFFF',
+                                                        minHeight: 'auto',
+                                                        boxShadow: 'none',
+                                                    }}
+                                                >
+                                                    {transcribingPending ? (
+                                                        <>
+                                                            <Loader2 size={12} className="animate-spin" /> Transcribiendo...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Sparkles size={12} /> Transcribir en el momento
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    openUniversalPreview(
+                                                        pendingAttachment.previewUrl,
+                                                        pendingAttachment.mediaType,
+                                                        pendingAttachment.fileName
+                                                    )
+                                                }
+                                                className="secondary"
+                                                style={{
+                                                    padding: '0.3rem 0.65rem',
+                                                    fontSize: '0.725rem',
+                                                    fontWeight: 700,
+                                                    borderRadius: 8,
+                                                    borderColor: '#111111',
+                                                    color: '#111111',
+                                                    minHeight: 'auto',
+                                                    boxShadow: 'none',
+                                                }}
+                                            >
+                                                <Eye size={13} /> Previsualizar
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={clearPendingAttachment}
+                                                className="btn-ghost"
+                                                style={{ padding: 4, minHeight: 'auto', color: '#EF4444' }}
+                                                title="Quitar adjunto"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {pendingAttachment.transcription && (
+                                        <div
+                                            style={{
+                                                padding: '0.45rem 0.65rem',
+                                                borderRadius: 8,
+                                                background: '#FFFFFF',
+                                                border: '1px solid #E5E7EB',
+                                                fontSize: '0.775rem',
+                                                color: '#111111',
+                                            }}
+                                        >
+                                            <strong>📝 Transcripción:</strong> &ldquo;{pendingAttachment.transcription}&rdquo;
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* "/" Shortcuts Floating Menu */}
                             {showShortcutsPopup && filteredShortcuts.length > 0 && (
                                 <div
@@ -1430,72 +2129,196 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                 </div>
                             )}
 
-                            <form
-                                onSubmit={handleSendMessage}
-                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                            >
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*,audio/*,.pdf,.xlsx,.xls,.doc,.docx"
-                                    style={{ display: 'none' }}
-                                    onChange={handleFileUpload}
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEmoji(!showEmoji)}
-                                    className="btn-ghost"
-                                    style={{ padding: '0.5rem', minHeight: 'auto' }}
-                                    title="Emojis"
-                                >
-                                    <Smile size={19} />
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={uploadingMedia}
-                                    className="btn-ghost"
-                                    style={{ padding: '0.5rem', minHeight: 'auto' }}
-                                    title="Adjuntar imagen, audio o PDF"
-                                >
-                                    {uploadingMedia ? (
-                                        <Loader2 size={19} className="animate-spin" />
-                                    ) : (
-                                        <Paperclip size={19} />
-                                    )}
-                                </button>
-
-                                <input
-                                    type="text"
-                                    value={messageText}
-                                    onChange={e => handleTextChange(e.target.value)}
-                                    placeholder='Escribí un mensaje o "/" para respuestas rápidas (/mayorista, /transferencia, /listo)...'
+                            {/* Live Audio Recording Bar OR Standard Input Form */}
+                            {isRecording ? (
+                                <div
                                     style={{
-                                        flex: 1,
-                                        marginBottom: 0,
-                                        padding: '0.65rem 0.9rem',
-                                        borderRadius: 10,
-                                        fontSize: '0.875rem',
-                                    }}
-                                />
-
-                                <button
-                                    type="submit"
-                                    disabled={sending || !messageText.trim()}
-                                    style={{
-                                        background: '#111111',
-                                        color: '#FFFFFF',
-                                        padding: '0.65rem 1.15rem',
-                                        borderRadius: 10,
-                                        minHeight: 'auto',
-                                        fontWeight: 800,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '0.75rem',
+                                        padding: '0.5rem 0.85rem',
+                                        borderRadius: 12,
+                                        background: '#FEF2F2',
+                                        border: '2px solid #EF4444',
                                     }}
                                 >
-                                    {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
-                                </button>
-                            </form>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                        <span
+                                            style={{
+                                                width: 11,
+                                                height: 11,
+                                                borderRadius: '50%',
+                                                background: '#EF4444',
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                        <span style={{ fontWeight: 900, fontSize: '0.85rem', color: '#991B1B' }}>
+                                            🎤 Grabando {Math.floor(recordingSeconds / 60).toString().padStart(2, '0')}:
+                                            {(recordingSeconds % 60).toString().padStart(2, '0')}
+                                        </span>
+                                        {liveTranscript && (
+                                            <span
+                                                style={{
+                                                    fontSize: '0.78rem',
+                                                    color: '#374151',
+                                                    fontStyle: 'italic',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                }}
+                                            >
+                                                &ldquo;{liveTranscript}&rdquo;
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <button
+                                            type="button"
+                                            onClick={cancelVoiceRecording}
+                                            className="secondary"
+                                            style={{
+                                                padding: '0.35rem 0.65rem',
+                                                fontSize: '0.75rem',
+                                                minHeight: 'auto',
+                                                borderColor: '#EF4444',
+                                                color: '#EF4444',
+                                                background: '#FFFFFF',
+                                            }}
+                                            title="Cancelar grabación"
+                                        >
+                                            <Trash2 size={14} /> Cancelar
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => finishVoiceRecording(false)}
+                                            className="secondary"
+                                            style={{
+                                                padding: '0.35rem 0.7rem',
+                                                fontSize: '0.75rem',
+                                                minHeight: 'auto',
+                                                borderColor: '#111111',
+                                                color: '#111111',
+                                                background: '#FFFFFF',
+                                                fontWeight: 700,
+                                            }}
+                                            title="Detener para escuchar o transcribir antes de enviar"
+                                        >
+                                            <Square size={13} /> Escuchar / Transcribir
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => finishVoiceRecording(true)}
+                                            style={{
+                                                padding: '0.35rem 0.85rem',
+                                                fontSize: '0.75rem',
+                                                minHeight: 'auto',
+                                                background: '#111111',
+                                                color: '#FFFFFF',
+                                                fontWeight: 800,
+                                            }}
+                                            title="Enviar audio ahora"
+                                        >
+                                            <Send size={14} /> Enviar Audio
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <form
+                                    onSubmit={handleSendMessage}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                >
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="*/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleFileUpload}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEmoji(!showEmoji)}
+                                        className="btn-ghost"
+                                        style={{ padding: '0.5rem', minHeight: 'auto' }}
+                                        title="Emojis"
+                                    >
+                                        <Smile size={19} />
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingMedia}
+                                        className="btn-ghost"
+                                        style={{ padding: '0.5rem', minHeight: 'auto' }}
+                                        title="Adjuntar cualquier tipo de archivo (Imágenes, Audios, Videos, PDF, Excel, Word...)"
+                                    >
+                                        {uploadingMedia ? (
+                                            <Loader2 size={19} className="animate-spin" />
+                                        ) : (
+                                            <Paperclip size={19} />
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={startVoiceRecording}
+                                        disabled={uploadingMedia || sending}
+                                        className="btn-ghost"
+                                        style={{ padding: '0.5rem', minHeight: 'auto' }}
+                                        title="Grabar nota de voz (con transcripción en el momento)"
+                                    >
+                                        <Mic size={19} />
+                                    </button>
+
+                                    <input
+                                        type="text"
+                                        value={messageText}
+                                        onChange={e => handleTextChange(e.target.value)}
+                                        onPaste={e => {
+                                            const item = e.clipboardData?.files?.[0];
+                                            if (item && selectedPhone) {
+                                                loadFileIntoPreview(item);
+                                            }
+                                        }}
+                                        placeholder={
+                                            pendingAttachment
+                                                ? 'Agregá un comentario opcional para el archivo adjunto...'
+                                                : 'Escribí un mensaje o "/" para respuestas rápidas (/mayorista, /transferencia, /listo)...'
+                                        }
+                                        style={{
+                                            flex: 1,
+                                            marginBottom: 0,
+                                            padding: '0.65rem 0.9rem',
+                                            borderRadius: 10,
+                                            fontSize: '0.875rem',
+                                        }}
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        disabled={sending || uploadingMedia || (!messageText.trim() && !pendingAttachment)}
+                                        style={{
+                                            background: '#111111',
+                                            color: '#FFFFFF',
+                                            padding: '0.65rem 1.15rem',
+                                            borderRadius: 10,
+                                            minHeight: 'auto',
+                                            fontWeight: 800,
+                                        }}
+                                    >
+                                        {sending || uploadingMedia ? (
+                                            <Loader2 size={17} className="animate-spin" />
+                                        ) : (
+                                            <Send size={17} />
+                                        )}
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )}
@@ -2117,8 +2940,8 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                 </div>
             )}
 
-            {/* ═══════════ LIGHTBOX MODAL FOR IMAGES ═══════════ */}
-            {lightboxUrl && (
+            {/* ═══════════ UNIVERSAL FILE & MEDIA PREVIEW MODAL ═══════════ */}
+            {(previewModal || lightboxUrl) && (
                 <div
                     style={{
                         position: 'fixed',
@@ -2126,17 +2949,168 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                         background: 'rgba(0,0,0,0.85)',
                         zIndex: 10000,
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: '2rem',
+                        padding: '1.5rem',
                     }}
-                    onClick={() => setLightboxUrl(null)}
+                    onClick={() => {
+                        setPreviewModal(null);
+                        setLightboxUrl(null);
+                    }}
                 >
-                    <img
-                        src={lightboxUrl}
-                        alt="Vista ampliada"
-                        style={{ maxWidth: '90vw', maxHeight: '88vh', borderRadius: 12 }}
-                    />
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            maxWidth: previewModal?.type === 'image' || lightboxUrl ? 960 : 1080,
+                            background: '#FFFFFF',
+                            borderRadius: 16,
+                            border: '2px solid #111111',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            maxHeight: '90vh',
+                        }}
+                    >
+                        {/* Modal Topbar */}
+                        <div
+                            style={{
+                                padding: '0.75rem 1.25rem',
+                                background: '#111111',
+                                color: '#FFFFFF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '1rem',
+                            }}
+                        >
+                            <div style={{ fontWeight: 800, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {previewModal?.title || 'Previsualización de Archivo'}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <a
+                                    href={previewModal?.url || lightboxUrl || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    style={{
+                                        padding: '0.35rem 0.75rem',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        borderRadius: 8,
+                                        background: '#FFFFFF',
+                                        color: '#111111',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    <Download size={14} /> Descargar / Abrir
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPreviewModal(null);
+                                        setLightboxUrl(null);
+                                    }}
+                                    style={{
+                                        padding: '0.35rem',
+                                        background: 'rgba(255,255,255,0.15)',
+                                        color: '#FFFFFF',
+                                        borderRadius: 8,
+                                        minHeight: 'auto',
+                                    }}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div
+                            style={{
+                                flex: 1,
+                                background: '#F8F9FA',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minHeight: 420,
+                                maxHeight: 'calc(90vh - 56px)',
+                                overflow: 'auto',
+                                padding:
+                                    previewModal?.type === 'pdf' ||
+                                    previewModal?.type === 'office' ||
+                                    previewModal?.type === 'document'
+                                        ? 0
+                                        : '1.5rem',
+                            }}
+                        >
+                            {(previewModal?.type === 'image' || lightboxUrl) && (
+                                <img
+                                    src={previewModal?.url || lightboxUrl!}
+                                    alt="Vista previa"
+                                    style={{ maxWidth: '100%', maxHeight: '78vh', borderRadius: 8, objectFit: 'contain' }}
+                                />
+                            )}
+
+                            {previewModal?.type === 'audio' && (
+                                <div style={{ width: '100%', maxWidth: 480, padding: '2rem', textAlign: 'center' }}>
+                                    <Volume2 size={42} style={{ margin: '0 auto 1rem', color: '#111111' }} />
+                                    <audio
+                                        controls
+                                        autoPlay
+                                        src={previewModal.url}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                            )}
+
+                            {previewModal?.type === 'video' && (
+                                <video
+                                    controls
+                                    autoPlay
+                                    src={previewModal.url}
+                                    style={{ maxWidth: '100%', maxHeight: '78vh', borderRadius: 8 }}
+                                />
+                            )}
+
+                            {previewModal?.type === 'pdf' && (
+                                <iframe
+                                    src={previewModal.url}
+                                    title={previewModal.title}
+                                    style={{ width: '100%', height: '78vh', border: 'none' }}
+                                />
+                            )}
+
+                            {previewModal?.type === 'office' && (
+                                previewModal.url.startsWith('http') ? (
+                                    <iframe
+                                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewModal.url)}`}
+                                        title={previewModal.title}
+                                        style={{ width: '100%', height: '78vh', border: 'none' }}
+                                    />
+                                ) : (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: '#374151' }}>
+                                        <FileText size={48} style={{ margin: '0 auto 0.75rem', color: '#111111' }} />
+                                        <p style={{ fontWeight: 700, marginBottom: '0.5rem' }}>{previewModal.title}</p>
+                                        <p style={{ fontSize: '0.825rem', color: '#6B7280' }}>
+                                            Archivo local listo para enviar. Una vez enviado se habilitará el visor Office interactivo.
+                                        </p>
+                                    </div>
+                                )
+                            )}
+
+                            {previewModal?.type === 'document' && (
+                                <iframe
+                                    src={previewModal.url}
+                                    title={previewModal.title}
+                                    style={{ width: '100%', height: '78vh', border: 'none', background: '#FFFFFF' }}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

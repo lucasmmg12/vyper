@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
 
         // 1. Enviar mensaje directo (POST /api/v2/{id}/messages)
         if (action === 'send_message') {
-            const { phone, content, mediaUrl, senderName } = body;
+            const { phone, content, mediaUrl, mediaType, transcription, senderName } = body;
             const normPhone = normalizeArgentinePhone(phone);
             if (!normPhone) {
                 return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 });
@@ -216,6 +216,8 @@ export async function POST(request: NextRequest) {
                 to: normPhone,
                 content: content || '',
                 mediaUrl: mediaUrl || undefined,
+                mediaType: mediaType || undefined,
+                transcription: transcription || undefined,
                 senderName: senderName || 'Operador Vyper',
             });
 

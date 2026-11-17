@@ -9,7 +9,36 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 const STORAGE_BUCKET = 'whatsapp-media';
+
+async function transcribeWithWhisper(
+    audioBuffer: ArrayBuffer,
+    fileName = 'audio.ogg',
+    mimeType = 'audio/ogg'
+): Promise<string | null> {
+    if (!OPENAI_API_KEY) return null;
+    try {
+        const form = new FormData();
+        const blob = new Blob([audioBuffer], { type: mimeType });
+        form.append('file', blob, fileName);
+        form.append('model', 'whisper-1');
+        form.append('language', 'es');
+
+        const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: form,
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return String(data?.text || '').trim() || null;
+    } catch {
+        return null;
+    }
+}
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -205,6 +234,45 @@ Deno.serve(async (req: Request) => {
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+        // 0. Acción directa de transcripción desde el CRM (crm.transcribe)
+        if (eventName === 'crm.transcribe') {
+            let audioBuffer: ArrayBuffer | null = null;
+            const fileName = String(payload?.fileName || 'audio.ogg');
+            const mimeType = String(payload?.mimeType || 'audio/ogg');
+
+            if (payload?.base64Audio) {
+                const binaryStr = atob(String(payload.base64Audio));
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                audioBuffer = bytes.buffer;
+            } else if (payload?.audioUrl) {
+                const r = await fetch(String(payload.audioUrl));
+                if (r.ok) audioBuffer = await r.arrayBuffer();
+            }
+
+            if (!audioBuffer) {
+                return new Response(
+                    JSON.stringify({ ok: false, error: 'No se pudo obtener el audio' }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
+            const text = await transcribeWithWhisper(audioBuffer, fileName, mimeType);
+            if (!text) {
+                return new Response(
+                    JSON.stringify({ ok: false, error: 'No se pudo transcribir con Whisper' }),
+                    { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
+            return new Response(
+                JSON.stringify({ ok: true, text }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
         // 1. Eventos de estado del Bot (status.ready, status.online, status.require_action, status.disconnect)
         if (eventName.startsWith('status.')) {
             const isOnline = eventName === 'status.ready' || eventName === 'status.online';
@@ -357,10 +425,23 @@ Deno.serve(async (req: Request) => {
 
         // Persistir media temporal en Supabase Storage ('whatsapp-media')
         const originalMediaUrl = mediaUrl;
+        let autoTranscription: string | null = null;
         if (mediaUrl) {
             const persisted = await persistMediaToStorage(supabase, mediaUrl, mediaType, phone, docFileName);
             if (persisted) {
                 mediaUrl = persisted;
+            }
+            // Si es un audio entrante, transcribir automáticamente en el momento con Whisper
+            if (mediaType === 'audio' && OPENAI_API_KEY && mediaUrl) {
+                try {
+                    const audioRes = await fetch(mediaUrl);
+                    if (audioRes.ok) {
+                        const buf = await audioRes.arrayBuffer();
+                        autoTranscription = await transcribeWithWhisper(buf, 'voice.ogg', 'audio/ogg');
+                    }
+                } catch {
+                    // ignore auto-transcribe error
+                }
             }
         }
 
@@ -407,7 +488,9 @@ Deno.serve(async (req: Request) => {
                     sender_name: 'Bot / WhatsApp Business',
                     is_read: true,
                     original_media_url: originalMediaUrl,
-                    raw_payload: payload,
+                    raw_payload: autoTranscription
+                        ? { ...payload, transcription: autoTranscription, transcribedAt: new Date().toISOString() }
+                        : payload,
                 })
                 .select('id')
                 .maybeSingle();
@@ -440,7 +523,9 @@ Deno.serve(async (req: Request) => {
                     sender_name: senderName,
                     is_read: direction === 'outgoing',
                     original_media_url: originalMediaUrl,
-                    raw_payload: payload,
+                    raw_payload: autoTranscription
+                        ? { ...payload, transcription: autoTranscription, transcribedAt: new Date().toISOString() }
+                        : payload,
                 })
                 .select('id')
                 .maybeSingle();

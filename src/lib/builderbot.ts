@@ -237,12 +237,16 @@ export async function sendDirectWhatsAppMessage({
     to,
     content,
     mediaUrl,
+    mediaType,
+    transcription,
     senderName = 'Operador Vyper',
     skipCrmLog = false,
 }: {
     to: string;
     content: string;
     mediaUrl?: string;
+    mediaType?: string;
+    transcription?: string;
     senderName?: string;
     skipCrmLog?: boolean;
 }): Promise<{ ok: boolean; error?: string; response?: any }> {
@@ -259,9 +263,27 @@ export async function sendDirectWhatsAppMessage({
             return { ok: false, error: 'Número de teléfono inválido' };
         }
 
+        const inferredType =
+            mediaType ||
+            (mediaUrl
+                ? /\.(mp3|ogg|oga|opus|wav|m4a|aac|weba)($|\?)/i.test(mediaUrl)
+                    ? 'audio'
+                    : /\.(jpe?g|png|gif|webp|bmp|svg)($|\?)/i.test(mediaUrl)
+                    ? 'image'
+                    : /\.(mp4|mov|avi|mkv|3gp|webm)($|\?)/i.test(mediaUrl)
+                    ? 'video'
+                    : 'document'
+                : 'text');
+
         const payload = {
             messages: {
-                content: content || (mediaUrl ? '📎 Archivo adjunto' : ''),
+                content:
+                    content ||
+                    (inferredType === 'audio'
+                        ? '🎤 Audio'
+                        : mediaUrl
+                        ? '📎 Archivo adjunto'
+                        : ''),
                 ...(mediaUrl ? { mediaUrl } : {}),
             },
             number: cleanPhone,
@@ -288,21 +310,17 @@ export async function sendDirectWhatsAppMessage({
         }
 
         if (!skipCrmLog) {
-            const inferredType = mediaUrl
-                ? /\.(mp3|ogg|oga|opus|wav|m4a|webm)($|\?)/i.test(mediaUrl)
-                    ? 'audio'
-                    : /\.(jpe?g|png|gif|webp)($|\?)/i.test(mediaUrl)
-                    ? 'image'
-                    : 'document'
-                : 'text';
-
             await logOutgoingCrmMessage({
                 phone: cleanPhone,
-                content: content || '',
+                content: content || (inferredType === 'audio' ? '🎤 Mensaje de voz' : ''),
                 mediaUrl: mediaUrl || null,
                 mediaType: inferredType,
                 senderName,
-                rawPayload: { source: 'crm_direct', response: data },
+                rawPayload: {
+                    source: 'crm_direct',
+                    ...(transcription ? { transcription } : {}),
+                    response: data,
+                },
             });
         }
 
