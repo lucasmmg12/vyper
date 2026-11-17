@@ -18,6 +18,8 @@ import {
     UserCog,
     Settings,
     MessageSquare,
+    PanelLeftClose,
+    PanelLeftOpen,
 } from 'lucide-react';
 
 interface CurrentUser {
@@ -29,7 +31,7 @@ interface CurrentUser {
 
 const navItems = [
     { href: '/admin', label: 'Inicio (POS & CRM)', icon: LayoutDashboard },
-    { href: '/admin/crm', label: 'CRM WhatsApp', icon: MessageSquare },
+    { href: '/admin/crm', label: 'Whatsapp', icon: MessageSquare },
     { href: '/admin/vyper-coins', label: 'Vyper Coins', icon: Coins },
     { href: '/admin/debt', label: 'Cta Corriente', icon: CreditCard },
     { href: '/admin/clients', label: 'Clientes', icon: Users },
@@ -48,7 +50,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
     const [user, setUser] = useState<CurrentUser | null>(null);
+    const [collapsed, setCollapsed] = useState(false);
     const isLoginPage = pathname === '/admin/login';
+    const isCrmFullPage = pathname === '/admin/crm';
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('vyper_sidebar_collapsed');
+            if (saved === 'true') setCollapsed(true);
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    const toggleSidebar = () => {
+        setCollapsed(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem('vyper_sidebar_collapsed', String(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
 
     // Fetch current user (must be before any early return)
     useEffect(() => {
@@ -92,16 +117,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
         <div className="admin-layout">
             {/* Sidebar */}
-            <aside className="admin-sidebar">
-                {/* Brand */}
-                <div className="sidebar-brand">
-                    <div className="sidebar-brand-icon">
-                        <img src="/logovyper.png" alt="Vyper" width={28} height={28} style={{ borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                        <span className="sidebar-brand-name">Vyper Labs</span>
-                        <span className="sidebar-brand-sub">Panel de gestión</span>
-                    </div>
+            <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`}>
+                {/* Brand + Collapse Toggle */}
+                <div
+                    className="sidebar-brand"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'space-between',
+                        gap: '0.5rem',
+                    }}
+                >
+                    {!collapsed && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                            <div className="sidebar-brand-icon">
+                                <img src="/logovyper.png" alt="Vyper" width={28} height={28} style={{ borderRadius: '6px' }} />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                                <span className="sidebar-brand-name">Vyper Labs</span>
+                                <span className="sidebar-brand-sub">Panel de gestión</span>
+                            </div>
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={toggleSidebar}
+                        title={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
+                        style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: 8,
+                            width: 34,
+                            height: 34,
+                            padding: 0,
+                            minHeight: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            boxShadow: 'none',
+                        }}
+                    >
+                        {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+                    </button>
                 </div>
 
                 {/* Nav */}
@@ -114,10 +174,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    title={collapsed ? item.label : undefined}
                                     className={`sidebar-nav-item ${active ? 'active' : ''}`}
                                 >
-                                    <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-                                    <span>{item.label}</span>
+                                    <Icon size={18} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
+                                    {!collapsed && <span>{item.label}</span>}
                                 </Link>
                             );
                         })}
@@ -125,10 +186,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {user?.rol === 'superadmin' && (
                             <Link
                                 href="/admin/usuarios"
+                                title={collapsed ? 'Usuarios' : undefined}
                                 className={`sidebar-nav-item ${pathname.startsWith('/admin/usuarios') ? 'active' : ''}`}
                             >
-                                <UserCog size={18} strokeWidth={pathname.startsWith('/admin/usuarios') ? 2.2 : 1.8} />
-                                <span>Usuarios</span>
+                                <UserCog size={18} strokeWidth={pathname.startsWith('/admin/usuarios') ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
+                                {!collapsed && <span>Usuarios</span>}
                             </Link>
                         )}
                     </div>
@@ -142,16 +204,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                title={collapsed ? item.label : undefined}
                                 className="sidebar-nav-item"
                             >
-                                <Icon size={18} strokeWidth={1.8} />
-                                <span>{item.label}</span>
+                                <Icon size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+                                {!collapsed && <span>{item.label}</span>}
                             </Link>
                         );
                     })}
 
                     {/* User info */}
-                    {user && (
+                    {user && !collapsed && (
                         <div style={{
                             padding: '0.625rem 0.75rem',
                             borderTop: '1px solid var(--border-light)',
@@ -171,32 +234,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             await fetch('/api/auth/logout', { method: 'POST' });
                             router.push('/admin/login');
                         }}
+                        title={collapsed ? 'Cerrar sesión' : undefined}
                         className="sidebar-nav-item sidebar-exit"
-                        style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            width: '100%',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            justifyContent: collapsed ? 'center' : 'flex-start',
+                        }}
                     >
-                        <LogOut size={18} strokeWidth={1.8} />
-                        <span>Cerrar sesión</span>
+                        <LogOut size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+                        {!collapsed && <span>Cerrar sesión</span>}
                     </button>
                 </div>
             </aside>
 
             {/* Main content */}
-            <div className="admin-main">
-                {/* Top bar */}
-                <header className="admin-topbar">
-                    <div>
-                        <h1 className="admin-topbar-title">
-                            Administración <span style={{ fontWeight: 800 }}>Vyper Labs</span>
-                        </h1>
-                        <p className="admin-topbar-sub">Sistema de gestión integral</p>
-                    </div>
-                    <div className="admin-topbar-right">
-                        <span className="admin-topbar-date">{formattedDate}</span>
-                    </div>
-                </header>
+            <div className="admin-main" style={{ height: isCrmFullPage ? '100vh' : undefined, overflow: isCrmFullPage ? 'hidden' : undefined }}>
+                {/* Top bar (hidden in full-screen CRM page so Whatsapp occupies 100% of screen) */}
+                {!isCrmFullPage && (
+                    <header className="admin-topbar">
+                        <div>
+                            <h1 className="admin-topbar-title">
+                                Administración <span style={{ fontWeight: 800 }}>Vyper Labs</span>
+                            </h1>
+                            <p className="admin-topbar-sub">Sistema de gestión integral</p>
+                        </div>
+                        <div className="admin-topbar-right">
+                            <span className="admin-topbar-date">{formattedDate}</span>
+                        </div>
+                    </header>
+                )}
 
                 {/* Page content */}
-                <main className="admin-content">
+                <main className="admin-content" style={{ display: isCrmFullPage ? 'flex' : undefined, flexDirection: isCrmFullPage ? 'column' : undefined, height: isCrmFullPage ? '100vh' : undefined, overflow: isCrmFullPage ? 'hidden' : undefined }}>
                     {children}
                 </main>
             </div>

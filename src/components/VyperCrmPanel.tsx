@@ -116,7 +116,7 @@ function formatTimeShort(dateVal: string) {
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
 }
 
-export default function VyperCrmPanel() {
+export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boolean }) {
     const [conversations, setConversations] = useState<CrmConversation[]>([]);
     const [totalUnread, setTotalUnread] = useState(0);
     const [shortcuts, setShortcuts] = useState<CrmShortcut[]>([]);
@@ -630,17 +630,19 @@ export default function VyperCrmPanel() {
         <div
             style={{
                 background: '#FFFFFF',
-                border: '2px solid #111111',
-                borderRadius: 16,
+                border: fullScreen ? 'none' : '2px solid #111111',
+                borderRadius: fullScreen ? 0 : 12,
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                height: 'calc(100vh - 190px)',
-                minHeight: 640,
-                boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                width: '100%',
+                flex: fullScreen ? 1 : undefined,
+                height: fullScreen ? '100vh' : 'calc(100vh - 145px)',
+                minHeight: fullScreen ? '100vh' : 620,
+                boxShadow: fullScreen ? 'none' : '0 10px 30px rgba(0,0,0,0.06)',
             }}
         >
-            {/* ═══════════ TOP HEADER BAR (Webhook + Line Status + Actions) ═══════════ */}
+            {/* ═══════════ TOP HEADER BAR ═══════════ */}
             <div
                 style={{
                     padding: '0.75rem 1.25rem',
@@ -657,32 +659,9 @@ export default function VyperCrmPanel() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <MessageSquare size={18} />
                         <span style={{ fontWeight: 900, fontSize: '0.95rem', letterSpacing: '-0.01em' }}>
-                            CRM WHATSAPP · CONTACT CENTER VYPER
+                            Whatsapp
                         </span>
                     </div>
-
-                    <span
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '0.2rem 0.65rem',
-                            borderRadius: 999,
-                            background: 'rgba(255,255,255,0.12)',
-                            fontSize: '0.725rem',
-                            fontWeight: 700,
-                        }}
-                    >
-                        <span
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: botStatus?.online !== false ? '#10B981' : '#F59E0B',
-                            }}
-                        />
-                        Línea Meta API: {botStatus?.status === 'require_action' ? 'Requiere Acción' : 'Activa'}
-                    </span>
 
                     {totalUnread > 0 && (
                         <span
@@ -700,53 +679,8 @@ export default function VyperCrmPanel() {
                     )}
                 </div>
 
-                {/* Webhook URL Copy + Quick Buttons */}
+                {/* Quick Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            navigator.clipboard.writeText(webhookUrl);
-                            setCopiedWebhook(true);
-                            setTimeout(() => setCopiedWebhook(false), 2500);
-                        }}
-                        title="Copiar URL del Webhook para pegar en BuilderBot → Webhooks"
-                        style={{
-                            padding: '0.35rem 0.75rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background: 'rgba(255,255,255,0.12)',
-                            color: '#FFFFFF',
-                            border: '1px solid rgba(255,255,255,0.25)',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            minHeight: 'auto',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        {copiedWebhook ? <Check size={13} /> : <Webhook size={13} />}{' '}
-                        {copiedWebhook ? '¡Webhook Copiado!' : 'Copiar URL Webhook'}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={handleSimulateIncoming}
-                        title="Simular la llegada de un mensaje por Webhook para probar el CRM"
-                        style={{
-                            padding: '0.35rem 0.75rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background: 'rgba(255,255,255,0.12)',
-                            color: '#FFFFFF',
-                            border: '1px solid rgba(255,255,255,0.25)',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            minHeight: 'auto',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        <Play size={13} /> Simular Entrada
-                    </button>
-
                     <button
                         type="button"
                         onClick={() => setShowShortcutManager(true)}
@@ -871,24 +805,11 @@ export default function VyperCrmPanel() {
                             <div style={{ padding: '2.5rem 1.25rem', textAlign: 'center', color: '#6B7280' }}>
                                 <MessageSquare size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.35 }} />
                                 <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111111', marginBottom: 4 }}>
-                                    Sin conversaciones aún
+                                    Sin conversaciones
                                 </div>
-                                <p style={{ fontSize: '0.775rem', marginBottom: '1rem' }}>
-                                    Pegá la URL del Webhook en BuilderBot o presioná &ldquo;Simular Entrada&rdquo; arriba para probar.
+                                <p style={{ fontSize: '0.775rem', marginBottom: 0 }}>
+                                    No se encontraron chats con este filtro.
                                 </p>
-                                <button
-                                    type="button"
-                                    onClick={handleSimulateIncoming}
-                                    style={{
-                                        padding: '0.45rem 0.9rem',
-                                        fontSize: '0.75rem',
-                                        background: '#111111',
-                                        color: '#FFFFFF',
-                                        minHeight: 'auto',
-                                    }}
-                                >
-                                    <Play size={13} /> Crear Conversación de Prueba
-                                </button>
                             </div>
                         ) : (
                             filteredConversations.map(conv => {
@@ -1128,14 +1049,6 @@ export default function VyperCrmPanel() {
                                 style={{ background: '#111111', color: '#FFFFFF', fontSize: '0.8125rem' }}
                             >
                                 <Plus size={15} /> Iniciar Nuevo Chat
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSimulateIncoming}
-                                className="secondary"
-                                style={{ borderColor: '#111111', color: '#111111', fontSize: '0.8125rem' }}
-                            >
-                                <Play size={15} /> Simular Mensaje Entrante
                             </button>
                         </div>
                     </div>

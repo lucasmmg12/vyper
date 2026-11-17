@@ -502,8 +502,30 @@ button:disabled {
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 50;
   color: #FFFFFF;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar.collapsed {
+  width: 68px;
+  min-width: 68px;
+}
+
+.admin-sidebar.collapsed .sidebar-brand {
+  padding: 1rem 0.5rem;
+  justify-content: center;
+}
+
+.admin-sidebar.collapsed .sidebar-nav-item {
+  justify-content: center;
+  padding: 0.65rem;
+}
+
+.admin-sidebar.collapsed .sidebar-bottom {
+  padding: 0.5rem;
+  align-items: center;
 }
 
 .sidebar-brand {

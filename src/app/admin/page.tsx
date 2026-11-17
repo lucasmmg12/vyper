@@ -41,9 +41,15 @@ export default function AdminPage() {
 
     return (
         <>
-            <div className="page-container" style={{ maxWidth: view === 'CRM' ? '1380px' : undefined }}>
+            <div
+                className="page-container"
+                style={{
+                    maxWidth: view === 'CRM' ? '100%' : undefined,
+                    padding: view === 'CRM' ? '0.75rem 1rem' : undefined,
+                }}
+            >
                 {/* Tabs & Actions */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: view === 'CRM' ? '0.75rem' : '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <div className="nav-pill-container" style={{ padding: '0.4rem' }}>
                         <button
                             onClick={() => setView('SALES')}
@@ -63,7 +69,7 @@ export default function AdminPage() {
                             onClick={() => setView('CRM')}
                             className={`nav-pill-button ${view === 'CRM' ? 'active' : ''}`}
                             style={{
-                                minWidth: '175px',
+                                minWidth: '145px',
                                 justifyContent: 'center',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -71,7 +77,7 @@ export default function AdminPage() {
                             }}
                         >
                             <MessageSquare size={15} />
-                            CRM WhatsApp
+                            Whatsapp
                             {unreadCrm > 0 && (
                                 <span
                                     style={{
