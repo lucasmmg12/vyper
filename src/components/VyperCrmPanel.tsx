@@ -1215,20 +1215,6 @@ export default function VyperCrmPanel({ fullScreen = false }: { fullScreen?: boo
                                                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                                                     }}
                                                 >
-                                                    {/* Sender label */}
-                                                    {msg.sender_name && (
-                                                        <div
-                                                            style={{
-                                                                fontSize: '0.675rem',
-                                                                fontWeight: 700,
-                                                                opacity: 0.7,
-                                                                marginBottom: 3,
-                                                            }}
-                                                        >
-                                                            {msg.sender_name}
-                                                        </div>
-                                                    )}
-
                                                     {/* Media Rendering */}
                                                     {msg.media_url && msg.media_type === 'image' && (
                                                         <div style={{ marginBottom: 6 }}>
