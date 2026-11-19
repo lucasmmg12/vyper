@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import {
+    normalizeArgentinePhone,
+    sendDirectWhatsAppMessage,
+    sendWhatsAppTemplate,
+} from '@/lib/builderbot';
 
 const db = supabaseAdmin || supabase;
 
@@ -432,6 +437,85 @@ export async function POST(request: NextRequest) {
             ];
             await saveStoredCheques(merged);
             return NextResponse.json({ ok: true, cheques: merged });
+        }
+
+        // 5b. Enviar Recordatorio de Pago de Cheque(s) por WhatsApp (Bot / Meta Template)
+        if (action === 'send_whatsapp_reminder') {
+            const targetPhone = normalizeArgentinePhone(
+                body.phone || process.env.OWNER_PHONE || '5492645438114'
+            );
+            const chequeId = body.id;
+            const pendingList = currentCheques
+                .filter(c => c.estado === 'pendiente' && c.direccion === 'emitido')
+                .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
+
+            const itemsToRemind = chequeId
+                ? currentCheques.filter(c => c.id === chequeId)
+                : pendingList.slice(0, 6);
+
+            if (itemsToRemind.length === 0) {
+                return NextResponse.json(
+                    { ok: false, error: 'No hay cheques pendientes para recordar' },
+                    { status: 400 }
+                );
+            }
+
+            const totalRemind = itemsToRemind.reduce((s, c) => s + Number(c.monto || 0), 0);
+            const detailLines = itemsToRemind
+                .map(
+                    c =>
+                        `• *${c.fecha_vencimiento}* — *${c.beneficiario || 'PROVEEDOR'}*: $${Number(
+                            c.monto
+                        ).toLocaleString('es-AR', { minimumFractionDigits: 2 })} (${c.banco} #${
+                            c.nro_cheque
+                        } · Emisor: ${c.razon_social_emisora})`
+                )
+                .join('\n');
+
+            const fullText = `🔔 *RECORDATORIO DE VENCIMIENTO DE CHEQUES (VYPER LABS)*\n\n${detailLines}\n\n💰 *Total en aviso:* $${totalRemind.toLocaleString(
+                'es-AR',
+                { minimumFractionDigits: 2 }
+            )}\n📉 *Deuda Total Pendiente en Cheques:* $${pendingList
+                .reduce((s, c) => s + Number(c.monto || 0), 0)
+                .toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+            // Intentar mensaje directo primero; si falla (ventana 24h cerrada), usar plantilla oficial Meta
+            const directRes = await sendDirectWhatsAppMessage({
+                to: targetPhone,
+                content: fullText,
+                senderName: 'Recordatorio Cheques Vyper',
+            });
+
+            if (directRes.ok) {
+                return NextResponse.json({ ok: true, method: 'direct', phone: targetPhone });
+            }
+
+            const tplRes = await sendWhatsAppTemplate({
+                to: targetPhone,
+                templateName: 'vyper_notificacion_general',
+                languageCode: 'es_AR',
+                parameters: [
+                    'Administración Vyper',
+                    `Recordatorio de Pago de Cheques ($${totalRemind.toLocaleString('es-AR')})`,
+                    itemsToRemind
+                        .map(
+                            c =>
+                                `${c.fecha_vencimiento}: ${c.beneficiario || 'Cheque'} $${Number(
+                                    c.monto
+                                ).toLocaleString('es-AR')}`
+                        )
+                        .join(' | '),
+                    'Recordá cubrir los fondos en cuenta bancaria antes del vencimiento.',
+                ],
+                renderedText: fullText,
+            });
+
+            return NextResponse.json({
+                ok: tplRes.ok,
+                method: 'template',
+                phone: targetPhone,
+                error: tplRes.error,
+            });
         }
 
         // 6. Crear o Editar Cheque

@@ -8,20 +8,23 @@ import {
     Clock,
     ArrowUpRight,
     ArrowDownLeft,
-    Zap,
-    FileText,
     Camera,
     RotateCcw,
     Pencil,
     Trash2,
     X,
     Building2,
-    Calendar,
+    Calendar as CalendarIcon,
     AlertTriangle,
-    Download,
-    Eye,
     Loader2,
     Check,
+    TrendingDown,
+    Bell,
+    ChevronLeft,
+    ChevronRight,
+    ExternalLink,
+    Download,
+    Send,
 } from 'lucide-react';
 import { showVyperToast } from '@/components/CommandPalette';
 
@@ -57,6 +60,22 @@ const BANCOS_SUGERIDOS = [
     'Banco Patagonia',
 ];
 
+const DIAS_SEMANA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+const MESES_NOMBRES = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+];
+
 function formatArsCurrency(val: number): string {
     return (
         '$ ' +
@@ -65,6 +84,17 @@ function formatArsCurrency(val: number): string {
             maximumFractionDigits: 2,
         })
     );
+}
+
+function formatCompactArs(val: number): string {
+    const num = Number(val || 0);
+    if (num >= 1_000_000) {
+        return `$${(num / 1_000_000).toFixed(2)}M`;
+    }
+    if (num >= 1_000) {
+        return `$${(num / 1_000).toFixed(0)}k`;
+    }
+    return `$${num.toFixed(0)}`;
 }
 
 function formatShortVtoLabel(dateStr: string): string {
@@ -79,6 +109,30 @@ function formatShortVtoLabel(dateStr: string): string {
     });
 }
 
+function getDaysUntil(dateStr: string): number {
+    if (!dateStr) return 0;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d) return 0;
+    const target = new Date(y, m - 1, d);
+    target.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function buildGoogleCalendarUrl(chq: ChequeItem): string {
+    const dateCompact = (chq.fecha_vencimiento || '').replace(/-/g, '');
+    const title = `${chq.direccion === 'emitido' ? 'PAGAR CHEQUE' : 'COBRAR CHEQUE'}: ${
+        chq.beneficiario || 'PROVEEDOR'
+    } (${formatArsCurrency(chq.monto)})`;
+    const details = `Cheque #${chq.nro_cheque} | Banco: ${chq.banco} | Razón Social Emisora: ${
+        chq.razon_social_emisora
+    } | Tipo: ${chq.tipo.toUpperCase()} | Monto: ${formatArsCurrency(chq.monto)}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+        title
+    )}&dates=${dateCompact}/${dateCompact}&details=${encodeURIComponent(details)}`;
+}
+
 export default function AdminChequesPage() {
     const [cheques, setCheques] = useState<ChequeItem[]>([]);
     const [razonesSociales, setRazonesSociales] = useState<string[]>([
@@ -89,6 +143,14 @@ export default function AdminChequesPage() {
     ]);
     const [facturasDisponibles, setFacturasDisponibles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Interactive Chart Hover Node
+    const [hoveredNodeIdx, setHoveredNodeIdx] = useState<number | null>(null);
+
+    // Google Calendar Month State (default to Nov 2026 or month of first pending cheque)
+    const [calYear, setCalYear] = useState<number>(2026);
+    const [calMonth, setCalMonth] = useState<number>(10); // 0-indexed: 10 = Noviembre, 11 = Diciembre
+    const [selectedCalDate, setSelectedCalDate] = useState<string | null>(null);
 
     // Filter state (matching Photo 2)
     const [statusFilter, setStatusFilter] = useState<
@@ -121,6 +183,11 @@ export default function AdminChequesPage() {
     const [newRazonInput, setNewRazonInput] = useState('');
     const [showRazonesManager, setShowRazonesManager] = useState(false);
 
+    // WhatsApp Reminder State
+    const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+    const [reminderPhone, setReminderPhone] = useState('2645438114');
+    const [showReminderModal, setShowReminderModal] = useState(false);
+
     // Scan upload & preview
     const [uploadingScanId, setUploadingScanId] = useState<string | null>(null);
     const [previewScanUrl, setPreviewScanUrl] = useState<string | null>(null);
@@ -147,7 +214,233 @@ export default function AdminChequesPage() {
         fetchChequesData();
     }, []);
 
-    const openNewChequeModal = () => {
+    // ═══════════ CURVA DE DESENDEUDAMIENTO (PENDIENTE NEGATIVA) ═══════════
+    const burnDownData = useMemo(() => {
+        const pendingEmitidos = cheques
+            .filter(c => c.direccion === 'emitido' && c.estado === 'pendiente')
+            .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
+
+        const initialDebt = pendingEmitidos.reduce((acc, c) => acc + Number(c.monto || 0), 0);
+
+        if (pendingEmitidos.length === 0) {
+            return {
+                initialDebt: 0,
+                totalDaysToZero: 0,
+                finalDate: '',
+                points: [],
+            };
+        }
+
+        // Group pending cheques by due date
+        const byDate = new Map<string, ChequeItem[]>();
+        pendingEmitidos.forEach(c => {
+            const list = byDate.get(c.fecha_vencimiento) || [];
+            list.push(c);
+            byDate.set(c.fecha_vencimiento, list);
+        });
+
+        const points: {
+            date: string;
+            label: string;
+            daysLeft: number;
+            debtBefore: number;
+            paidThatDay: number;
+            debtRemaining: number;
+            pctPaid: number;
+            cheques: ChequeItem[];
+        }[] = [];
+
+        // Point 0: Hoy (100% deuda actual)
+        const todayStr = new Date().toISOString().slice(0, 10);
+        points.push({
+            date: todayStr,
+            label: 'Hoy (Inicio)',
+            daysLeft: 0,
+            debtBefore: initialDebt,
+            paidThatDay: 0,
+            debtRemaining: initialDebt,
+            pctPaid: 0,
+            cheques: [],
+        });
+
+        let runningDebt = initialDebt;
+        Array.from(byDate.entries()).forEach(([dateStr, items]) => {
+            const daySum = items.reduce((s, i) => s + Number(i.monto || 0), 0);
+            const before = runningDebt;
+            runningDebt = Math.max(0, Number((runningDebt - daySum).toFixed(2)));
+            const [, m, d] = dateStr.split('-');
+            const daysLeft = getDaysUntil(dateStr);
+            points.push({
+                date: dateStr,
+                label: `${d}/${m}`,
+                daysLeft,
+                debtBefore: before,
+                paidThatDay: daySum,
+                debtRemaining: runningDebt,
+                pctPaid: initialDebt > 0 ? Math.round(((initialDebt - runningDebt) / initialDebt) * 100) : 100,
+                cheques: items,
+            });
+        });
+
+        const finalDate = points[points.length - 1]?.date || '';
+        const totalDaysToZero = Math.max(0, getDaysUntil(finalDate));
+
+        return {
+            initialDebt,
+            totalDaysToZero,
+            finalDate,
+            points,
+        };
+    }, [cheques]);
+
+    // ═══════════ CALENDARIO ESTILO GOOGLE CALENDAR ═══════════
+    const calendarGrid = useMemo(() => {
+        const firstDayOfMonth = new Date(calYear, calMonth, 1);
+        const lastDayOfMonth = new Date(calYear, calMonth + 1, 0);
+        const daysInMonth = lastDayOfMonth.getDate();
+
+        // Convert Sunday=0..Saturday=6 to Monday=0..Sunday=6
+        const startOffset = (firstDayOfMonth.getDay() + 6) % 7;
+
+        const cells: {
+            day: number | null;
+            dateStr: string | null;
+            items: ChequeItem[];
+            dayTotalEmitido: number;
+        }[] = [];
+
+        for (let i = 0; i < startOffset; i++) {
+            cells.push({ day: null, dateStr: null, items: [], dayTotalEmitido: 0 });
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const mStr = String(calMonth + 1).padStart(2, '0');
+            const dStr = String(d).padStart(2, '0');
+            const dateStr = `${calYear}-${mStr}-${dStr}`;
+            const dayCheques = cheques.filter(c => c.fecha_vencimiento === dateStr);
+            const dayTotalEmitido = dayCheques
+                .filter(c => c.direccion === 'emitido')
+                .reduce((s, c) => s + Number(c.monto || 0), 0);
+
+            cells.push({
+                day: d,
+                dateStr,
+                items: dayCheques,
+                dayTotalEmitido,
+            });
+        }
+
+        while (cells.length % 7 !== 0) {
+            cells.push({ day: null, dateStr: null, items: [], dayTotalEmitido: 0 });
+        }
+
+        const monthTotalPending = cheques
+            .filter(
+                c =>
+                    c.fecha_vencimiento.startsWith(`${calYear}-${String(calMonth + 1).padStart(2, '0')}`) &&
+                    c.direccion === 'emitido' &&
+                    c.estado === 'pendiente'
+            )
+            .reduce((s, c) => s + Number(c.monto || 0), 0);
+
+        return { cells, monthTotalPending };
+    }, [cheques, calYear, calMonth]);
+
+    // Months with cheques for quick jump pills in calendar
+    const activeMonthsList = useMemo(() => {
+        const map = new Map<string, { year: number; month: number; count: number; total: number }>();
+        cheques.forEach(c => {
+            if (!c.fecha_vencimiento) return;
+            const [y, m] = c.fecha_vencimiento.split('-').map(Number);
+            if (!y || !m) return;
+            const key = `${y}-${String(m).padStart(2, '0')}`;
+            const cur = map.get(key) || { year: y, month: m - 1, count: 0, total: 0 };
+            cur.count += 1;
+            cur.total += Number(c.monto || 0);
+            map.set(key, cur);
+        });
+        return Array.from(map.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([, val]) => val);
+    }, [cheques]);
+
+    // Export all pending cheques as an .ICS calendar file for Google Calendar / Apple / Outlook
+    const handleExportIcsCalendar = () => {
+        const pending = cheques.filter(c => c.estado === 'pendiente');
+        if (pending.length === 0) {
+            showVyperToast('No hay cheques pendientes para exportar', 'error');
+            return;
+        }
+        const lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Vyper Labs//Cheques Calendar//ES',
+            'CALSCALE:GREGORIAN',
+        ];
+        pending.forEach(c => {
+            const dt = (c.fecha_vencimiento || '').replace(/-/g, '');
+            if (!dt) return;
+            lines.push(
+                'BEGIN:VEVENT',
+                `UID:${c.id}@vyperlabs.com`,
+                `DTSTART;VALUE=DATE:${dt}`,
+                `DTEND;VALUE=DATE:${dt}`,
+                `SUMMARY:${c.direccion === 'emitido' ? 'PAGAR CHEQUE' : 'COBRAR CHEQUE'}: ${
+                    c.beneficiario || 'PROVEEDOR'
+                } (${formatArsCurrency(c.monto)})`,
+                `DESCRIPTION:Cheque #${c.nro_cheque} - Banco: ${c.banco} - Emisor: ${
+                    c.razon_social_emisora
+                } - Monto: ${formatArsCurrency(c.monto)}`,
+                'BEGIN:VALARM',
+                'TRIGGER:-PT24H',
+                'ACTION:DISPLAY',
+                'DESCRIPTION:Recordatorio de vencimiento de cheque mañana',
+                'END:VALARM',
+                'END:VEVENT'
+            );
+        });
+        lines.push('END:VCALENDAR');
+
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'vencimientos_cheques_vyper.ics';
+        a.click();
+        URL.revokeObjectURL(url);
+        showVyperToast('📅 Calendario .ICS descargado (importalo en Google Calendar)');
+    };
+
+    const handleSendWhatsAppReminder = async (chequeId?: string) => {
+        setSendingReminderId(chequeId || 'all');
+        try {
+            const res = await fetch('/api/cheques', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'send_whatsapp_reminder',
+                    id: chequeId,
+                    phone: reminderPhone,
+                }),
+            });
+            const data = await res.json();
+            if (data.ok) {
+                showVyperToast(`🔔 Recordatorio enviado por WhatsApp a ${reminderPhone}`);
+                setShowReminderModal(false);
+            } else {
+                showVyperToast(
+                    `Aviso registrado (Meta: ${data.error || 'verificá ventana 24h'})`,
+                    'info'
+                );
+            }
+        } catch {
+            showVyperToast('Error enviando recordatorio por WhatsApp', 'error');
+        } finally {
+            setSendingReminderId(null);
+        }
+    };
+
+    const openNewChequeModal = (prefillDate?: string) => {
         setEditingId(null);
         setFormDireccion('emitido');
         setFormNroCheque('');
@@ -158,7 +451,7 @@ export default function AdminChequesPage() {
         setFormMonto('');
         setFormTipo('fisico');
         setFormFechaEmision(new Date().toISOString().slice(0, 10));
-        setFormFechaVto('');
+        setFormFechaVto(prefillDate || '');
         setFormScanUrl(null);
         setShowInlineNewRazon(false);
         setShowModal(true);
@@ -379,7 +672,6 @@ export default function AdminChequesPage() {
             .filter(c => c.direccion === 'recibido' && c.estado === 'pendiente')
             .reduce((acc, c) => acc + Number(c.monto || 0), 0);
 
-        // Agrupación por beneficiario para vista rápida de lotes (GENETIC, SCIMMIA, PAVE, ANGACO, etc.)
         const byBeneficiario: Record<string, { total: number; count: number }> = {};
         cheques
             .filter(c => c.estado === 'pendiente')
@@ -404,7 +696,7 @@ export default function AdminChequesPage() {
         return cheques
             .filter(c => c.estado === 'pendiente')
             .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento))
-            .slice(0, 3);
+            .slice(0, 4);
     }, [cheques]);
 
     // Filtered list for table
@@ -439,6 +731,13 @@ export default function AdminChequesPage() {
         [filteredCheques]
     );
 
+    const activeHoverNode =
+        hoveredNodeIdx !== null && burnDownData.points[hoveredNodeIdx]
+            ? burnDownData.points[hoveredNodeIdx]
+            : burnDownData.points.length > 1
+            ? burnDownData.points[1]
+            : null;
+
     return (
         <div className="page-container" style={{ maxWidth: '100%', padding: '1.5rem 2rem' }}>
             {/* Hidden file input for row scan upload */}
@@ -458,26 +757,59 @@ export default function AdminChequesPage() {
                     alignItems: 'center',
                     flexWrap: 'wrap',
                     gap: '1rem',
-                    marginBottom: '1.5rem',
+                    marginBottom: '1.25rem',
                 }}
             >
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em', margin: 0 }}>
-                        Cheques y eCheqs
+                        Cheques, Curva de Deuda y Calendario
                     </h1>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 2 }}>
-                        Control de cheques emitidos (a pagar) y recibidos (a cobrar) por Razón Social Emisora
+                        Curva de desendeudamiento (pendiente negativa), recordatorios de pago y calendario mensual de vencimientos
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowReminderModal(true)}
+                        className="secondary"
+                        style={{
+                            padding: '0.6rem 0.95rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            borderColor: '#111111',
+                            color: '#111111',
+                            minHeight: 'auto',
+                        }}
+                    >
+                        <Bell size={15} /> Recordatorios WhatsApp
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleExportIcsCalendar}
+                        className="secondary"
+                        style={{
+                            padding: '0.6rem 0.95rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            borderColor: '#111111',
+                            color: '#111111',
+                            minHeight: 'auto',
+                        }}
+                        title="Descargar archivo .ICS para importar todos los vencimientos en Google Calendar"
+                    >
+                        <Download size={15} /> Exportar a Google Calendar (.ICS)
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setShowRazonesManager(true)}
                         className="secondary"
                         style={{
-                            padding: '0.6rem 1rem',
-                            fontSize: '0.8125rem',
+                            padding: '0.6rem 0.95rem',
+                            fontSize: '0.8rem',
                             fontWeight: 700,
                             borderColor: '#111111',
                             color: '#111111',
@@ -489,7 +821,7 @@ export default function AdminChequesPage() {
 
                     <button
                         type="button"
-                        onClick={openNewChequeModal}
+                        onClick={() => openNewChequeModal()}
                         style={{
                             padding: '0.6rem 1.15rem',
                             fontSize: '0.8125rem',
@@ -504,18 +836,18 @@ export default function AdminChequesPage() {
                 </div>
             </header>
 
-            {/* ═══════════ BANNER DE PRÓXIMOS VENCIMIENTOS (COMO FOTO 3 FONDO) ═══════════ */}
+            {/* ═══════════ 1. BANNER DE RECORDATORIOS Y PRÓXIMOS VENCIMIENTOS ═══════════ */}
             {upcomingAlerts.length > 0 && (
                 <div
                     style={{
                         marginBottom: '1.25rem',
-                        padding: '0.9rem 1.15rem',
+                        padding: '0.95rem 1.2rem',
                         borderRadius: 14,
                         background: '#111111',
                         color: '#FFFFFF',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '0.55rem',
+                        gap: '0.65rem',
                     }}
                 >
                     <div
@@ -523,6 +855,8 @@ export default function AdminChequesPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem',
                             fontSize: '0.725rem',
                             fontWeight: 800,
                             textTransform: 'uppercase',
@@ -531,44 +865,59 @@ export default function AdminChequesPage() {
                         }}
                     >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <AlertTriangle size={14} color="#FBBF24" /> Próximos Vencimientos Pendientes
+                            <AlertTriangle size={14} color="#FBBF24" /> Recordatorios Activos · Próximos Cheques a Cubrir
                         </span>
-                        <span>Total Pendiente a Pagar: {formatArsCurrency(kpis.emitidosPendientes)}</span>
+                        <span>
+                            Deuda Total Pendiente: <strong style={{ color: '#FFFFFF' }}>{formatArsCurrency(kpis.emitidosPendientes)}</strong> · Tiempo hasta Deuda $0:{' '}
+                            <strong style={{ color: '#10B981' }}>{burnDownData.totalDaysToZero} días ({burnDownData.finalDate})</strong>
+                        </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.6rem' }}>
-                        {upcomingAlerts.map(al => (
-                            <div
-                                key={al.id}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    gap: 10,
-                                    padding: '0.6rem 0.85rem',
-                                    borderRadius: 10,
-                                    background: 'rgba(255,255,255,0.08)',
-                                    border: '1px solid rgba(255,255,255,0.14)',
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                                    <span style={{ fontWeight: 900, fontSize: '0.925rem', whiteSpace: 'nowrap' }}>
-                                        {formatArsCurrency(al.monto)}
-                                    </span>
-                                    <span
-                                        style={{
-                                            padding: '0.15rem 0.45rem',
-                                            borderRadius: 5,
-                                            fontSize: '0.65rem',
-                                            fontWeight: 800,
-                                            background: al.direccion === 'emitido' ? '#991B1B' : '#1E40AF',
-                                            color: '#FFFFFF',
-                                            whiteSpace: 'nowrap',
-                                        }}
-                                    >
-                                        {al.direccion === 'emitido' ? '↑ Pagar' : '↓ Cobrar'}
-                                    </span>
-                                    <div style={{ minWidth: 0 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.6rem' }}>
+                        {upcomingAlerts.map(al => {
+                            const daysLeft = getDaysUntil(al.fecha_vencimiento);
+                            const urgencyLabel =
+                                daysLeft < 0
+                                    ? `Venció hace ${Math.abs(daysLeft)}d`
+                                    : daysLeft === 0
+                                    ? '¡VENCE HOY!'
+                                    : `Faltan ${daysLeft} días`;
+
+                            return (
+                                <div
+                                    key={al.id}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: 10,
+                                        padding: '0.65rem 0.85rem',
+                                        borderRadius: 10,
+                                        background: 'rgba(255,255,255,0.08)',
+                                        border:
+                                            daysLeft <= 3
+                                                ? '1px solid #FBBF24'
+                                                : '1px solid rgba(255,255,255,0.14)',
+                                    }}
+                                >
+                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                            <span style={{ fontWeight: 900, fontSize: '0.925rem' }}>
+                                                {formatArsCurrency(al.monto)}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    padding: '0.12rem 0.45rem',
+                                                    borderRadius: 999,
+                                                    fontSize: '0.625rem',
+                                                    fontWeight: 900,
+                                                    background: daysLeft <= 3 ? '#FBBF24' : 'rgba(255,255,255,0.16)',
+                                                    color: daysLeft <= 3 ? '#111111' : '#FFFFFF',
+                                                }}
+                                            >
+                                                ⏰ {urgencyLabel}
+                                            </span>
+                                        </div>
                                         <div
                                             style={{
                                                 fontSize: '0.775rem',
@@ -578,37 +927,813 @@ export default function AdminChequesPage() {
                                                 textOverflow: 'ellipsis',
                                             }}
                                         >
-                                            {al.beneficiario || 'SIN BENEFICIARIO'} ({al.razon_social_emisora})
+                                            {al.beneficiario || 'PROVEEDOR'} ({al.razon_social_emisora})
                                         </div>
                                         <div style={{ fontSize: '0.675rem', color: '#9CA3AF' }}>
                                             #{al.nro_cheque} · {al.banco} · Vto: {formatShortVtoLabel(al.fecha_vencimiento)}
                                         </div>
                                     </div>
-                                </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => handleToggleEstado(al)}
-                                    title="Marcar como Pagado / Efectivizado"
-                                    style={{
-                                        padding: '0.28rem 0.55rem',
-                                        fontSize: '0.675rem',
-                                        fontWeight: 800,
-                                        borderRadius: 6,
-                                        background: '#FFFFFF',
-                                        color: '#111111',
-                                        minHeight: 'auto',
-                                        boxShadow: 'none',
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    ✓ Cumplir
-                                </button>
-                            </div>
-                        ))}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleEstado(al)}
+                                            style={{
+                                                padding: '0.25rem 0.55rem',
+                                                fontSize: '0.675rem',
+                                                fontWeight: 800,
+                                                borderRadius: 6,
+                                                background: '#FFFFFF',
+                                                color: '#111111',
+                                                minHeight: 'auto',
+                                                boxShadow: 'none',
+                                            }}
+                                        >
+                                            ✓ Pagado
+                                        </button>
+                                        <a
+                                            href={buildGoogleCalendarUrl(al)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                padding: '0.2rem 0.45rem',
+                                                fontSize: '0.625rem',
+                                                fontWeight: 700,
+                                                borderRadius: 6,
+                                                border: '1px solid rgba(255,255,255,0.3)',
+                                                color: '#FFFFFF',
+                                                textAlign: 'center',
+                                                textDecoration: 'none',
+                                            }}
+                                            title="Agendar recordatorio en Google Calendar"
+                                        >
+                                            📅 GCal
+                                        </a>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
+
+            {/* ═══════════ 2. GRÁFICO DE LÍNEA CON PENDIENTE NEGATIVA (TOTAL ADEUDADO VS TIEMPO) + CALENDARIO GOOGLE ═══════════ */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+                    gap: '1.25rem',
+                    marginBottom: '1.5rem',
+                }}
+            >
+                {/* PANEL IZQUIERDO: CURVA DE DESENDEUDAMIENTO (PENDIENTE NEGATIVA) */}
+                <div
+                    style={{
+                        background: '#FFFFFF',
+                        border: '2px solid #111111',
+                        borderRadius: 16,
+                        padding: '1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                    }}
+                >
+                    <div>
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                justifyContent: 'space-between',
+                                gap: '0.75rem',
+                                flexWrap: 'wrap',
+                                marginBottom: '0.85rem',
+                            }}
+                        >
+                            <div>
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        padding: '0.2rem 0.6rem',
+                                        borderRadius: 999,
+                                        background: '#111111',
+                                        color: '#FFFFFF',
+                                        fontSize: '0.675rem',
+                                        fontWeight: 800,
+                                        marginBottom: 4,
+                                    }}
+                                >
+                                    <TrendingDown size={13} /> CURVA DE DESENDEUDAMIENTO (PENDIENTE NEGATIVA)
+                                </div>
+                                <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0 }}>
+                                    Total Adeudado vs. Tiempo Restante hasta Deuda $0
+                                </h3>
+                                <p style={{ fontSize: '0.75rem', color: '#6B7280', margin: 0 }}>
+                                    A medida que vence y se paga cada cheque, la deuda cae hasta extinguirse el{' '}
+                                    <strong>{burnDownData.finalDate || '—'}</strong>.
+                                </p>
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.675rem', fontWeight: 800, color: '#6B7280' }}>
+                                    SALDO ACTUAL A PAGAR
+                                </div>
+                                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#991B1B' }}>
+                                    {formatArsCurrency(burnDownData.initialDebt)}
+                                </div>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#059669' }}>
+                                    ↘ Baja a $0,00 en {burnDownData.totalDaysToZero} días
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Interactive Negative-Slope Line Chart SVG */}
+                        {burnDownData.points.length <= 1 ? (
+                            <div
+                                style={{
+                                    padding: '3rem 1rem',
+                                    textAlign: 'center',
+                                    color: '#059669',
+                                    fontWeight: 800,
+                                    background: '#F8F9FA',
+                                    borderRadius: 12,
+                                }}
+                            >
+                                🎉 ¡Sin deuda pendiente en cheques! Todos los cheques fueron pagados ($ 0,00).
+                            </div>
+                        ) : (
+                            (() => {
+                                const pts = burnDownData.points;
+                                const maxDebt = Math.max(burnDownData.initialDebt, 1);
+                                const W = 640;
+                                const H = 250;
+                                const padL = 62;
+                                const padR = 26;
+                                const padT = 22;
+                                const padB = 46;
+                                const innerW = W - padL - padR;
+                                const innerH = H - padT - padB;
+
+                                const coords = pts.map((p, idx) => {
+                                    const x =
+                                        padL +
+                                        (pts.length > 1
+                                            ? (idx / (pts.length - 1)) * innerW
+                                            : innerW / 2);
+                                    const y =
+                                        padT + innerH - (p.debtRemaining / maxDebt) * innerH;
+                                    return { x, y, p, idx };
+                                });
+
+                                const polylinePoints = coords
+                                    .map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`)
+                                    .join(' ');
+                                const areaPoints = `${coords[0].x.toFixed(1)},${padT + innerH} ${polylinePoints} ${coords[
+                                    coords.length - 1
+                                ].x.toFixed(1)},${padT + innerH}`;
+
+                                return (
+                                    <div style={{ width: '100%', overflowX: 'auto' }}>
+                                        <svg
+                                            viewBox={`0 0 ${W} ${H}`}
+                                            style={{
+                                                width: '100%',
+                                                height: 'auto',
+                                                minHeight: 220,
+                                                background: '#FAFAFA',
+                                                borderRadius: 12,
+                                                border: '1px solid #E5E7EB',
+                                            }}
+                                        >
+                                            <defs>
+                                                <linearGradient
+                                                    id="vyperBurnDownGrad"
+                                                    x1="0"
+                                                    y1="0"
+                                                    x2="0"
+                                                    y2="1"
+                                                >
+                                                    <stop
+                                                        offset="0%"
+                                                        stopColor="#111111"
+                                                        stopOpacity="0.22"
+                                                    />
+                                                    <stop
+                                                        offset="100%"
+                                                        stopColor="#111111"
+                                                        stopOpacity="0.02"
+                                                    />
+                                                </linearGradient>
+                                            </defs>
+
+                                            {/* Horizontal Grid Lines (100%, 75%, 50%, 25%, 0%) */}
+                                            {[1, 0.75, 0.5, 0.25, 0].map((ratio, i) => {
+                                                const yPos = padT + innerH - ratio * innerH;
+                                                const val = maxDebt * ratio;
+                                                return (
+                                                    <g key={i}>
+                                                        <line
+                                                            x1={padL}
+                                                            y1={yPos}
+                                                            x2={W - padR}
+                                                            y2={yPos}
+                                                            stroke="#E5E7EB"
+                                                            strokeDasharray={ratio === 0 ? undefined : '4 4'}
+                                                            strokeWidth={ratio === 0 ? 1.5 : 1}
+                                                        />
+                                                        <text
+                                                            x={padL - 8}
+                                                            y={yPos + 4}
+                                                            textAnchor="end"
+                                                            fontSize="10"
+                                                            fontWeight="700"
+                                                            fill="#6B7280"
+                                                        >
+                                                            {formatCompactArs(val)}
+                                                        </text>
+                                                    </g>
+                                                );
+                                            })}
+
+                                            {/* Shaded Area under Negative-Slope Curve */}
+                                            <polygon
+                                                points={areaPoints}
+                                                fill="url(#vyperBurnDownGrad)"
+                                            />
+
+                                            {/* Dashed Ideal Reference Line from Peak to $0 */}
+                                            <line
+                                                x1={coords[0].x}
+                                                y1={coords[0].y}
+                                                x2={coords[coords.length - 1].x}
+                                                y2={coords[coords.length - 1].y}
+                                                stroke="#9CA3AF"
+                                                strokeWidth="1.5"
+                                                strokeDasharray="5 5"
+                                            />
+
+                                            {/* Negative-Slope Debt Line */}
+                                            <polyline
+                                                fill="none"
+                                                stroke="#111111"
+                                                strokeWidth="3.2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                points={polylinePoints}
+                                            />
+
+                                            {/* Data Nodes & X-Axis Labels */}
+                                            {coords.map(({ x, y, p, idx }) => {
+                                                const isHovered = hoveredNodeIdx === idx;
+                                                const isZero = p.debtRemaining === 0;
+                                                return (
+                                                    <g
+                                                        key={idx}
+                                                        style={{ cursor: 'pointer' }}
+                                                        onMouseEnter={() => setHoveredNodeIdx(idx)}
+                                                        onClick={() => {
+                                                            setHoveredNodeIdx(idx);
+                                                            if (p.date && idx > 0) {
+                                                                const [yy, mm] = p.date
+                                                                    .split('-')
+                                                                    .map(Number);
+                                                                if (yy && mm) {
+                                                                    setCalYear(yy);
+                                                                    setCalMonth(mm - 1);
+                                                                    setSelectedCalDate(p.date);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <circle
+                                                            cx={x}
+                                                            cy={y}
+                                                            r={isHovered ? 7 : 5}
+                                                            fill={
+                                                                isZero
+                                                                    ? '#10B981'
+                                                                    : isHovered
+                                                                    ? '#991B1B'
+                                                                    : '#111111'
+                                                            }
+                                                            stroke="#FFFFFF"
+                                                            strokeWidth="2"
+                                                        />
+                                                        {/* Value label above node */}
+                                                        <text
+                                                            x={x}
+                                                            y={y - 9}
+                                                            textAnchor="middle"
+                                                            fontSize="9.5"
+                                                            fontWeight="800"
+                                                            fill={isZero ? '#059669' : '#111111'}
+                                                        >
+                                                            {formatCompactArs(p.debtRemaining)}
+                                                        </text>
+                                                        {/* Date label on X-axis */}
+                                                        <text
+                                                            x={x}
+                                                            y={padT + innerH + 16}
+                                                            textAnchor="middle"
+                                                            fontSize="9.5"
+                                                            fontWeight="800"
+                                                            fill="#111111"
+                                                        >
+                                                            {idx === 0 ? 'Hoy' : p.label}
+                                                        </text>
+                                                        {/* Days remaining sub-label on X-axis */}
+                                                        <text
+                                                            x={x}
+                                                            y={padT + innerH + 29}
+                                                            textAnchor="middle"
+                                                            fontSize="8.5"
+                                                            fontWeight="600"
+                                                            fill="#6B7280"
+                                                        >
+                                                            {idx === 0
+                                                                ? '100%'
+                                                                : p.daysLeft >= 0
+                                                                ? `${p.daysLeft}d`
+                                                                : `${p.daysLeft}d`}
+                                                        </text>
+                                                    </g>
+                                                );
+                                            })}
+                                        </svg>
+                                    </div>
+                                );
+                            })()
+                        )}
+                    </div>
+
+                    {/* Interactive Inspector Bar below Chart */}
+                    {activeHoverNode && (
+                        <div
+                            style={{
+                                marginTop: '0.85rem',
+                                padding: '0.75rem 0.95rem',
+                                borderRadius: 10,
+                                background: '#F8F9FA',
+                                border: '1px solid #E5E7EB',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                flexWrap: 'wrap',
+                                gap: '0.5rem',
+                                fontSize: '0.78rem',
+                            }}
+                        >
+                            <div>
+                                <div style={{ fontWeight: 900, color: '#111111' }}>
+                                    📌 Hito: {activeHoverNode.date} (
+                                    {activeHoverNode.daysLeft === 0
+                                        ? 'Hoy'
+                                        : activeHoverNode.daysLeft > 0
+                                        ? `Faltan ${activeHoverNode.daysLeft} días`
+                                        : `Hace ${Math.abs(activeHoverNode.daysLeft)} días`}
+                                    )
+                                </div>
+                                <div style={{ color: '#4B5563', fontSize: '0.73rem' }}>
+                                    {activeHoverNode.cheques.length > 0 ? (
+                                        <>
+                                            Se pagan:{' '}
+                                            <strong>
+                                                {activeHoverNode.cheques
+                                                    .map(
+                                                        c =>
+                                                            `${c.beneficiario || 'Cheque'} (${formatArsCurrency(
+                                                                c.monto
+                                                            )})`
+                                                    )
+                                                    .join(' + ')}
+                                            </strong>
+                                        </>
+                                    ) : (
+                                        'Inicio de la curva con el 100% de los cheques pendientes'
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 700 }}>
+                                    DEUDA REMANENTE TRAS ESTE DÍA
+                                </div>
+                                <div style={{ fontWeight: 900, fontSize: '0.95rem', color: '#111111' }}>
+                                    {formatArsCurrency(activeHoverNode.debtRemaining)}{' '}
+                                    <span style={{ color: '#059669', fontSize: '0.75rem' }}>
+                                        ({activeHoverNode.pctPaid}% cancelado)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* PANEL DERECHO: CALENDARIO MENSUAL ESTILO GOOGLE CALENDAR */}
+                <div
+                    style={{
+                        background: '#FFFFFF',
+                        border: '2px solid #111111',
+                        borderRadius: 16,
+                        padding: '1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                    }}
+                >
+                    {/* Calendar Top Controls */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem',
+                            marginBottom: '0.65rem',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <CalendarIcon size={18} />
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0 }}>
+                                {MESES_NOMBRES[calMonth]} {calYear}
+                            </h3>
+                            <span
+                                style={{
+                                    padding: '0.15rem 0.55rem',
+                                    borderRadius: 999,
+                                    background: '#FEF2F2',
+                                    color: '#991B1B',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                A pagar este mes: {formatArsCurrency(calendarGrid.monthTotalPending)}
+                            </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (calMonth === 0) {
+                                        setCalMonth(11);
+                                        setCalYear(y => y - 1);
+                                    } else {
+                                        setCalMonth(m => m - 1);
+                                    }
+                                }}
+                                className="secondary"
+                                style={{ padding: '0.3rem 0.5rem', minHeight: 'auto' }}
+                                title="Mes anterior"
+                            >
+                                <ChevronLeft size={15} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (calMonth === 11) {
+                                        setCalMonth(0);
+                                        setCalYear(y => y + 1);
+                                    } else {
+                                        setCalMonth(m => m + 1);
+                                    }
+                                }}
+                                className="secondary"
+                                style={{ padding: '0.3rem 0.5rem', minHeight: 'auto' }}
+                                title="Mes siguiente"
+                            >
+                                <ChevronRight size={15} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Quick Month Jumpers (Nov 2026, Dic 2026, Ene 2027, Feb 2027) */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: 5,
+                            overflowX: 'auto',
+                            paddingBottom: 6,
+                            marginBottom: '0.5rem',
+                        }}
+                    >
+                        {activeMonthsList.map(mItem => {
+                            const isCurrent =
+                                mItem.year === calYear && mItem.month === calMonth;
+                            return (
+                                <button
+                                    key={`${mItem.year}-${mItem.month}`}
+                                    type="button"
+                                    onClick={() => {
+                                        setCalYear(mItem.year);
+                                        setCalMonth(mItem.month);
+                                    }}
+                                    style={{
+                                        padding: '0.25rem 0.6rem',
+                                        borderRadius: 999,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 800,
+                                        background: isCurrent ? '#111111' : '#F3F4F6',
+                                        color: isCurrent ? '#FFFFFF' : '#374151',
+                                        whiteSpace: 'nowrap',
+                                        minHeight: 'auto',
+                                        boxShadow: 'none',
+                                    }}
+                                >
+                                    {MESES_NOMBRES[mItem.month].slice(0, 3)} {mItem.year} ({mItem.count})
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* 7-Column Google Calendar Grid */}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(7, 1fr)',
+                            borderTop: '1px solid #E5E7EB',
+                            borderLeft: '1px solid #E5E7EB',
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            flex: 1,
+                        }}
+                    >
+                        {DIAS_SEMANA.map(dName => (
+                            <div
+                                key={dName}
+                                style={{
+                                    padding: '0.35rem',
+                                    textAlign: 'center',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 900,
+                                    background: '#111111',
+                                    color: '#FFFFFF',
+                                    borderRight: '1px solid #374151',
+                                }}
+                            >
+                                {dName}
+                            </div>
+                        ))}
+
+                        {calendarGrid.cells.map((cell, idx) => {
+                            const isSelected = cell.dateStr && selectedCalDate === cell.dateStr;
+                            const hasCheques = cell.items.length > 0;
+                            return (
+                                <div
+                                    key={idx}
+                                    onClick={() => {
+                                        if (cell.dateStr) {
+                                            setSelectedCalDate(
+                                                selectedCalDate === cell.dateStr ? null : cell.dateStr
+                                            );
+                                        }
+                                    }}
+                                    style={{
+                                        minHeight: 68,
+                                        padding: '0.25rem 0.3rem',
+                                        borderRight: '1px solid #E5E7EB',
+                                        borderBottom: '1px solid #E5E7EB',
+                                        background: !cell.day
+                                            ? '#F9FAFB'
+                                            : isSelected
+                                            ? '#F3F4F6'
+                                            : hasCheques
+                                            ? '#FFFBEB'
+                                            : '#FFFFFF',
+                                        cursor: cell.day ? 'pointer' : 'default',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                    }}
+                                >
+                                    {cell.day && (
+                                        <>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: hasCheques ? 900 : 600,
+                                                        color: hasCheques ? '#111111' : '#6B7280',
+                                                    }}
+                                                >
+                                                    {cell.day}
+                                                </span>
+                                                {cell.dayTotalEmitido > 0 && (
+                                                    <span
+                                                        style={{
+                                                            fontSize: '0.58rem',
+                                                            fontWeight: 900,
+                                                            color: '#991B1B',
+                                                        }}
+                                                    >
+                                                        {formatCompactArs(cell.dayTotalEmitido)}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Google Calendar Style Event Chips */}
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 2,
+                                                }}
+                                            >
+                                                {cell.items.map(chq => {
+                                                    const isPag = chq.estado === 'pagado';
+                                                    const isEm = chq.direccion === 'emitido';
+                                                    return (
+                                                        <div
+                                                            key={chq.id}
+                                                            title={`${
+                                                                chq.beneficiario || 'CHEQUE'
+                                                            } - ${formatArsCurrency(chq.monto)} (${
+                                                                chq.banco
+                                                            } #${chq.nro_cheque})`}
+                                                            style={{
+                                                                padding: '1px 4px',
+                                                                borderRadius: 4,
+                                                                fontSize: '0.6rem',
+                                                                fontWeight: 800,
+                                                                background: isPag
+                                                                    ? '#D1FAE5'
+                                                                    : isEm
+                                                                    ? '#111111'
+                                                                    : '#1D4ED8',
+                                                                color: isPag ? '#065F46' : '#FFFFFF',
+                                                                whiteSpace: 'nowrap',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                            }}
+                                                        >
+                                                            {isPag ? '✓ ' : ''}
+                                                            {chq.beneficiario || `#${chq.nro_cheque}`}{' '}
+                                                            {formatCompactArs(chq.monto)}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Selected Calendar Day Inspector */}
+                    {selectedCalDate && (
+                        <div
+                            style={{
+                                marginTop: '0.75rem',
+                                padding: '0.75rem 0.95rem',
+                                borderRadius: 10,
+                                background: '#F8F9FA',
+                                border: '1px solid #111111',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 6,
+                                }}
+                            >
+                                <span style={{ fontWeight: 900, fontSize: '0.825rem' }}>
+                                    📅 Cheques del día {selectedCalDate}
+                                </span>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => openNewChequeModal(selectedCalDate)}
+                                        style={{
+                                            padding: '0.2rem 0.55rem',
+                                            fontSize: '0.675rem',
+                                            background: '#111111',
+                                            color: '#FFFFFF',
+                                            borderRadius: 6,
+                                            minHeight: 'auto',
+                                        }}
+                                    >
+                                        + Agendar cheque este día
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedCalDate(null)}
+                                        className="btn-ghost"
+                                        style={{ padding: 2, minHeight: 'auto' }}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {cheques.filter(c => c.fecha_vencimiento === selectedCalDate).length === 0 ? (
+                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                                    No hay cheques programados para esta fecha.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    {cheques
+                                        .filter(c => c.fecha_vencimiento === selectedCalDate)
+                                        .map(c => (
+                                            <div
+                                                key={c.id}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: 8,
+                                                    padding: '0.45rem 0.65rem',
+                                                    background: '#FFFFFF',
+                                                    borderRadius: 8,
+                                                    border: '1px solid #E5E7EB',
+                                                    fontSize: '0.775rem',
+                                                }}
+                                            >
+                                                <div>
+                                                    <strong>{c.beneficiario || 'CHEQUE'}</strong> ·{' '}
+                                                    <span style={{ fontWeight: 900 }}>
+                                                        {formatArsCurrency(c.monto)}
+                                                    </span>{' '}
+                                                    <span style={{ color: '#6B7280', fontSize: '0.7rem' }}>
+                                                        (#{c.nro_cheque} · {c.banco} · Emisor:{' '}
+                                                        {c.razon_social_emisora})
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 5 }}>
+                                                    <a
+                                                        href={buildGoogleCalendarUrl(c)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            padding: '0.2rem 0.5rem',
+                                                            fontSize: '0.675rem',
+                                                            fontWeight: 700,
+                                                            borderRadius: 6,
+                                                            border: '1px solid #111111',
+                                                            color: '#111111',
+                                                            textDecoration: 'none',
+                                                        }}
+                                                    >
+                                                        📅 Google Cal
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSendWhatsAppReminder(c.id)}
+                                                        disabled={sendingReminderId === c.id}
+                                                        style={{
+                                                            padding: '0.2rem 0.5rem',
+                                                            fontSize: '0.675rem',
+                                                            fontWeight: 700,
+                                                            borderRadius: 6,
+                                                            background: '#F3F4F6',
+                                                            color: '#111111',
+                                                            minHeight: 'auto',
+                                                            boxShadow: 'none',
+                                                        }}
+                                                    >
+                                                        🔔 WA
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleEstado(c)}
+                                                        style={{
+                                                            padding: '0.2rem 0.55rem',
+                                                            fontSize: '0.675rem',
+                                                            fontWeight: 800,
+                                                            borderRadius: 6,
+                                                            background:
+                                                                c.estado === 'pagado'
+                                                                    ? '#D1FAE5'
+                                                                    : '#111111',
+                                                            color:
+                                                                c.estado === 'pagado'
+                                                                    ? '#065F46'
+                                                                    : '#FFFFFF',
+                                                            minHeight: 'auto',
+                                                            boxShadow: 'none',
+                                                        }}
+                                                    >
+                                                        {c.estado === 'pagado' ? '✓ Pagado' : 'Marcar Pagado'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* ═══════════ KPI CARDS & LOTES POR BENEFICIARIO ═══════════ */}
             <div
@@ -978,7 +2103,7 @@ export default function AdminChequesPage() {
                                 <th style={{ padding: '0.85rem 1rem' }}>TIPO</th>
                                 <th style={{ padding: '0.85rem 1rem' }}>BENEFICIARIO / EMISOR</th>
                                 <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>MONTO ($)</th>
-                                <th style={{ padding: '0.85rem 1rem' }}>FECHA VTO</th>
+                                <th style={{ padding: '0.85rem 1rem' }}>FECHA VTO / TIEMPO</th>
                                 <th style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>ESTADO</th>
                                 <th style={{ padding: '0.85rem 0.75rem', textAlign: 'center' }}>SCAN</th>
                                 <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>ACCIONES</th>
@@ -1008,6 +2133,7 @@ export default function AdminChequesPage() {
                                     const isEmitido = chq.direccion === 'emitido';
                                     const isPagado = chq.estado === 'pagado';
                                     const isEcheq = chq.tipo === 'echeq';
+                                    const daysLeft = getDaysUntil(chq.fecha_vencimiento);
 
                                     return (
                                         <tr
@@ -1153,12 +2279,20 @@ export default function AdminChequesPage() {
                                                         style={{
                                                             marginLeft: 6,
                                                             fontSize: '0.675rem',
-                                                            fontWeight: 700,
-                                                            color: '#D97706',
+                                                            fontWeight: 800,
+                                                            color:
+                                                                daysLeft <= 3
+                                                                    ? '#DC2626'
+                                                                    : '#D97706',
                                                             fontFamily: 'var(--font-main)',
                                                         }}
                                                     >
-                                                        · Pendiente
+                                                        ·{' '}
+                                                        {daysLeft === 0
+                                                            ? '¡Vence Hoy!'
+                                                            : daysLeft > 0
+                                                            ? `en ${daysLeft} días`
+                                                            : `venció (${Math.abs(daysLeft)}d)`}
                                                     </span>
                                                 )}
                                             </td>
@@ -1231,9 +2365,36 @@ export default function AdminChequesPage() {
                                                     style={{
                                                         display: 'inline-flex',
                                                         alignItems: 'center',
-                                                        gap: 4,
+                                                        gap: 3,
                                                     }}
                                                 >
+                                                    <a
+                                                        href={buildGoogleCalendarUrl(chq)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="btn-ghost"
+                                                        style={{
+                                                            padding: 5,
+                                                            minHeight: 'auto',
+                                                            color: '#6B7280',
+                                                            display: 'inline-flex',
+                                                        }}
+                                                        title="Agendar recordatorio de pago en Google Calendar"
+                                                    >
+                                                        <CalendarIcon size={14} />
+                                                    </a>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSendWhatsAppReminder(chq.id)}
+                                                        disabled={sendingReminderId === chq.id}
+                                                        className="btn-ghost"
+                                                        style={{ padding: 5, minHeight: 'auto', color: '#6B7280' }}
+                                                        title="Enviar recordatorio de este cheque por WhatsApp"
+                                                    >
+                                                        <Bell size={14} />
+                                                    </button>
+
                                                     <button
                                                         type="button"
                                                         onClick={() => handleToggleEstado(chq)}
@@ -1295,6 +2456,110 @@ export default function AdminChequesPage() {
                 </div>
             </div>
 
+            {/* ═══════════ MODAL: RECORDATORIOS DE PAGO POR WHATSAPP & GOOGLE CALENDAR ═══════════ */}
+            {showReminderModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.55)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1rem',
+                    }}
+                    onClick={() => setShowReminderModal(false)}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: '#FFFFFF',
+                            border: '2px solid #111111',
+                            borderRadius: 18,
+                            maxWidth: 480,
+                            width: '100%',
+                            padding: '1.5rem',
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '0.85rem',
+                            }}
+                        >
+                            <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: 0 }}>
+                                🔔 Recordatorios de Pago de Cheques
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowReminderModal(false)}
+                                className="btn-ghost"
+                                style={{ padding: 4, minHeight: 'auto' }}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <p style={{ fontSize: '0.825rem', color: '#4B5563', marginBottom: '1rem' }}>
+                            Enviá un resumen inmediato a tu WhatsApp con los próximos cheques a cubrir en el banco y el saldo total adeudado, o sincronizalos con Google Calendar.
+                        </p>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                                Teléfono WhatsApp destino del recordatorio
+                            </label>
+                            <input
+                                type="text"
+                                value={reminderPhone}
+                                onChange={e => setReminderPhone(e.target.value)}
+                                placeholder="Ej: 2645438114"
+                                style={{ marginBottom: 0 }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <button
+                                type="button"
+                                onClick={() => handleSendWhatsAppReminder()}
+                                disabled={sendingReminderId === 'all'}
+                                style={{
+                                    width: '100%',
+                                    background: '#111111',
+                                    color: '#FFFFFF',
+                                    fontWeight: 800,
+                                    fontSize: '0.875rem',
+                                }}
+                            >
+                                {sendingReminderId === 'all' ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <Send size={15} />
+                                )}{' '}
+                                Enviar Resumen de Próximos Vencimientos por WhatsApp
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleExportIcsCalendar}
+                                className="secondary"
+                                style={{
+                                    width: '100%',
+                                    borderColor: '#111111',
+                                    color: '#111111',
+                                    fontWeight: 800,
+                                    fontSize: '0.85rem',
+                                }}
+                            >
+                                <Download size={15} /> Descargar Todos los Vencimientos (.ICS Google Calendar)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ═══════════ MODAL: REGISTRO MANUAL / EDICIÓN DE CHEQUE (EXACTAMENTE COMO FOTO 3) ═══════════ */}
             {showModal && (
                 <div
@@ -1345,7 +2610,7 @@ export default function AdminChequesPage() {
                         </div>
 
                         <form onSubmit={handleSaveCheque}>
-                            {/* Selector Dirección Principal (↑ A Pagar (emitido) / ↓ A Cobrar (recibido)) */}
+                            {/* Selector Dirección Principal */}
                             <div style={{ marginBottom: '1rem' }}>
                                 <select
                                     value={formDireccion}
