@@ -35,9 +35,9 @@ SISTEMA INTEGRAL VYPER LABS — DOCUMENTACIÓN OFICIAL COMPLETA (GROW LABS)
 - Programa de fidelización: Bronce (0-99 Coins), Plata (100-299 Coins), Oro (300-599 Coins), Platino (600+ Coins).
 - Permite acreditar o canjear puntos y notificar al cliente por WhatsApp.
 
-5. CUENTA CORRIENTE (/admin/debt):
-- Gestión de fiados y pagos parciales/totales.
-- Envío individual o masivo de recordatorios de deuda por WhatsApp y botón directo "💬 Abrir en Whatsapp" para ir al chat del deudor.
+5. CUENTA CORRIENTE (/admin/debt) Y CHEQUES (/admin/cheques):
+- Cuenta Corriente (/admin/debt): Gestión de fiados, pagos parciales/totales y recordatorios masivos por WhatsApp.
+- Cheques y eCheqs (/admin/cheques): Control completo de cheques Emitidos (A Pagar) y Recibidos (A Cobrar), físicos o eCheq, con selector y creador de Razón Social Emisora (VYPER LABS, ECAR SAS, CARLOS ADOLFO REGALADO, etc.), asociación a facturas, carga de foto/escaneo y filtros rápidos por estado o proveedor (GENETIC, SCIMMIA, PAVE, ANGACO).
 
 6. CLIENTES (/admin/clients):
 - ABM completo de clientes, importación Excel, ranking de Top Vyper Coins y Top Deudores, y acceso directo al chat de WhatsApp de cada cliente.

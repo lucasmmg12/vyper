@@ -90,6 +90,7 @@ export default function CommandPalette() {
     const navPages = [
         { label: 'Inicio (Ventas POS & Egresos)', href: '/admin', icon: LayoutDashboard },
         { label: 'Whatsapp CRM (Pantalla Completa)', href: '/admin/crm', icon: MessageSquare },
+        { label: 'Cheques y eCheqs (Emitidos y Recibidos)', href: '/admin/cheques', icon: CreditCard },
         { label: 'Vyper Coins (Fidelización)', href: '/admin/vyper-coins', icon: Coins },
         { label: 'Cuenta Corriente (Deudores)', href: '/admin/debt', icon: CreditCard },
         { label: 'Base de Clientes', href: '/admin/clients', icon: Users },

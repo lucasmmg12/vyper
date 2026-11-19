@@ -22,6 +22,7 @@ import {
     PanelLeftOpen,
     Search,
     Bot,
+    FileCheck2,
 } from 'lucide-react';
 import GrowyAssistant from '@/components/GrowyAssistant';
 import CommandPalette from '@/components/CommandPalette';
@@ -36,6 +37,7 @@ interface CurrentUser {
 const navItems = [
     { href: '/admin', label: 'Inicio', icon: LayoutDashboard },
     { href: '/admin/crm', label: 'Whatsapp', icon: MessageSquare },
+    { href: '/admin/cheques', label: 'Cheques', icon: FileCheck2 },
     { href: '/admin/vyper-coins', label: 'Vyper Coins', icon: Coins },
     { href: '/admin/debt', label: 'Cta Corriente', icon: CreditCard },
     { href: '/admin/clients', label: 'Clientes', icon: Users },
