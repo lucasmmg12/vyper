@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="100%" height="100%">
+  <rect width="1200" height="500" rx="16" fill="#FFFFFF" stroke="#111111" stroke-width="3"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="54" rx="13" fill="#111111"/>
+  <text x="30" y="33" font-family="Inter, sans-serif" font-size="17" font-weight="900" fill="#FFFFFF">🛒 Doble Motor Ecommerce: Mayorista B2B (/tienda) · Minorista B2C (/minorista) · Portal (/client)</text>
+
+  <!-- Left Panel: B2B Quick Spreadsheet Mode -->
+  <rect x="28" y="76" width="560" height="398" rx="14" fill="#F8F9FA" stroke="#111111" stroke-width="2"/>
+  <text x="48" y="108" font-family="Inter, sans-serif" font-size="16" font-weight="900" fill="#111111">📋 Modo Planilla Rápida B2B (/tienda)</text>
+  <rect x="410" y="88" width="158" height="28" rx="6" fill="#111111"/>
+  <text x="489" y="106" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">📄 Lista Precios PDF</text>
+
+  <!-- Table Rows -->
+  <rect x="48" y="128" width="520" height="34" rx="6" fill="#111111"/>
+  <text x="62" y="149" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF">PRODUCTO / SKU</text>
+  <text x="275" y="149" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF">SABOR / VARIANTE</text>
+  <text x="415" y="149" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF">MAYORISTA</text>
+  <text x="505" y="149" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF">CANT.</text>
+
+  <rect x="48" y="168" width="520" height="44" rx="6" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="62" y="194" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">Whey Protein Star 2Lb</text>
+  <rect x="275" y="177" width="115" height="26" rx="5" fill="#F3F4F6"/>
+  <text x="332" y="194" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">Vainilla Ice ▾</text>
+  <text x="415" y="194" font-family="Inter, sans-serif" font-size="12" font-weight="900" fill="#111111">$38.900</text>
+  <rect x="495" y="177" width="60" height="26" rx="5" fill="#111111"/>
+  <text x="525" y="194" font-family="Inter, sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle">-  12  +</text>
+
+  <rect x="48" y="218" width="520" height="44" rx="6" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="62" y="244" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">Creatina Monohidrato 300g</text>
+  <rect x="275" y="227" width="115" height="26" rx="5" fill="#F3F4F6"/>
+  <text x="332" y="244" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">Neutro ▾</text>
+  <text x="415" y="244" font-family="Inter, sans-serif" font-size="12" font-weight="900" fill="#111111">$26.900</text>
+  <rect x="495" y="227" width="60" height="26" rx="5" fill="#111111"/>
+  <text x="525" y="244" font-family="Inter, sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle">-  20  +</text>
+
+  <!-- Incentive Progress Bar -->
+  <rect x="48" y="280" width="520" height="74" rx="10" fill="#FFFFFF" stroke="#111111" stroke-width="1.5"/>
+  <text x="64" y="304" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">🎉 ¡Envío Gratis y 5% OFF Mayorista Desbloqueados!</text>
+  <rect x="64" y="318" width="488" height="12" rx="6" fill="#111111"/>
+  <text x="64" y="346" font-family="Inter, sans-serif" font-size="11" fill="#6B7280">Política de Stock Flexible: Permite encargar productos aun con stock 0.</text>
+
+  <rect x="48" y="372" width="520" height="80" rx="10" fill="#111111"/>
+  <text x="68" y="404" font-family="Inter, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">32 unidades · Total Mayorista: $1.004.800 ARS</text>
+  <text x="68" y="428" font-family="Inter, sans-serif" font-size="12" fill="#D1D5DB">Sincronización directa con ERP, Vyper Coins y WhatsApp Bot</text>
+
+  <!-- Right Panel: B2C Personal Shopper IA + Portal Cliente -->
+  <rect x="612" y="76" width="560" height="398" rx="14" fill="#F8F9FA" stroke="#E5E7EB" stroke-width="2"/>
+  <text x="634" y="108" font-family="Inter, sans-serif" font-size="16" font-weight="900" fill="#111111">✨ Personal Shopper IA &amp; Portal Cliente (/client)</text>
+
+  <rect x="634" y="128" width="516" height="150" rx="12" fill="#FFFFFF" stroke="#111111" stroke-width="1.5"/>
+  <text x="652" y="154" font-family="Inter, sans-serif" font-size="12" font-weight="900" fill="#111111">🤖 Personal Shopper IA en Tienda:</text>
+  <text x="652" y="176" font-family="Inter, sans-serif" font-size="12" fill="#374151">"Busco un combo para ganar masa muscular sin lactosa"</text>
+  <rect x="652" y="192" width="480" height="68" rx="8" fill="#F8F9FA" stroke="#E5E7EB"/>
+  <text x="668" y="216" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">Recomendación IA: Carnivor Beef Protein + Creatina 300g</text>
+  <text x="668" y="238" font-family="Inter, sans-serif" font-size="11" fill="#6B7280">Agregá ambos al carrito directamente desde este chat →</text>
+  <rect x="1010" y="210" width="108" height="30" rx="6" fill="#111111"/>
+  <text x="1064" y="229" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">+ Agregar 🛒</text>
+
+  <!-- Client Portal & Live Tracking -->
+  <rect x="634" y="294" width="516" height="158" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="652" y="320" font-family="Inter, sans-serif" font-size="13" font-weight="900" fill="#111111">👤 Portal de Autogestión (/client) &amp; Tracking (/pedido/[id])</text>
+  <text x="652" y="344" font-family="Inter, sans-serif" font-size="12" fill="#374151">• Consulta de saldo de Vyper Coins (Bronce / Plata / Oro / Platino)</text>
+  <text x="652" y="366" font-family="Inter, sans-serif" font-size="12" fill="#374151">• Estado al día de Cuenta Corriente e historial de pedidos</text>
+  <text x="652" y="388" font-family="Inter, sans-serif" font-size="12" fill="#374151">• Seguimiento en vivo del pedido y comprobante imprimible</text>
+  <rect x="652" y="404" width="230" height="32" rx="8" fill="#111111"/>
+  <text x="767" y="424" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">🔁 Repetir mi último pedido en 1 clic</text>
+</svg>

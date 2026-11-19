@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" width="100%" height="100%">
+  <!-- Frame -->
+  <rect width="1200" height="660" rx="16" fill="#FFFFFF" stroke="#111111" stroke-width="3"/>
+
+  <!-- Left Collapsible Admin Sidebar (68px icon rail) -->
+  <rect x="0" y="0" width="68" height="660" fill="#0B0B0B"/>
+  <rect x="16" y="16" width="36" height="36" rx="8" fill="#FFFFFF"/>
+  <text x="34" y="39" font-family="Inter, sans-serif" font-size="16" font-weight="900" fill="#111111" text-anchor="middle">V</text>
+  <rect x="14" y="75" width="40" height="36" rx="8" fill="#1F2937"/>
+  <text x="34" y="98" font-family="Inter, sans-serif" font-size="14" fill="#FFFFFF" text-anchor="middle">🔍</text>
+  <rect x="14" y="125" width="40" height="36" rx="8" fill="#111111"/>
+  <text x="34" y="148" font-family="Inter, sans-serif" font-size="15" fill="#9CA3AF" text-anchor="middle">📊</text>
+  <rect x="14" y="172" width="40" height="36" rx="8" fill="#FFFFFF"/>
+  <text x="34" y="195" font-family="Inter, sans-serif" font-size="15" fill="#111111" text-anchor="middle">💬</text>
+  <circle cx="48" cy="176" r="9" fill="#111111" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="48" y="180" font-family="Inter, sans-serif" font-size="9" font-weight="900" fill="#FFFFFF" text-anchor="middle">4</text>
+
+  <!-- Top Bar Whatsapp -->
+  <rect x="68" y="0" width="1132" height="54" fill="#111111"/>
+  <text x="96" y="33" font-family="Inter, sans-serif" font-size="18" font-weight="900" fill="#FFFFFF">💬 Whatsapp</text>
+  <rect x="215" y="16" width="84" height="24" rx="12" fill="#FFFFFF"/>
+  <text x="257" y="32" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">4 sin leer</text>
+
+  <rect x="965" y="12" width="95" height="30" rx="8" fill="#262626" stroke="#404040"/>
+  <text x="1012" y="31" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">⚡ Atajos (/)</text>
+  <rect x="1070" y="12" width="110" height="30" rx="8" fill="#FFFFFF"/>
+  <text x="1125" y="31" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111" text-anchor="middle">+ Nuevo Chat</text>
+
+  <!-- Column 1: Conversations List -->
+  <rect x="68" y="54" width="310" height="606" fill="#FAFAFA" stroke="#E5E7EB"/>
+  <rect x="82" y="68" width="282" height="34" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="96" y="89" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">🔍 Buscar por nombre, teléfono o texto...</text>
+
+  <!-- Filter Pills -->
+  <rect x="82" y="110" width="52" height="22" rx="11" fill="#111111"/>
+  <text x="108" y="125" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Todos</text>
+  <rect x="140" y="110" width="64" height="22" rx="11" fill="#E5E7EB"/>
+  <text x="172" y="125" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#374151" text-anchor="middle">No leídos</text>
+  <rect x="210" y="110" width="68" height="22" rx="11" fill="#E5E7EB"/>
+  <text x="244" y="125" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#374151" text-anchor="middle">24h Activa</text>
+  <rect x="284" y="110" width="74" height="22" rx="11" fill="#E5E7EB"/>
+  <text x="321" y="125" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#374151" text-anchor="middle">Con Deuda</text>
+
+  <!-- Active Conversation Item -->
+  <rect x="68" y="144" width="310" height="96" fill="#F3F4F6"/>
+  <rect x="68" y="144" width="5" height="96" fill="#111111"/>
+  <circle cx="102" cy="178" r="18" fill="#111111"/>
+  <text x="102" y="183" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">LM</text>
+  <circle cx="115" cy="191" r="5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="130" y="168" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#111111">Lucas Marinero</text>
+  <text x="330" y="168" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">10:32</text>
+  <text x="130" y="187" font-family="Inter, sans-serif" font-size="12" fill="#374151">🎤 Audio (0:14) · Transcrito con IA</text>
+  <rect x="130" y="198" width="72" height="20" rx="4" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="166" y="212" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#111111" text-anchor="middle">🪙 108 Coins</text>
+  <rect x="208" y="198" width="98" height="20" rx="4" fill="#FEF2F2" stroke="#FECACA"/>
+  <text x="257" y="212" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#991B1B" text-anchor="middle">💳 Deuda $45.454</text>
+
+  <!-- Second Conversation Item -->
+  <rect x="68" y="241" width="310" height="84" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <circle cx="102" cy="276" r="18" fill="#E5E7EB"/>
+  <text x="102" y="281" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111" text-anchor="middle">FP</text>
+  <text x="130" y="266" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#111111">Federico Pickelny</text>
+  <text x="130" y="285" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#111111">📎 comprobante_pago.pdf</text>
+  <rect x="130" y="295" width="72" height="20" rx="4" fill="#F3F4F6"/>
+  <text x="166" y="309" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#111111" text-anchor="middle">🪙 310 Coins</text>
+
+  <!-- Column 2: Center Chat Console -->
+  <rect x="378" y="54" width="532" height="606" fill="#F8F9FA"/>
+  <!-- Chat Header -->
+  <rect x="378" y="54" width="532" height="58" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <circle cx="408" cy="83" r="17" fill="#111111"/>
+  <text x="408" y="88" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">LM</text>
+  <text x="434" y="78" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#111111">Lucas Marinero</text>
+  <text x="434" y="96" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#059669">📱 +5492645438114 · ● Ventana 24h abierta (Chat libre activo)</text>
+  <rect x="690" y="69" width="128" height="28" rx="8" fill="#FFFFFF" stroke="#111111" stroke-width="1.5"/>
+  <text x="754" y="87" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">✨ Plantilla Meta</text>
+  <rect x="824" y="69" width="74" height="28" rx="8" fill="#111111"/>
+  <text x="861" y="87" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">Ficha 360°</text>
+
+  <!-- Incoming Audio Bubble with Real-Time Whisper Transcription & 1.5x Speed -->
+  <rect x="396" y="128" width="350" height="128" rx="14" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+  <rect x="410" y="142" width="272" height="32" rx="16" fill="#F3F4F6"/>
+  <text x="430" y="162" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#111111">▶ 0:00 / 0:14 ━━━━━━━━━━●━━</text>
+  <rect x="690" y="144" width="42" height="28" rx="6" fill="#111111"/>
+  <text x="711" y="162" font-family="Inter, sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle">1.5x</text>
+
+  <rect x="410" y="182" width="322" height="58" rx="8" fill="#F9FAFB" stroke="#E5E7EB"/>
+  <text x="420" y="198" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#6B7280">📝 TRANSCRIPCIÓN DE AUDIO (WHISPER IA):</text>
+  <text x="420" y="216" font-family="Inter, sans-serif" font-size="12" font-style="italic" fill="#111111">"Hola! Pasame el precio mayorista de la Creatina</text>
+  <text x="420" y="232" font-family="Inter, sans-serif" font-size="12" font-style="italic" fill="#111111">Star Nutrition 300g y te mando el comprobante PDF"</text>
+
+  <!-- Incoming PDF File Bubble with Universal Preview Button -->
+  <rect x="396" y="268" width="310" height="92" rx="14" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+  <rect x="410" y="280" width="282" height="66" rx="8" fill="#F3F4F6" stroke="#E5E7EB"/>
+  <rect x="420" y="290" width="38" height="20" rx="5" fill="#111111"/>
+  <text x="439" y="304" font-family="Inter, sans-serif" font-size="10" font-weight="900" fill="#FFFFFF" text-anchor="middle">PDF</text>
+  <text x="466" y="305" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">comprobante_transferencia.pdf</text>
+  <rect x="420" y="316" width="160" height="22" rx="5" fill="#111111"/>
+  <text x="500" y="331" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">👁️ Previsualizar Archivo</text>
+  <rect x="586" y="316" width="94" height="22" rx="5" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="633" y="331" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#111111" text-anchor="middle">⬇️ Descargar</text>
+
+  <!-- Internal Note Bubble -->
+  <rect x="510" y="372" width="382" height="58" rx="12" fill="#111111"/>
+  <text x="524" y="391" font-family="Inter, sans-serif" font-size="10" font-weight="900" fill="#FBBF24">📌 NOTA INTERNA (No enviada al cliente)</text>
+  <text x="524" y="412" font-family="Inter, sans-serif" font-size="12" fill="#FFFFFF">Separar 10 unidades de Creatina del depósito central.</text>
+
+  <!-- Outgoing Product Quote Bubble -->
+  <rect x="500" y="440" width="392" height="68" rx="14" fill="#111111"/>
+  <text x="516" y="465" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">📦 *Creatina Monohidrato Star 300g*: $32.500</text>
+  <text x="516" y="485" font-family="Inter, sans-serif" font-size="12" fill="#D1D5DB">(Precio Mayorista B2B: $26.900) · Stock inmediato ✓✓</text>
+
+  <!-- Pre-Send Attachment Preview Bar & Composer -->
+  <rect x="378" y="525" width="532" height="135" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="392" y="535" width="504" height="44" rx="10" fill="#F8F9FA" stroke="#111111" stroke-width="1.5"/>
+  <text x="408" y="561" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">🎤 grabacion_voz.ogg (42 KB) · Listo para enviar</text>
+  <rect x="645" y="543" width="132" height="28" rx="6" fill="#111111"/>
+  <text x="711" y="561" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">✨ Transcribir ahora</text>
+  <rect x="783" y="543" width="84" height="28" rx="6" fill="#FFFFFF" stroke="#111111"/>
+  <text x="825" y="561" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#111111" text-anchor="middle">👁️ Escuchar</text>
+
+  <!-- Composer Input Row -->
+  <text x="395" y="618" font-family="Inter, sans-serif" font-size="18">😊  📎  🎤</text>
+  <rect x="478" y="596" width="58" height="32" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="507" y="616" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">✨ Growy</text>
+  <rect x="542" y="596" width="54" height="32" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="569" y="616" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">📌 Nota</text>
+  <rect x="602" y="594" width="234" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="614" y="616" font-family="Inter, sans-serif" font-size="11" fill="#9CA3AF">Escribí un mensaje o "/" para atajos...</text>
+  <rect x="842" y="594" width="54" height="36" rx="8" fill="#111111"/>
+  <text x="869" y="617" font-family="Inter, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF" text-anchor="middle">➤</text>
+
+  <!-- Column 3: Right 360° Client Sidebar -->
+  <rect x="910" y="54" width="290" height="606" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="926" y="80" font-family="Inter, sans-serif" font-size="11" font-weight="900" fill="#6B7280" letter-spacing="0.8">FICHA 360° CLIENTE VYPER</text>
+  <rect x="926" y="90" width="195" height="32" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="936" y="110" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#111111">Lucas Marinero</text>
+  <rect x="1127" y="90" width="58" height="32" rx="8" fill="#111111"/>
+  <text x="1156" y="110" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Guardar</text>
+
+  <!-- Coins & Debt Cards -->
+  <rect x="926" y="134" width="126" height="68" rx="10" fill="#F8F9FA" stroke="#E5E7EB"/>
+  <text x="936" y="152" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#6B7280">VYPER COINS</text>
+  <text x="936" y="176" font-family="Inter, sans-serif" font-size="18" font-weight="900" fill="#111111">🪙 108</text>
+  <text x="936" y="192" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#374151">Nivel Plata</text>
+
+  <rect x="1058" y="134" width="126" height="68" rx="10" fill="#FEF2F2" stroke="#FECACA"/>
+  <text x="1068" y="152" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#6B7280">CTA. CORRIENTE</text>
+  <text x="1068" y="176" font-family="Inter, sans-serif" font-size="18" font-weight="900" fill="#991B1B">$45.454</text>
+  <text x="1068" y="192" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">Saldo deudor</text>
+
+  <!-- Quick ERP Buttons -->
+  <text x="926" y="224" font-family="Inter, sans-serif" font-size="10" font-weight="900" fill="#6B7280">ACCIONES OPERATIVAS RÁPIDAS</text>
+  <rect x="926" y="232" width="126" height="30" rx="8" fill="#FFFFFF" stroke="#111111"/>
+  <text x="989" y="251" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">💰 + Venta</text>
+  <rect x="1058" y="232" width="126" height="30" rx="8" fill="#FFFFFF" stroke="#111111"/>
+  <text x="1121" y="251" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">💳 + Fiado</text>
+  <rect x="926" y="268" width="126" height="30" rx="8" fill="#FFFFFF" stroke="#111111"/>
+  <text x="989" y="287" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">✅ Cobrar Cta.</text>
+  <rect x="1058" y="268" width="126" height="30" rx="8" fill="#FFFFFF" stroke="#111111"/>
+  <text x="1121" y="287" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111" text-anchor="middle">🪙 + Coins</text>
+
+  <!-- Quick Product Quoter in 360 Sidebar -->
+  <text x="926" y="322" font-family="Inter, sans-serif" font-size="10" font-weight="900" fill="#6B7280">🛒 COTIZAR PRODUCTO EN EL CHAT</text>
+  <rect x="926" y="330" width="258" height="30" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="936" y="349" font-family="Inter, sans-serif" font-size="11" fill="#111111">Creatina Star...</text>
+  <rect x="926" y="366" width="258" height="44" rx="8" fill="#F8F9FA" stroke="#E5E7EB"/>
+  <text x="936" y="384" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#111111">Creatina Star Nutrition 300g</text>
+  <text x="936" y="400" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">May: $26.900 · Min: $32.500</text>
+  <rect x="1128" y="376" width="48" height="24" rx="6" fill="#111111"/>
+  <text x="1152" y="392" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">+ Chat</text>
+
+  <!-- Floating Growy AI Trigger -->
+  <rect x="1055" y="605" width="130" height="42" rx="21" fill="#111111" stroke="#FFFFFF" stroke-width="2"/>
+  <text x="1120" y="631" font-family="Inter, sans-serif" font-size="13" font-weight="900" fill="#FFFFFF" text-anchor="middle">🤖 Growy IA ●</text>
+</svg>
