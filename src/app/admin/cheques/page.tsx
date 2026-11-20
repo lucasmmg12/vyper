@@ -772,55 +772,6 @@ export default function AdminChequesPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
                     <button
                         type="button"
-                        onClick={() => setShowReminderModal(true)}
-                        className="secondary"
-                        style={{
-                            padding: '0.6rem 0.95rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 800,
-                            borderColor: '#111111',
-                            color: '#111111',
-                            minHeight: 'auto',
-                        }}
-                    >
-                        <Bell size={15} /> Recordatorios WhatsApp
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={handleExportIcsCalendar}
-                        className="secondary"
-                        style={{
-                            padding: '0.6rem 0.95rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                            borderColor: '#111111',
-                            color: '#111111',
-                            minHeight: 'auto',
-                        }}
-                        title="Descargar archivo .ICS para importar todos los vencimientos en Google Calendar"
-                    >
-                        <Download size={15} /> Exportar a Google Calendar (.ICS)
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowRazonesManager(true)}
-                        className="secondary"
-                        style={{
-                            padding: '0.6rem 0.95rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                            borderColor: '#111111',
-                            color: '#111111',
-                            minHeight: 'auto',
-                        }}
-                    >
-                        <Building2 size={15} /> Razones Sociales ({razonesSociales.length})
-                    </button>
-
-                    <button
-                        type="button"
                         onClick={() => openNewChequeModal()}
                         style={{
                             padding: '0.6rem 1.15rem',
