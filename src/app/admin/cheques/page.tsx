@@ -48,11 +48,11 @@ interface ChequeItem {
 }
 
 const BANCOS_SUGERIDOS = [
+    'Banco Macro',
     'Banco San Juan',
     'Banco Santander',
     'Banco Galicia',
     'BBVA',
-    'Banco Macro',
     'Banco Nación',
     'Banco Provincia',
     'Banco Credicoop',
@@ -141,6 +141,7 @@ export default function AdminChequesPage() {
         'CARLOS ADOLFO REGALADO',
         'LUCAS MARINERO',
     ]);
+    const [bancosDisponibles, setBancosDisponibles] = useState<string[]>(BANCOS_SUGERIDOS);
     const [facturasDisponibles, setFacturasDisponibles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -178,10 +179,12 @@ export default function AdminChequesPage() {
     const [formScanUrl, setFormScanUrl] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
-    // Inline / Modal creation of Razón Social Emisora
+    // Inline / Modal creation of Razón Social Emisora & Banco
     const [showInlineNewRazon, setShowInlineNewRazon] = useState(false);
     const [newRazonInput, setNewRazonInput] = useState('');
     const [showRazonesManager, setShowRazonesManager] = useState(false);
+    const [showInlineNewBanco, setShowInlineNewBanco] = useState(false);
+    const [newBancoInput, setNewBancoInput] = useState('');
 
     // WhatsApp Reminder State
     const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
@@ -202,6 +205,7 @@ export default function AdminChequesPage() {
             const data = await res.json();
             if (data.cheques) setCheques(data.cheques);
             if (data.razonesSociales) setRazonesSociales(data.razonesSociales);
+            if (Array.isArray(data.bancos) && data.bancos.length > 0) setBancosDisponibles(data.bancos);
             if (data.facturasDisponibles) setFacturasDisponibles(data.facturasDisponibles);
         } catch (err) {
             console.error('Error cargando cheques:', err);
@@ -444,7 +448,7 @@ export default function AdminChequesPage() {
         setEditingId(null);
         setFormDireccion('emitido');
         setFormNroCheque('');
-        setFormBanco('Banco San Juan');
+        setFormBanco(bancosDisponibles[0] || 'Banco Macro');
         setFormRazonSocial(razonesSociales[0] || 'VYPER LABS');
         setFormBeneficiario('');
         setFormFactura('');
@@ -454,6 +458,7 @@ export default function AdminChequesPage() {
         setFormFechaVto(prefillDate || '');
         setFormScanUrl(null);
         setShowInlineNewRazon(false);
+        setShowInlineNewBanco(false);
         setShowModal(true);
     };
 
@@ -471,7 +476,32 @@ export default function AdminChequesPage() {
         setFormFechaVto(chq.fecha_vencimiento || '');
         setFormScanUrl(chq.scan_url || null);
         setShowInlineNewRazon(false);
+        setShowInlineNewBanco(false);
         setShowModal(true);
+    };
+
+    const handleAddBanco = async () => {
+        const clean = newBancoInput.trim();
+        if (!clean) return;
+        try {
+            const res = await fetch('/api/cheques', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add_banco', nombre: clean }),
+            });
+            const data = await res.json();
+            if (Array.isArray(data.bancos) && data.bancos.length > 0) {
+                setBancosDisponibles(data.bancos);
+            } else if (!bancosDisponibles.includes(clean)) {
+                setBancosDisponibles(prev => [...prev, clean]);
+            }
+            setFormBanco(clean);
+            setNewBancoInput('');
+            setShowInlineNewBanco(false);
+            showVyperToast(`✅ Banco "${clean}" agregado`);
+        } catch {
+            showVyperToast('Error guardando banco', 'error');
+        }
     };
 
     const handleAddRazonSocial = async () => {
@@ -2608,23 +2638,77 @@ export default function AdminChequesPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>
-                                        Banco
-                                    </label>
-                                    <input
-                                        type="text"
-                                        list="bancos-list"
-                                        value={formBanco}
-                                        onChange={e => setFormBanco(e.target.value)}
-                                        placeholder="Ej: Banco San Juan"
-                                        required
-                                        style={{ marginBottom: 0 }}
-                                    />
-                                    <datalist id="bancos-list">
-                                        {BANCOS_SUGERIDOS.map(b => (
-                                            <option key={b} value={b} />
-                                        ))}
-                                    </datalist>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                                            Banco
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowInlineNewBanco(!showInlineNewBanco)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#111111',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 800,
+                                                padding: 0,
+                                                minHeight: 'auto',
+                                                textDecoration: 'underline',
+                                                boxShadow: 'none',
+                                            }}
+                                        >
+                                            {showInlineNewBanco ? 'Cancelar' : '+ Agregar banco'}
+                                        </button>
+                                    </div>
+                                    {showInlineNewBanco ? (
+                                        <div style={{ display: 'flex', gap: 5, marginTop: 4 }}>
+                                            <input
+                                                type="text"
+                                                value={newBancoInput}
+                                                onChange={e => setNewBancoInput(e.target.value)}
+                                                placeholder="Ej: Banco Macro..."
+                                                autoFocus
+                                                style={{ marginBottom: 0 }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddBanco}
+                                                style={{
+                                                    padding: '0.45rem 0.7rem',
+                                                    background: '#111111',
+                                                    color: '#FFFFFF',
+                                                    fontSize: '0.75rem',
+                                                    minHeight: 'auto',
+                                                }}
+                                            >
+                                                OK
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            value={formBanco}
+                                            onChange={e => setFormBanco(e.target.value)}
+                                            required
+                                            style={{ marginBottom: 0 }}
+                                        >
+                                            {Array.from(
+                                                new Set([
+                                                    ...bancosDisponibles,
+                                                    ...(formBanco ? [formBanco] : []),
+                                                ])
+                                            ).map(b => (
+                                                <option key={b} value={b}>
+                                                    {b}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             </div>
 

@@ -11,6 +11,7 @@ const db = supabaseAdmin || supabase;
 
 const CONFIG_KEY_CHEQUES = 'vyper_cheques_registry';
 const CONFIG_KEY_RAZONES = 'vyper_cheques_razones_sociales';
+const CONFIG_KEY_BANCOS = 'vyper_cheques_bancos';
 
 export interface ChequeItem {
     id: string;
@@ -36,6 +37,19 @@ const DEFAULT_RAZONES_SOCIALES: string[] = [
     'ECAR SAS',
     'CARLOS ADOLFO REGALADO',
     'LUCAS MARINERO',
+];
+
+const DEFAULT_BANCOS: string[] = [
+    'Banco Macro',
+    'Banco San Juan',
+    'Banco Santander',
+    'Banco Galicia',
+    'BBVA',
+    'Banco Nación',
+    'Banco Provincia',
+    'Banco Credicoop',
+    'ICBC',
+    'Banco Patagonia',
 ];
 
 // Los 12 cheques por defecto de la 4ta foto (hoja manuscrita)
@@ -325,6 +339,45 @@ async function saveStoredRazones(list: string[]) {
     );
 }
 
+async function getStoredBancos(): Promise<string[]> {
+    const { data } = await db
+        .from('configuraciones')
+        .select('valor')
+        .eq('clave', CONFIG_KEY_BANCOS)
+        .maybeSingle();
+
+    if (Array.isArray(data?.valor) && data.valor.length > 0) {
+        const stored = data.valor as string[];
+        if (!stored.some(b => b.toLowerCase() === 'banco macro')) {
+            const updated = ['Banco Macro', ...stored];
+            await saveStoredBancos(updated);
+            return updated;
+        }
+        return stored;
+    }
+
+    await db.from('configuraciones').upsert(
+        {
+            clave: CONFIG_KEY_BANCOS,
+            valor: DEFAULT_BANCOS,
+            updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'clave' }
+    );
+    return DEFAULT_BANCOS;
+}
+
+async function saveStoredBancos(list: string[]) {
+    await db.from('configuraciones').upsert(
+        {
+            clave: CONFIG_KEY_BANCOS,
+            valor: list,
+            updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'clave' }
+    );
+}
+
 export async function GET(request: NextRequest) {
     try {
         const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -332,9 +385,10 @@ export async function GET(request: NextRequest) {
         if (sessionUser && isEzeRawsonUser(sessionUser.email)) {
             return NextResponse.json({ ok: false, error: 'Acceso restringido' }, { status: 403 });
         }
-        const [cheques, razonesSociales, comprasRes] = await Promise.all([
+        const [cheques, razonesSociales, bancos, comprasRes] = await Promise.all([
             getStoredCheques(),
             getStoredRazones(),
+            getStoredBancos(),
             db
                 .from('compras')
                 .select('id, proveedor, numero_factura, total, fecha')
@@ -351,6 +405,7 @@ export async function GET(request: NextRequest) {
             ok: true,
             cheques: sorted,
             razonesSociales,
+            bancos,
             facturasDisponibles: comprasRes.data || [],
         });
     } catch (error: any) {
@@ -396,6 +451,31 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 ok: true,
                 razonesSociales: filtered.length > 0 ? filtered : DEFAULT_RAZONES_SOCIALES,
+            });
+        }
+
+        // 1b. Crear o eliminar Banco
+        if (action === 'add_banco') {
+            const nombre = String(body.nombre || '').trim();
+            if (!nombre) {
+                return NextResponse.json({ error: 'Nombre de banco requerido' }, { status: 400 });
+            }
+            const current = await getStoredBancos();
+            if (!current.some(b => b.toLowerCase() === nombre.toLowerCase())) {
+                current.push(nombre);
+                await saveStoredBancos(current);
+            }
+            return NextResponse.json({ ok: true, bancos: current });
+        }
+
+        if (action === 'delete_banco') {
+            const nombre = String(body.nombre || '').trim();
+            const current = await getStoredBancos();
+            const filtered = current.filter(b => b !== nombre);
+            await saveStoredBancos(filtered.length > 0 ? filtered : DEFAULT_BANCOS);
+            return NextResponse.json({
+                ok: true,
+                bancos: filtered.length > 0 ? filtered : DEFAULT_BANCOS,
             });
         }
 
@@ -562,6 +642,14 @@ export async function POST(request: NextRequest) {
         if (cleanRazon && !currentRazones.includes(cleanRazon)) {
             currentRazones.push(cleanRazon);
             await saveStoredRazones(currentRazones);
+        }
+
+        // Si el banco ingresado es nuevo, agregarlo automáticamente al dropdown
+        const cleanBanco = String(banco || 'Banco Macro').trim();
+        const currentBancos = await getStoredBancos();
+        if (cleanBanco && !currentBancos.some(b => b.toLowerCase() === cleanBanco.toLowerCase())) {
+            currentBancos.push(cleanBanco);
+            await saveStoredBancos(currentBancos);
         }
 
         const nowIso = new Date().toISOString();
