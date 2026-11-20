@@ -5,11 +5,17 @@ import {
     sendDirectWhatsAppMessage,
     sendWhatsAppTemplate,
 } from '@/lib/builderbot';
+import { COOKIE_NAME, verifyToken, isEzeRawsonUser } from '@/lib/auth';
 
 const db = supabaseAdmin || supabase;
 
 export async function GET(request: NextRequest) {
     try {
+        const token = request.cookies.get(COOKIE_NAME)?.value;
+        const sessionUser = token ? await verifyToken(token) : null;
+        if (sessionUser && isEzeRawsonUser(sessionUser.email)) {
+            return NextResponse.json({ error: 'Acceso restringido' }, { status: 403 });
+        }
         const phoneParam = request.nextUrl.searchParams.get('phone');
 
         // 1. Si se pide una conversación específica (?phone=549...)
@@ -212,6 +218,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const token = request.cookies.get(COOKIE_NAME)?.value;
+        const sessionUser = token ? await verifyToken(token) : null;
+        if (sessionUser && isEzeRawsonUser(sessionUser.email)) {
+            return NextResponse.json({ error: 'Acceso restringido' }, { status: 403 });
+        }
         const body = await request.json();
         const { action } = body;
 

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
     const [formData, setFormData] = useState({
@@ -11,6 +11,19 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
         date: new Date().toISOString().split('T')[0]
     });
     const [loading, setLoading] = useState(false);
+    const [onlyRawson, setOnlyRawson] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(r => r.json())
+            .then(d => {
+                if ((d?.user?.email || '').toLowerCase().trim() === 'eze@growlabs.com') {
+                    setOnlyRawson(true);
+                    setFormData(prev => ({ ...prev, branch: 'Rawson' }));
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,11 +61,12 @@ export default function SalesForm({ onSuccess }: { onSuccess: () => void }) {
                     <div>
                         <label>Sucursal</label>
                         <select
-                            value={formData.branch}
+                            value={onlyRawson ? 'Rawson' : formData.branch}
+                            disabled={onlyRawson}
                             onChange={e => setFormData({ ...formData, branch: e.target.value })}
                         >
                             <option value="Rawson" style={{ color: 'black' }}>Rawson</option>
-                            <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>
+                            {!onlyRawson && <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>}
                         </select>
                     </div>
                 </div>

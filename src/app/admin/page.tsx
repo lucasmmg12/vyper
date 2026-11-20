@@ -16,8 +16,22 @@ export default function AdminPage() {
     const [showImporter, setShowImporter] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [unreadCrm, setUnreadCrm] = useState(0);
+    const [isEzeUser, setIsEzeUser] = useState(false);
 
     useEffect(() => {
+        fetch('/api/auth/me')
+            .then(r => r.json())
+            .then(d => {
+                const email = (d?.user?.email || '').toLowerCase().trim();
+                if (email === 'eze@growlabs.com') {
+                    setIsEzeUser(true);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        if (isEzeUser) return;
         const fetchUnread = async () => {
             try {
                 const res = await fetch('/api/crm');
@@ -66,34 +80,36 @@ export default function AdminPage() {
                         >
                             Egresos
                         </button>
-                        <button
-                            onClick={() => setView('CRM')}
-                            className={`nav-pill-button ${view === 'CRM' ? 'active' : ''}`}
-                            style={{
-                                minWidth: '145px',
-                                justifyContent: 'center',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                            }}
-                        >
-                            <MessageSquare size={15} />
-                            Whatsapp
-                            {unreadCrm > 0 && (
-                                <span
-                                    style={{
-                                        background: view === 'CRM' ? '#FFFFFF' : '#111111',
-                                        color: view === 'CRM' ? '#111111' : '#FFFFFF',
-                                        borderRadius: 999,
-                                        padding: '0.05rem 0.45rem',
-                                        fontSize: '0.675rem',
-                                        fontWeight: 900,
-                                    }}
-                                >
-                                    {unreadCrm}
-                                </span>
-                            )}
-                        </button>
+                        {!isEzeUser && (
+                            <button
+                                onClick={() => setView('CRM')}
+                                className={`nav-pill-button ${view === 'CRM' ? 'active' : ''}`}
+                                style={{
+                                    minWidth: '145px',
+                                    justifyContent: 'center',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                }}
+                            >
+                                <MessageSquare size={15} />
+                                Whatsapp
+                                {unreadCrm > 0 && (
+                                    <span
+                                        style={{
+                                            background: view === 'CRM' ? '#FFFFFF' : '#111111',
+                                            color: view === 'CRM' ? '#111111' : '#FFFFFF',
+                                            borderRadius: 999,
+                                            padding: '0.05rem 0.45rem',
+                                            fontSize: '0.675rem',
+                                            fontWeight: 900,
+                                        }}
+                                    >
+                                        {unreadCrm}
+                                    </span>
+                                )}
+                            </button>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>

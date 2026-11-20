@@ -5,6 +5,7 @@ import {
     sendDirectWhatsAppMessage,
     sendWhatsAppTemplate,
 } from '@/lib/builderbot';
+import { COOKIE_NAME, verifyToken, isEzeRawsonUser } from '@/lib/auth';
 
 const db = supabaseAdmin || supabase;
 
@@ -324,8 +325,13 @@ async function saveStoredRazones(list: string[]) {
     );
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const token = request.cookies.get(COOKIE_NAME)?.value;
+        const sessionUser = token ? await verifyToken(token) : null;
+        if (sessionUser && isEzeRawsonUser(sessionUser.email)) {
+            return NextResponse.json({ ok: false, error: 'Acceso restringido' }, { status: 403 });
+        }
         const [cheques, razonesSociales, comprasRes] = await Promise.all([
             getStoredCheques(),
             getStoredRazones(),
@@ -358,6 +364,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
+        const token = request.cookies.get(COOKIE_NAME)?.value;
+        const sessionUser = token ? await verifyToken(token) : null;
+        if (sessionUser && isEzeRawsonUser(sessionUser.email)) {
+            return NextResponse.json({ ok: false, error: 'Acceso restringido' }, { status: 403 });
+        }
         const body = await request.json();
         const { action = 'create' } = body;
 

@@ -21,6 +21,18 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<Transaction>>({});
     const [loading, setLoading] = useState(false);
+    const [isRawsonOnly, setIsRawsonOnly] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (data?.user?.email?.toLowerCase() === 'eze@growlabs.com') {
+                    setIsRawsonOnly(true);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     // Fetch Data
     const fetchData = async () => {
@@ -167,9 +179,14 @@ export default function RecentTransactions({ type, refreshTrigger }: { type: Tra
                                     <>
                                         <td><input type="date" value={editForm.date?.split('T')[0]} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={{ padding: '0.3rem', fontSize: '0.8rem' }} /></td>
                                         <td>
-                                            <select value={editForm.branch} onChange={e => setEditForm({ ...editForm, branch: e.target.value })} style={{ padding: '0.3rem', fontSize: '0.8rem' }}>
+                                            <select
+                                                value={isRawsonOnly ? 'Rawson' : editForm.branch}
+                                                onChange={e => setEditForm({ ...editForm, branch: isRawsonOnly ? 'Rawson' : e.target.value })}
+                                                disabled={isRawsonOnly}
+                                                style={{ padding: '0.3rem', fontSize: '0.8rem' }}
+                                            >
                                                 <option value="Rawson" style={{ color: 'black' }}>Rawson</option>
-                                                <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>
+                                                {!isRawsonOnly && <option value="Rivadavia" style={{ color: 'black' }}>Rivadavia</option>}
                                             </select>
                                         </td>
                                         <td>

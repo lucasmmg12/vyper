@@ -319,21 +319,26 @@ export default function UsuariosPage() {
                         : 'Nunca'}
                     </td>
                     <td style={{ padding: '0.75rem 1rem' }}>
-                      {u.rol !== 'superadmin' ? (
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button className="btn-ghost" onClick={() => handleEdit(u)} style={{ padding: '0.375rem' }}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="btn-ghost" onClick={() => handleToggle(u)} style={{ padding: '0.375rem' }}>
-                            {u.activo ? <Eye size={16} /> : <Eye size={16} style={{ opacity: 0.4 }} />}
-                          </button>
-                          <button className="btn-ghost" onClick={() => handleDelete(u.id)} style={{ padding: '0.375rem', color: 'var(--accent-red)' }}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>—</span>
-                      )}
+                      <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                        <button
+                          className="btn-ghost"
+                          onClick={() => handleEdit(u)}
+                          title="Editar usuario / Cambiar contraseña"
+                          style={{ padding: '0.375rem', fontSize: '0.75rem', fontWeight: 700 }}
+                        >
+                          <Edit size={16} /> {u.rol === 'superadmin' ? 'Cambiar Contraseña' : ''}
+                        </button>
+                        {u.rol !== 'superadmin' && (
+                          <>
+                            <button className="btn-ghost" onClick={() => handleToggle(u)} style={{ padding: '0.375rem' }}>
+                              {u.activo ? <Eye size={16} /> : <Eye size={16} style={{ opacity: 0.4 }} />}
+                            </button>
+                            <button className="btn-ghost" onClick={() => handleDelete(u.id)} style={{ padding: '0.375rem', color: 'var(--accent-red)' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

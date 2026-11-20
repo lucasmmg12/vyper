@@ -1,17 +1,33 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { verifyToken, COOKIE_NAME, isEzeRawsonUser } from '@/lib/auth';
 import { parseISO, addMonths, differenceInMonths, format, getDay, subMonths, startOfMonth, isAfter } from 'date-fns';
 
 export async function GET(request: Request) {
     try {
-        const { data: sales, error: salesError } = await supabase
+        const cookieHeader = request.headers.get('cookie') || '';
+        const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
+        const token = match ? decodeURIComponent(match[1]) : null;
+        const user = token ? await verifyToken(token) : null;
+        const forceRawson = isEzeRawsonUser(user?.email);
+
+        let salesQuery = supabase
             .from('sales')
             .select('date, amount, branch');
-
-        const { data: expenses, error: expensesError } = await supabase
+        let expensesQuery = supabase
             .from('expenses')
             .select('date, amount, category, branch');
+
+        if (forceRawson) {
+            salesQuery = salesQuery.eq('branch', 'Rawson');
+            expensesQuery = expensesQuery.eq('branch', 'Rawson');
+        }
+
+        const [{ data: sales, error: salesError }, { data: expenses, error: expensesError }] = await Promise.all([
+            salesQuery,
+            expensesQuery,
+        ]);
 
         if (salesError || expensesError) {
             throw new Error('Failed to fetch data');

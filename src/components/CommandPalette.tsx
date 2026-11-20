@@ -38,6 +38,20 @@ export default function CommandPalette() {
     const [clients, setClients] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
     const [toasts, setToasts] = useState<ToastItem[]>([]);
+    const [userEmail, setUserEmail] = useState<string>('');
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (data?.user?.email) {
+                    setUserEmail(String(data.user.email).toLowerCase());
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    const isEzeUser = userEmail === 'eze@growlabs.com';
 
     // Global Toast listener
     useEffect(() => {
@@ -89,8 +103,12 @@ export default function CommandPalette() {
 
     const navPages = [
         { label: 'Inicio (Ventas POS & Egresos)', href: '/admin', icon: LayoutDashboard },
-        { label: 'Whatsapp CRM (Pantalla Completa)', href: '/admin/crm', icon: MessageSquare },
-        { label: 'Cheques y eCheqs (Emitidos y Recibidos)', href: '/admin/cheques', icon: CreditCard },
+        ...(!isEzeUser
+            ? [
+                  { label: 'Whatsapp CRM (Pantalla Completa)', href: '/admin/crm', icon: MessageSquare },
+                  { label: 'Cheques y eCheqs (Emitidos y Recibidos)', href: '/admin/cheques', icon: CreditCard },
+              ]
+            : []),
         { label: 'Vyper Coins (Fidelización)', href: '/admin/vyper-coins', icon: Coins },
         { label: 'Cuenta Corriente (Deudores)', href: '/admin/debt', icon: CreditCard },
         { label: 'Base de Clientes', href: '/admin/clients', icon: Users },
@@ -289,7 +307,7 @@ export default function CommandPalette() {
                                             padding: '0.25rem 0.5rem',
                                         }}
                                     >
-                                        Clientes (Clic para abrir en Whatsapp CRM)
+                                        {isEzeUser ? 'Clientes' : 'Clientes (Clic para abrir en Whatsapp CRM)'}
                                     </div>
                                     {filteredClients.map(c => (
                                         <div
@@ -297,7 +315,7 @@ export default function CommandPalette() {
                                             onClick={() => {
                                                 setIsOpen(false);
                                                 setQuery('');
-                                                if (c.phone) {
+                                                if (!isEzeUser && c.phone) {
                                                     router.push(`/admin/crm?phone=${encodeURIComponent(c.phone)}`);
                                                 } else {
                                                     router.push('/admin/clients');
@@ -323,21 +341,23 @@ export default function CommandPalette() {
                                                     {Number(c.debt_balance || 0).toLocaleString('es-AR')}
                                                 </div>
                                             </div>
-                                            <span
-                                                style={{
-                                                    padding: '0.25rem 0.6rem',
-                                                    borderRadius: 6,
-                                                    background: '#111111',
-                                                    color: '#FFFFFF',
-                                                    fontSize: '0.7rem',
-                                                    fontWeight: 700,
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: 4,
-                                                }}
-                                            >
-                                                <MessageSquare size={12} /> Abrir Chat
-                                            </span>
+                                            {!isEzeUser && (
+                                                <span
+                                                    style={{
+                                                        padding: '0.25rem 0.6rem',
+                                                        borderRadius: 6,
+                                                        background: '#111111',
+                                                        color: '#FFFFFF',
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: 700,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 4,
+                                                    }}
+                                                >
+                                                    <MessageSquare size={12} /> Abrir Chat
+                                                </span>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

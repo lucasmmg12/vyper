@@ -26,6 +26,18 @@ export default function ClientsPage() {
     const [loading, setLoading] = useState(false);
     const [showImporter, setShowImporter] = useState(false);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [isEzeUser, setIsEzeUser] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (data?.user?.email?.toLowerCase() === 'eze@growlabs.com') {
+                    setIsEzeUser(true);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const fetchClients = async () => {
         setLoading(true);
@@ -187,7 +199,7 @@ export default function ClientsPage() {
                                         <th style={{ padding: '0.75rem 0.5rem', color: '#111' }}>Teléfono</th>
                                         <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Coins</th>
                                         <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>Deuda</th>
-                                        <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>CRM</th>
+                                        {!isEzeUser && <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#111' }}>CRM</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -211,27 +223,29 @@ export default function ClientsPage() {
                                             <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 700, color: c.debt_balance > 0 ? '#ef4444' : '#10b981' }}>
                                                 ${c.debt_balance.toLocaleString()}
                                             </td>
-                                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                                                {c.phone && (
-                                                    <Link
-                                                        href={`/admin/crm?phone=${encodeURIComponent(c.phone)}`}
-                                                        style={{
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: 4,
-                                                            padding: '0.25rem 0.6rem',
-                                                            borderRadius: 6,
-                                                            background: '#111111',
-                                                            color: '#FFFFFF',
-                                                            fontSize: '0.725rem',
-                                                            fontWeight: 700,
-                                                            textDecoration: 'none',
-                                                        }}
-                                                    >
-                                                        💬 Chat
-                                                    </Link>
-                                                )}
-                                            </td>
+                                            {!isEzeUser && (
+                                                <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                                                    {c.phone && (
+                                                        <Link
+                                                            href={`/admin/crm?phone=${encodeURIComponent(c.phone)}`}
+                                                            style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: 4,
+                                                                padding: '0.25rem 0.6rem',
+                                                                borderRadius: 6,
+                                                                background: '#111111',
+                                                                color: '#FFFFFF',
+                                                                fontSize: '0.725rem',
+                                                                fontWeight: 700,
+                                                                textDecoration: 'none',
+                                                            }}
+                                                        >
+                                                            💬 Chat
+                                                        </Link>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>

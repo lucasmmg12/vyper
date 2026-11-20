@@ -23,15 +23,19 @@ import {
     Search,
     Bot,
     FileCheck2,
+    KeyRound,
+    X,
 } from 'lucide-react';
 import GrowyAssistant from '@/components/GrowyAssistant';
-import CommandPalette from '@/components/CommandPalette';
+import CommandPalette, { showVyperToast } from '@/components/CommandPalette';
 
 interface CurrentUser {
     id: string;
     email: string;
     nombre: string;
     rol: 'superadmin' | 'administrador' | 'vendedor';
+    restrictedBranch?: string | null;
+    hideCrmAndCheques?: boolean;
 }
 
 const navItems = [
@@ -58,8 +62,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [user, setUser] = useState<CurrentUser | null>(null);
     const [collapsed, setCollapsed] = useState(false);
     const [unreadWhatsapp, setUnreadWhatsapp] = useState(0);
+    const [showPassModal, setShowPassModal] = useState(false);
+    const [newPass, setNewPass] = useState('');
+    const [savingPass, setSavingPass] = useState(false);
     const isLoginPage = pathname === '/admin/login';
     const isCrmFullPage = pathname === '/admin/crm';
+    const isEzeUser = (user?.email || '').toLowerCase().trim() === 'eze@growlabs.com';
 
     useEffect(() => {
         try {
@@ -70,9 +78,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
     }, []);
 
-    // Poll unread WhatsApp messages for global sidebar badge
+    // Poll unread WhatsApp messages for global sidebar badge (skip if eze@growlabs.com)
     useEffect(() => {
-        if (isLoginPage) return;
+        if (isLoginPage || isEzeUser) return;
         const fetchUnread = () => {
             fetch('/api/crm')
                 .then(r => r.json())
@@ -86,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         fetchUnread();
         const interval = setInterval(fetchUnread, 10000);
         return () => clearInterval(interval);
-    }, [isLoginPage]);
+    }, [isLoginPage, isEzeUser]);
 
     const toggleSidebar = () => {
         setCollapsed(prev => {
@@ -225,7 +233,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             )}
                         </button>
 
-                        {navItems.map(item => {
+                        {navItems
+                            .filter(item => {
+                                if (isEzeUser && (item.href === '/admin/crm' || item.href === '/admin/cheques')) {
+                                    return false;
+                                }
+                                return true;
+                            })
+                            .map(item => {
                             const Icon = item.icon;
                             const active = isActive(item.href);
                             const isWa = item.href === '/admin/crm';
@@ -303,10 +318,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 {user.nombre}
                             </div>
                             <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>
-                                {rolLabel[user.rol] || user.rol}
+                                {isEzeUser ? 'Sucursal Rawson' : rolLabel[user.rol] || user.rol}
                             </div>
                         </div>
                     )}
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setNewPass('');
+                            setShowPassModal(true);
+                        }}
+                        title={collapsed ? 'Cambiar contraseña' : undefined}
+                        className="sidebar-nav-item"
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            width: '100%',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            justifyContent: collapsed ? 'center' : 'flex-start',
+                        }}
+                    >
+                        <KeyRound size={17} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+                        {!collapsed && <span>Cambiar contraseña</span>}
+                    </button>
 
                     <button
                         onClick={async () => {
@@ -369,6 +405,105 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Global Command Palette (Ctrl+K) + Toast System + Growy Virtual Assistant */}
             <CommandPalette />
             <GrowyAssistant />
+
+            {/* Modal Cambiar Contraseña */}
+            {showPassModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.55)',
+                        zIndex: 10040,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1rem',
+                    }}
+                    onClick={() => setShowPassModal(false)}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: '#FFFFFF',
+                            border: '2px solid #111111',
+                            borderRadius: 16,
+                            maxWidth: 420,
+                            width: '100%',
+                            padding: '1.5rem',
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: 0 }}>
+                                🔑 Cambiar Contraseña ({user?.email})
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowPassModal(false)}
+                                className="btn-ghost"
+                                style={{ padding: 4, minHeight: 'auto' }}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={async e => {
+                                e.preventDefault();
+                                if (!newPass || newPass.trim().length < 4) return;
+                                setSavingPass(true);
+                                try {
+                                    const res = await fetch('/api/auth/me', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ newPassword: newPass.trim() }),
+                                    });
+                                    const data = await res.json();
+                                    if (!res.ok || !data.ok) {
+                                        showVyperToast(data.error || 'Error cambiando contraseña', 'error');
+                                    } else {
+                                        showVyperToast('✅ Contraseña actualizada correctamente');
+                                        setShowPassModal(false);
+                                        setNewPass('');
+                                    }
+                                } catch {
+                                    showVyperToast('Error de conexión', 'error');
+                                } finally {
+                                    setSavingPass(false);
+                                }
+                            }}
+                        >
+                            <label style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+                                Nueva Contraseña
+                            </label>
+                            <input
+                                type="password"
+                                value={newPass}
+                                onChange={e => setNewPass(e.target.value)}
+                                placeholder="Ingresá tu nueva contraseña..."
+                                autoFocus
+                                required
+                                minLength={4}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassModal(false)}
+                                    className="secondary"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={savingPass || newPass.trim().length < 4}
+                                    style={{ background: '#111111', color: '#FFFFFF' }}
+                                >
+                                    {savingPass ? 'Guardando...' : 'Guardar Nueva Contraseña'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

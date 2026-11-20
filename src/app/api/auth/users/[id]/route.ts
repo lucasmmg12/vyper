@@ -21,13 +21,19 @@ export async function PUT(
 
   if (body.nombre !== undefined) updateData.nombre = body.nombre;
   if (body.rol !== undefined) {
-    if (!['administrador', 'vendedor'].includes(body.rol)) {
+    if (!['superadmin', 'administrador', 'vendedor'].includes(body.rol)) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 });
     }
-    updateData.rol = body.rol;
+    // Prevent demoting self if superadmin
+    if (user.id !== id) {
+      updateData.rol = body.rol;
+    }
   }
-  if (body.activo !== undefined) updateData.activo = body.activo;
+  if (body.activo !== undefined && user.id !== id) updateData.activo = body.activo;
   if (body.password) {
+    if (String(body.password).length < 4) {
+      return NextResponse.json({ error: 'La contraseña debe tener al menos 4 caracteres' }, { status: 400 });
+    }
     updateData.password_hash = await bcrypt.hash(body.password, 10);
   }
 
