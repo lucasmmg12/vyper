@@ -78,23 +78,48 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
     }, []);
 
-    // Poll unread WhatsApp messages for global sidebar badge (skip if eze@growlabs.com)
+    // Poll unread WhatsApp messages for global sidebar badge (only after user is loaded and not eze@growlabs.com)
     useEffect(() => {
-        if (isLoginPage || isEzeUser) return;
-        const fetchUnread = () => {
-            fetch('/api/crm')
-                .then(r => r.json())
-                .then(d => {
-                    if (typeof d?.totalUnread === 'number') {
-                        setUnreadWhatsapp(d.totalUnread);
+        if (isLoginPage || !user || isEzeUser) return;
+        let stopped = false;
+        const fetchUnread = async () => {
+            if (stopped) return;
+            try {
+                const r = await fetch('/api/crm');
+                if (r.status === 403 || r.status === 401) {
+                    stopped = true;
+                    // Re-sync current session user (e.g. if another tab logged in as eze@growlabs.com)
+                    const meRes = await fetch('/api/auth/me').catch(() => null);
+                    const meData = meRes ? await meRes.json().catch(() => null) : null;
+                    if (meData?.authenticated && meData?.user) {
+                        setUser(meData.user);
+                        if (
+                            String(meData.user.email || '').toLowerCase().trim() === 'eze@growlabs.com' &&
+                            (pathname.startsWith('/admin/crm') ||
+                                pathname.startsWith('/admin/cheques') ||
+                                pathname.startsWith('/admin/usuarios'))
+                        ) {
+                            router.push('/admin');
+                        }
                     }
-                })
-                .catch(() => {});
+                    return;
+                }
+                if (!r.ok) return;
+                const d = await r.json();
+                if (typeof d?.totalUnread === 'number') {
+                    setUnreadWhatsapp(d.totalUnread);
+                }
+            } catch {
+                // ignore network error
+            }
         };
         fetchUnread();
-        const interval = setInterval(fetchUnread, 10000);
-        return () => clearInterval(interval);
-    }, [isLoginPage, isEzeUser]);
+        const interval = setInterval(fetchUnread, 15000);
+        return () => {
+            stopped = true;
+            clearInterval(interval);
+        };
+    }, [isLoginPage, user, isEzeUser, pathname, router]);
 
     const toggleSidebar = () => {
         setCollapsed(prev => {

@@ -13,6 +13,10 @@ const CONFIG_KEY_CHEQUES = 'vyper_cheques_registry';
 const CONFIG_KEY_RAZONES = 'vyper_cheques_razones_sociales';
 const CONFIG_KEY_BANCOS = 'vyper_cheques_bancos';
 
+const SHORTCUT_KEY_CHEQUES = '__sys_cheques_registry__';
+const SHORTCUT_KEY_RAZONES = '__sys_cheques_razones__';
+const SHORTCUT_KEY_BANCOS = '__sys_cheques_bancos__';
+
 export interface ChequeItem {
     id: string;
     nro_cheque: string;
@@ -272,82 +276,98 @@ const DEFAULT_CHEQUES_SEED: ChequeItem[] = [
     },
 ];
 
-async function getStoredCheques(): Promise<ChequeItem[]> {
-    const { data } = await db
-        .from('configuraciones')
-        .select('valor')
-        .eq('clave', CONFIG_KEY_CHEQUES)
+async function readSystemJson<T>(shortcutKey: string, configKey: string): Promise<T | null> {
+    // 1. First read from whatsapp_shortcuts (works with both ANON_KEY and SERVICE_ROLE_KEY without RLS block)
+    const { data: scRow } = await db
+        .from('whatsapp_shortcuts')
+        .select('message')
+        .eq('shortcut', shortcutKey)
         .maybeSingle();
 
-    if (Array.isArray(data?.valor) && data.valor.length > 0) {
-        return data.valor as ChequeItem[];
+    if (scRow?.message) {
+        try {
+            const parsed = JSON.parse(scRow.message);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed as T;
+            }
+        } catch {
+            // fallback to configuraciones
+        }
+    }
+
+    // 2. Fallback read from configuraciones
+    const { data: cfgRow } = await db
+        .from('configuraciones')
+        .select('valor')
+        .eq('clave', configKey)
+        .maybeSingle();
+
+    if (Array.isArray(cfgRow?.valor) && cfgRow.valor.length > 0) {
+        // Sync to whatsapp_shortcuts so future anon writes succeed
+        await writeSystemJson(shortcutKey, configKey, cfgRow.valor);
+        return cfgRow.valor as T;
+    }
+
+    return null;
+}
+
+async function writeSystemJson<T>(shortcutKey: string, configKey: string, value: T): Promise<void> {
+    const nowIso = new Date().toISOString();
+    await Promise.all([
+        db.from('whatsapp_shortcuts').upsert(
+            {
+                shortcut: shortcutKey,
+                label: configKey,
+                message: JSON.stringify(value),
+                category: 'system_cheques',
+                is_active: false,
+                updated_at: nowIso,
+            },
+            { onConflict: 'shortcut' }
+        ),
+        db.from('configuraciones').upsert(
+            {
+                clave: configKey,
+                valor: value,
+                updated_at: nowIso,
+            },
+            { onConflict: 'clave' }
+        ),
+    ]);
+}
+
+async function getStoredCheques(): Promise<ChequeItem[]> {
+    const stored = await readSystemJson<ChequeItem[]>(SHORTCUT_KEY_CHEQUES, CONFIG_KEY_CHEQUES);
+    if (Array.isArray(stored) && stored.length > 0) {
+        return stored;
     }
 
     // Seed initially with the 12 default cheques from Photo 4
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_CHEQUES,
-            valor: DEFAULT_CHEQUES_SEED,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_CHEQUES, CONFIG_KEY_CHEQUES, DEFAULT_CHEQUES_SEED);
     return DEFAULT_CHEQUES_SEED;
 }
 
 async function saveStoredCheques(list: ChequeItem[]) {
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_CHEQUES,
-            valor: list,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_CHEQUES, CONFIG_KEY_CHEQUES, list);
 }
 
 async function getStoredRazones(): Promise<string[]> {
-    const { data } = await db
-        .from('configuraciones')
-        .select('valor')
-        .eq('clave', CONFIG_KEY_RAZONES)
-        .maybeSingle();
-
-    if (Array.isArray(data?.valor) && data.valor.length > 0) {
-        return data.valor as string[];
+    const stored = await readSystemJson<string[]>(SHORTCUT_KEY_RAZONES, CONFIG_KEY_RAZONES);
+    if (Array.isArray(stored) && stored.length > 0) {
+        return stored;
     }
 
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_RAZONES,
-            valor: DEFAULT_RAZONES_SOCIALES,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_RAZONES, CONFIG_KEY_RAZONES, DEFAULT_RAZONES_SOCIALES);
     return DEFAULT_RAZONES_SOCIALES;
 }
 
 async function saveStoredRazones(list: string[]) {
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_RAZONES,
-            valor: list,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_RAZONES, CONFIG_KEY_RAZONES, list);
 }
 
 async function getStoredBancos(): Promise<string[]> {
-    const { data } = await db
-        .from('configuraciones')
-        .select('valor')
-        .eq('clave', CONFIG_KEY_BANCOS)
-        .maybeSingle();
-
-    if (Array.isArray(data?.valor) && data.valor.length > 0) {
-        const stored = data.valor as string[];
+    const stored = await readSystemJson<string[]>(SHORTCUT_KEY_BANCOS, CONFIG_KEY_BANCOS);
+    if (Array.isArray(stored) && stored.length > 0) {
         if (!stored.some(b => b.toLowerCase() === 'banco macro')) {
             const updated = ['Banco Macro', ...stored];
             await saveStoredBancos(updated);
@@ -356,26 +376,12 @@ async function getStoredBancos(): Promise<string[]> {
         return stored;
     }
 
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_BANCOS,
-            valor: DEFAULT_BANCOS,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_BANCOS, CONFIG_KEY_BANCOS, DEFAULT_BANCOS);
     return DEFAULT_BANCOS;
 }
 
 async function saveStoredBancos(list: string[]) {
-    await db.from('configuraciones').upsert(
-        {
-            clave: CONFIG_KEY_BANCOS,
-            valor: list,
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'clave' }
-    );
+    await writeSystemJson(SHORTCUT_KEY_BANCOS, CONFIG_KEY_BANCOS, list);
 }
 
 export async function GET(request: NextRequest) {

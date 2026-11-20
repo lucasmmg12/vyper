@@ -201,7 +201,7 @@ export default function AdminChequesPage() {
     const fetchChequesData = async (silent = false) => {
         if (!silent) setLoading(true);
         try {
-            const res = await fetch('/api/cheques');
+            const res = await fetch('/api/cheques', { cache: 'no-store' });
             const data = await res.json();
             if (data.cheques) setCheques(data.cheques);
             if (data.razonesSociales) setRazonesSociales(data.razonesSociales);
@@ -574,8 +574,18 @@ export default function AdminChequesPage() {
             if (!res.ok || !data.ok) {
                 throw new Error(data.error || 'Error guardando cheque');
             }
+            if (Array.isArray(data.cheques)) {
+                const sorted = [...data.cheques].sort((a: ChequeItem, b: ChequeItem) =>
+                    (a.fecha_vencimiento || '').localeCompare(b.fecha_vencimiento || '')
+                );
+                setCheques(sorted);
+            } else {
+                await fetchChequesData(true);
+            }
+            if (Array.isArray(data.razonesSociales)) {
+                setRazonesSociales(data.razonesSociales);
+            }
             setShowModal(false);
-            await fetchChequesData(true);
             showVyperToast(
                 editingId ? '✅ Cheque actualizado correctamente' : '✅ Cheque registrado correctamente'
             );
@@ -587,21 +597,49 @@ export default function AdminChequesPage() {
     };
 
     const handleToggleEstado = async (chq: ChequeItem) => {
+        const nextEstado: 'pendiente' | 'pagado' = chq.estado === 'pagado' ? 'pendiente' : 'pagado';
+        // Optimistic UI update so the badge switches immediately
+        setCheques(prev =>
+            prev.map(c => (c.id === chq.id ? { ...c, estado: nextEstado } : c))
+        );
         try {
-            await fetch('/api/cheques', {
+            const res = await fetch('/api/cheques', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'toggle_estado', id: chq.id }),
             });
-            await fetchChequesData(true);
+            const data = await res.json().catch(() => ({}));
+            if (res.status === 403) {
+                // Revert optimistic update if logged in as restricted user
+                setCheques(prev =>
+                    prev.map(c => (c.id === chq.id ? { ...c, estado: chq.estado } : c))
+                );
+                showVyperToast(
+                    'Tu sesión activa es Ezequiel (Rawson). Iniciá sesión con fer@growlabs.com para gestionar Cheques.',
+                    'error'
+                );
+                return;
+            }
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Error cambiando estado');
+            }
+            if (Array.isArray(data.cheques)) {
+                const sorted = [...data.cheques].sort((a: ChequeItem, b: ChequeItem) =>
+                    (a.fecha_vencimiento || '').localeCompare(b.fecha_vencimiento || '')
+                );
+                setCheques(sorted);
+            }
             showVyperToast(
-                chq.estado === 'pagado'
+                nextEstado === 'pendiente'
                     ? `Cheque #${chq.nro_cheque} marcado como Pendiente`
                     : `✓ Cheque #${chq.nro_cheque} marcado como ${
                           chq.direccion === 'emitido' ? 'PAGADO' : 'COBRADO'
                       }`
             );
         } catch {
+            setCheques(prev =>
+                prev.map(c => (c.id === chq.id ? { ...c, estado: chq.estado } : c))
+            );
             showVyperToast('Error cambiando estado del cheque', 'error');
         }
     };
@@ -610,12 +648,20 @@ export default function AdminChequesPage() {
         if (!confirm(`¿Eliminar el cheque #${chq.nro_cheque} (${formatArsCurrency(chq.monto)})?`))
             return;
         try {
-            await fetch('/api/cheques', {
+            const res = await fetch('/api/cheques', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'delete', id: chq.id }),
             });
-            await fetchChequesData(true);
+            const data = await res.json().catch(() => ({}));
+            if (Array.isArray(data.cheques)) {
+                const sorted = [...data.cheques].sort((a: ChequeItem, b: ChequeItem) =>
+                    (a.fecha_vencimiento || '').localeCompare(b.fecha_vencimiento || '')
+                );
+                setCheques(sorted);
+            } else {
+                await fetchChequesData(true);
+            }
             showVyperToast(`Cheque #${chq.nro_cheque} eliminado`);
         } catch {
             showVyperToast('Error eliminando cheque', 'error');
